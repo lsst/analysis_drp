@@ -1,0 +1,28 @@
+description: Make colour analysis plots
+tasks:
+  addQAColumns:
+    class: lsst.analysis.drp.addQAColumns.AddQAColumnsTask
+  plot_iz_ri_CModel_byMag:
+    class: lsst.analysis.drp.colorColorByMagPlot.ColorColorByMagPlotTask
+    config:
+      xColName: riCModelMag
+      yColName: izCModelMag
+      xLabel: "r - i [CModel] (mag)"
+      yLabel: "i - z [CModel] (mag)"
+      connections.plotName: iz_ri_CModel_byMag
+  plot_ri_gr_CModel_byMag:
+    class: lsst.analysis.drp.colorColorByMagPlot.ColorColorByMagPlotTask
+    config:
+      xColName: grCModelMag
+      yColName: riCModelMag
+      xLabel: "g - r [CModel] (mag)"
+      yLabel: "r - i [CModel] (mag)"
+      connections.plotName: ri_gr_CModel_byMag
+  plot_zy_iz_CModel_byMag:
+    class: lsst.analysis.drp.colorColorByMagPlot.ColorColorByMagPlotTask
+    config:
+      xColName: izCModelMag
+      yColName: zyCModelMag
+      xLabel: "i - z [CModel] (mag)"
+      yLabel: "z - y [CModel] (mag)"
+      connections.plotName: zy_iz_CModel_byMag
