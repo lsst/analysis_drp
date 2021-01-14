@@ -1,0 +1,19 @@
+description: Make colour analysis plots
+tasks:
+  addQAColumns:
+    class: lsst.analysis.drp.addQAColumns.AddQAColumnsTask
+  plot_wPerp_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      colorCodeValueColName: wPerp
+      connections.plotName: wPerp_sky
+  plot_xPerp_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      colorCodeValueColName: xPerp
+      connections.plotName: xPerp_sky
+  plot_yPerp_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      colorCodeValueColName: yPerp
+      connections.plotName: yPerp_sky
