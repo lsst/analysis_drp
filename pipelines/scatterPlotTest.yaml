@@ -1,0 +1,28 @@
+description: Make colour analysis plots
+tasks:
+  addQAColumns:
+    class: lsst.analysis.drp.addQAColumns.AddQAColumnsTask
+  plot_wPerp_psfMag:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      xColName: iPsMag
+      yColName: wPerp
+      xLabel: "PSF Mag i (mag)"
+      yLabel: "w Perp (griBlue) (mmag)"
+      connections.plotName: wPerp_iPsMag
+  plot_xPerp_psfMag:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      xColName: iPsMag
+      yColName: xPerp
+      xLabel: "PSF Mag i (mag)"
+      yLabel: "x Perp (griRed) (mmag)"
+      connections.plotName: xPerp_iPsMag
+  plot_yPerp_psfMag:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      xColName: iPsMag
+      yColName: yPerp
+      xLabel: "PSF Mag i (mag)"
+      yLabel: "y Perp (rizRed) (mmag)"
+      connections.plotName: yPerp_iPsMag

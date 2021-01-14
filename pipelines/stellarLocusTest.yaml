@@ -1,0 +1,100 @@
+description: Make colour analysis plots
+tasks:
+  addQAColumns:
+    class: lsst.analysis.drp.addQAColumns.AddQAColumnsTask
+  calcStellarLocusParams_PSF_wFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      name: "wFit"
+      connections.fitType: "PSF_wFit"
+  plot_griPSF_wFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      xLabel: "g - r [PSF] (mag)"
+      yLabel: "r - i [PSF] (mag)"
+      name: "wFit"
+      connections.plotName: "PSF_wFit"
+  calcStellarLocusParams_CModel_wFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      name: "wFit"
+      connections.fitType: "CModel_wFit"
+  plot_griCModel_wFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: grCModelMag
+      yColName: riCModelMag
+      xLabel: "g - r [CModel] (mag)"
+      yLabel: "r - i [CModel] (mag)"
+      name: "wFit"
+      connections.plotName: "CModel_wFit"
+  calcStellarLocusParams_PSF_xFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      name: "xFit"
+      connections.fitType: "PSF_xFit"
+  plot_griPSF_xFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      xLabel: "g - r [PSF] (mag)"
+      yLabel: "r - i [PSF] (mag)"
+      name: "xFit"
+      connections.plotName: "PSF_xFit"
+  calcStellarLocusParams_CModel_xFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: grPsMag
+      yColName: riPsMag
+      name: "xFit"
+      connections.fitType: "CModel_xFit"
+  plot_griCModel_xFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: grCModelMag
+      yColName: riCModelMag
+      xLabel: "g - r [CModel] (mag)"
+      yLabel: "r - i [CModel] (mag)"
+      name: "xFit"
+      connections.plotName: "CModel_xFit"
+  calcStellarLocusParams_PSF_yFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: riPsMag
+      yColName: izPsMag
+      name: "yFit"
+      connections.fitType: "PSF_yFit"
+  plot_rizPSF_yFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: riPsMag
+      yColName: izPsMag
+      xLabel: "r - i [PSF] (mag)"
+      yLabel: "i - z [PSF] (mag)"
+      name: "xFit"
+      connections.plotName: "PSF_yFit"
+  calcStellarLocusParams_CModel_yFit:
+    class: lsst.analysis.drp.calcStellarLocusParams.CalcStellarLocusParamsTask
+    config:
+      xColName: riPsMag
+      yColName: izPsMag
+      name: "yFit"
+      connections.fitType: "CModel_yFit"
+  plot_rizCModel_yFit:
+    class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
+    config:
+      xColName: riCModelMag
+      yColName: izCModelMag
+      xLabel: "r - i [CModel] (mag)"
+      yLabel: "i - z [CModel] (mag)"
+      name: "yFit"
+      connections.plotName: "CModel_yFit"
