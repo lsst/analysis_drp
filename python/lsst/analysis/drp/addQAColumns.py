@@ -6,17 +6,18 @@ from .qaUtils import (addMagnitudes, addColors, stellarLocusFits, addUseForQAFla
                       addSNColumn, addDeconvMoments)
 
 
-class AddQAColumnsTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("tract", "skymap")):
+class AddQAColumnsTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("tract", "skymap"),
+                                  defaultTemplates={"tableType": "forced"}):
 
     cat = pipeBase.connectionTypes.Input(doc="The tract wide catalog to make plots from.",
                                          storageClass="DataFrame",
-                                         name="objectTable_tract",
-                                         dimensions=("tract", "skymap"))
+                                         name="qaTractTable_{tableType}",
+                                         dimensions=("tract", "skymap", "band"))
 
     qaCat = pipeBase.connectionTypes.Output(doc="The input catalog with additional columns for QA added",
                                             storageClass="DataFrame",
                                             name="qaTable_tract",
-                                            dimensions=("tract", "skymap"))
+                                            dimensions=("tract", "skymap", "band"))
 
 
 class AddQAColumnsTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=AddQAColumnsTaskConnections):

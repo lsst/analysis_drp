@@ -3,30 +3,33 @@ import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
 from matplotlib import patheffects
 from matplotlib.patches import Rectangle
+import matplotlib.patheffects as path_effects
 
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
+from lsst.skymap import BaseSkyMap
 
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
 
 
 class SkyPlotTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("tract", "skymap"),
-                             defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords"}):
+                             defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords",
+                                               "tableType": "forced"}):
 
     catPlot = pipeBase.connectionTypes.Input(doc="The tract wide catalog to make plots from.",
                                              storageClass="DataFrame",
-                                             name="qaTable_tract",
-                                             dimensions=("tract", "skymap"))
+                                             name="qaTractTable_{tableType}",
+                                             dimensions=("tract", "skymap", "band"))
+
+    skymap = pipeBase.connectionTypes.Input(doc="The skymap for the tract",
+                                            storageClass="SkyMap",
+                                            name=BaseSkyMap.SKYMAP_DATASET_TYPE_NAME,
+                                            dimensions=("skymap",))
 
     skyPlot = pipeBase.connectionTypes.Output(doc="A plot showing the on sky distribution of a value.",
                                               storageClass="Plot",
                                               name="skyPlot_{plotName}",
                                               dimensions=("tract", "skymap"))
-
-    skymap = pipeBase.connectionTypes.Input(doc="The skymap for the tract",
-                                            storageClass="SkyMap",
-                                            name="{inputCoaddName}Coadd_skyMap",
-                                            dimensions=("skymap",))
 
 
 class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlotTaskConnections):
@@ -58,7 +61,13 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
     sourceTypeColName = pexConfig.Field(
         doc="The column to use for star - galaxy separation.",
         dtype=str,
-        default="iExtendedness",
+        default="base_ClassificationExtendedness_flag",
+    )
+
+    skyObjectColName = pexConfig.Field(
+        doc="The flag column to use to identify sky objects.",
+        dtype=str,
+        default="merge_peak_sky",
     )
 
     objectsToPlot = pexConfig.Field(
@@ -146,12 +155,14 @@ class SkyPlotTask(pipeBase.PipelineTask):
         ax = fig.add_subplot(111)
 
         # Cut the catalogue down to only valid sources
-        sourcesToUse = ((catPlot["useForQAFlag"].values) & (catPlot["useForStats"].values != 0))
+        # sourcesToUse = ((catPlot["useForQAFlag"].values) & (catPlot["useForStats"].values != 0))
+        sourcesToUse = (catPlot[self.config.skyObjectColName] == 1.0)
         catPlot = catPlot[sourcesToUse]
 
-        # Need to separate stars and galaxies
+        # Need to separate stars, galaxies and sky objects
         stars = (catPlot[self.config.sourceTypeColName] == 0.0)
         galaxies = (catPlot[self.config.sourceTypeColName] == 1.0)
+        skyObjects = (catPlot[self.config.skyObjectColName] == 1.0)
 
         # For galaxies
         xsGalaxies = catPlot[self.config.xColName].values[galaxies]
@@ -162,6 +173,11 @@ class SkyPlotTask(pipeBase.PipelineTask):
         xsStars = catPlot[self.config.xColName].values[stars]
         ysStars = catPlot[self.config.yColName].values[stars]
         colorValsStars = catPlot[self.config.colorCodeValueColName].values[stars]
+
+        # For sky objects
+        xsSkyObjects = catPlot[self.config.xColName].values[skyObjects]
+        ysSkyObjects = catPlot[self.config.yColName].values[skyObjects]
+        colorValsSkyObjects = catPlot[self.config.colorCodeValueColName].values[skyObjects]
 
         # Calculate some statistics
         if self.config.objectsToPlot == "galaxies" or self.config.objectsToPlot == "all":
@@ -189,10 +205,25 @@ class SkyPlotTask(pipeBase.PipelineTask):
             bbox = dict(facecolor="C0", alpha=0.3, edgecolor="none")
             ax.text(0.8, 0.92, starStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
 
+        if self.config.objectsToPlot == "skyObjects":
+
+            skyObjectsMed = np.nanmedian(catPlot[self.config.colorCodeValueColName].values[skyObjects])
+            skyObjectsMad = sigmaMad(catPlot[self.config.colorCodeValueColName].values[skyObjects],
+                                     nan_policy="omit")
+
+            skyObjectStatsText = ("Median: {:0.2f}\n".format(skyObjectsMed) + r"$\sigma_{MAD}$: "
+                                  + "{:0.2f}".format(skyObjectsMad))
+            # Add statistics
+            bbox = dict(facecolor="green", alpha=0.3, edgecolor="none")
+            ax.text(0.8, 0.92, skyObjectStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            #text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
+
         if self.config.objectsToPlot == "stars":
             toPlotList = [(xsStars, ysStars, colorValsStars, "winter_r", "Stars")]
         elif self.config.objectsToPlot == "galaxies":
             toPlotList = [(xsGalaxies, ysGalaxies, colorValsGalaxies, "autumn_r", "Galaxies")]
+        elif self.config.objectsToPlot == "skyObjects":
+            toPlotList = [(xsSkyObjects, ysSkyObjects, colorValsSkyObjects, "viridis", "Sky Objects")]
         elif self.config.objectsToPlot == "all":
             toPlotList = [(xsGalaxies, ysGalaxies, colorValsGalaxies, "autumn_r", "Galaxies"),
                           (xsStars, ysStars, colorValsStars, "winter_r", "Stars")]
@@ -221,12 +252,13 @@ class SkyPlotTask(pipeBase.PipelineTask):
             mad = sigmaMad(colorVals)
             vmin = med - 3*mad
             vmax = med + 3*mad
-            scatterOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=10.0, vmin=vmin, vmax=vmax)
+            scatterOut = ax.scatter(np.rad2deg(xs), np.rad2deg(ys), c=colorVals, cmap=cmap, s=10.0, vmin=vmin, vmax=vmax)
             cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.77])
             plt.colorbar(scatterOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.colorCodeValueColName, label)
-            cax.text(0.6, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
-                     ha="center", va="center", fontsize=10)
+            text = cax.text(0.6, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
+                            ha="center", va="center", fontsize=9)
+            text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'), path_effects.Normal()])
 
             if i == 0 and len(toPlotList) > 1:
                 cax.yaxis.set_ticks_position("left")
