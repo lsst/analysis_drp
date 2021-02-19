@@ -12,7 +12,7 @@ tasks:
       connections.plotName: CModelFlux_sky
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel Flux"}
 
-  # Change what is plotted on the z axis
+ # Change what is plotted on the z axis
   # in this case use a predefined action (defined in calcFunctors.py)
   plot_PsfSn_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
@@ -66,7 +66,7 @@ tasks:
         from lsst.analysis.drp.dataSelectors import PsfFlagSelector, HighSnSelector
         from lsst.analysis.drp.calcFunctors import SNCalculator
 
- # Same as above bu tths time plot it for galaxies not stars
+ # Same as above but this time plot it for galaxies not stars
  # The defualt is stars but you can also use all for both.
  # Then adjust the SN threshold for points to be included in the plot.
   plot_psfSn_goodCmodel_gals_sky:
@@ -80,4 +80,52 @@ tasks:
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "PS Flux S/N"}
       python: |
         from lsst.analysis.drp.dataSelectors import PsfFlagSelector, HighSnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.calcFunctors import SNCalculator
+
+ # A scatter plot with histograms along both of the axis
+ # This plot shows the SN against the default setting
+ # on the x axis, the i band magnitude.
+ # The plot shows two sets of statistics and in this example
+ # we change the statSelector that selects which points
+ # go into the printed stats.
+  plot_psfSn_Cmodel_stars_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SNCalculator
+      selectorActions.update: {"PhotomFlagSelector": PsfFlagSelector}
+      highSnStatisticSelectorActions.statSelector.threshold: 1000
+      connections.plotName: PsfSn_CModel_stars_scatter
+      axisLabels: {"x": "i CModel Mag", "y": "S / N", "mag": "i CModel Mag"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import PsfFlagSelector
+        from lsst.analysis.drp.calcFunctors import SNCalculator
+
+ # As above but for galaxies
+  plot_psfSn_Cmodel_all_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SNCalculator
+      sourceSelectorActions.update: {"GalIdentifier": GalaxyIdentifier}
+      selectorActions.update: {"PhotomFlagSelector": PsfFlagSelector}
+      highSnStatisticSelectorActions.statSelector.threshold: 1000
+      connections.plotName: PsfSn_CModel_all_scatter
+      axisLabels: {"x": "i CModel Mag", "y": "S / N", "mag": "i CModel Mag"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import PsfFlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.calcFunctors import SNCalculator
+
+ # A scatter plot, changing the x axis from the default
+ # to the FWHM.
+  plot_iFWHM_SN_scatter:
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SNCalculator
+      selectorActions.update: {"PhotomFlagSelector": PsfFlagSelector}
+      highSnStatisticSelectorActions.statSelector.threshold: 1000
+      axisActions.xAction: SingleColumnAction
+      axisActions.xAction.column: iFwhm
+      connections.plotName: iFWHM_SN_stars
+      axisLabels: {"x": "i FWHM", "y": "S / N", "mag": "i CModel Mag"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import PsfFlagSelector
         from lsst.analysis.drp.calcFunctors import SNCalculator

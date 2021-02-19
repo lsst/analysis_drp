@@ -8,8 +8,8 @@ class SNCalculator(DivideColumns):
 
     def setDefaults(self):
         super().setDefaults()
-        self.actions.ColA.column = "iPsFlux"
-        self.actions.ColB.column = "iPsFluxErr"
+        self.colA.column = "iPsFlux"
+        self.colB.column = "iPsFluxErr"
 
 
 class KronFluxDivPsfFlux(DivideColumns):
@@ -17,5 +17,5 @@ class KronFluxDivPsfFlux(DivideColumns):
 
     def setDefaults(self):
         super().setDefaults()
-        self.actions.ColA.column = "iKronFlux"
-        self.actions.ColB.column = "iPsFlux"
+        self.colA.column = "iKronFlux"
+        self.colB.column = "iPsFlux"
