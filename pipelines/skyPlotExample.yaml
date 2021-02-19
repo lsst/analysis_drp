@@ -1,0 +1,25 @@
+description: Make colour analysis plots
+tasks:
+  plot_PsfSn_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: PsfSn_sky
+  plot_GaussFlux_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      zColName: "base_GaussianFlux_instFlux"
+      connections.plotName: GaussFlux_sky
+  #plot_KronDivPsf_sky:
+  #  class: lsst.analysis.drp.skyPlot.SkyPlotTask
+  #  config:
+  #    axisFunctors: {"xFunctor": RadToDeg, "yFunctor": RadToDeg, "zFunctor": SNCalculator}
+  #    axisFunctors.zFunctor: KronFluxDivPsfFlux
+  #    connections.plotName: KronDivPsf_sky
+  #    python: from lsst.analysis.drp.calcFunctors import KronFluxDivPsfFlux
+  plot_PsfSn_highSN_sky:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      statisticSelectors: {"statSelector": HighSnSelector}
+      connections.plotName: PsfSn_high_sky
+      statisticSelectors.statSelector.threshold: 4000
+      python: from lsst.analysis.drp.dataSelectors import HighSnSelector
