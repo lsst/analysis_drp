@@ -1,46 +1,36 @@
-# This file is part of pex_config.
-#
-# Developed for the LSST Data Management System.
-# This product includes software developed by the LSST Project
-# (http://www.lsst.org).
-# See the COPYRIGHT file at the top-level directory of this distribution
-# for details of code ownership.
-#
-# This software is dual licensed under the GNU General Public License and also
-# under a 3-clause BSD license. Recipients may choose which of these licenses
-# to use; please see the files gpl-3.0.txt and/or bsd_license.txt,
-# respectively.  If you choose the GPL option then the following text applies
-# (but note that there is still no warranty even if you opt for BSD instead):
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import annotations
 
-__all__ = ["ConfigStructField"]
+__all__ = ["ConfigurableActionStructField"]
 
-from typing import Iterable
+import ast
+
+from dataclasses import dataclass
+from typing import Iterable, Mapping, Union, Type
 
 from lsst.pex.config.config import Config, Field, FieldValidationError, _typeStr, _joinNamePath
 from lsst.pex.config.comparison import compareConfigs, compareScalars, getComparisonName
 from lsst.pex.config.callStack import getCallStack, getStackFrame
 
 
-class ConfigStruct:
-    """Internal representation of a dictionary of configuration classes.
+class ConfigurableAction(Config):
+    pass
 
-    Much like `Dict`, `ConfigDict` is a custom `MutableMapper` which tracks
-    the history of changes to any of its items.
+
+@dataclass
+class ProxyConfigurableAction:
+    """This exists as a workaround for behavior in configOverrides.py:144 in
+    pipe_base. If this gets moved outside of this package, this should likely
+    be removed and the logic there changed. This arises as this is the first
+    non Config class option that we allow assignment for in Pipelines.
     """
+    proxy: ConfigurableAction
 
+    @property
+    def dtype(self):
+        return str
+
+
+class ConfigurableActionStruct:
     def __init__(self, config, field, value, at, label, defaults=None):
         object.__setattr__(self, '_config', config)
         object.__setattr__(self, '_attrs', {})
@@ -54,6 +44,11 @@ class ConfigStruct:
                 setattr(self, k, v)
 
     @property
+    def _fields(self):
+        # This exists as a workaround, see the note in the ProxyConfig class
+        return {name: ProxyConfigurableAction(value) for name, value in self._attrs.items()}
+
+    @property
     def history(self):
         return self._history
 
@@ -61,14 +56,31 @@ class ConfigStruct:
     def fieldNames(self) -> Iterable[str]:
         return self._attrs.keys()
 
-    def __setattr__(self, attr, value, at=None, label='setattr', setHistory=False):
+    @staticmethod
+    def _get_variables_in_scope():
+        vars = {}
+        vars.update(locals())
+        vars.update(globals())
+        return vars
+
+    def __setattr__(self, attr: str, value: Union[str, Type[ConfigurableAction]],
+                    at=None, label='setattr', setHistory=False) -> None:
+
         if hasattr(self._config, '_frozen') and self._config._frozen:
             msg = "Cannot modify a frozen Config. "\
                   f"Attempting to set item {attr} to value {value}"
             raise FieldValidationError(self._field, self._config, msg)
 
-        if attr not in self.__dict__ and issubclass(value, Config):
+        if isinstance(value, str):
+            vars = self._get_variables_in_scope()
+            if value in vars and issubclass(vars[value], ConfigurableAction):
+                value = vars[value]
+            else:
+                msg = (f"The string {vars[value]} does not correspond to a ConfigurableAction subclass, "
+                       "or does not exist")
+                raise FieldValidationError(self._field, self._config, msg)
 
+        if attr not in self.__dict__ and issubclass(value, ConfigurableAction):
             name = _joinNamePath(self._config._name, self._field.name, attr)
             if at is None:
                 at = getCallStack()
@@ -92,41 +104,57 @@ class ConfigStruct:
         yield from self._attrs.items()
 
 
-class ConfigStructField(Field):
+class ConfigurableActionStructField(Field):
 
-    StructClass = ConfigStruct
+    StructClass = ConfigurableActionStruct
 
     def __init__(self, doc, default=None, optional=False, deprecated=None):
         source = getStackFrame()
-        self._setup(doc=doc, dtype=ConfigStructField, default=default, check=None,
+        self._setup(doc=doc, dtype=self.__class__, default=default, check=None,
                     optional=optional, source=source, deprecated=deprecated)
 
-    def __set__(self, instance, value, at=None, label='assigment'):
+    def __set__(self, instance, value: Union[None, str, dict, ConfigurableActionStruct],
+                at=None, label='assigment'):
         if instance._frozen:
             msg = "Cannot modify a frozen Config. "\
                   "Attempting to set field to value %s" % value
             raise FieldValidationError(self, instance, msg)
 
+        if isinstance(value, str):
+            if not isinstance(value := ast.literal_eval(value), Mapping):
+                raise FieldValidationError(self, instance,
+                                           "Only strings that are of the form python dicts are allowed")
+        if isinstance(value, Mapping):
+            existing = self.__get__(instance)
+            for k, v in value:
+                setattr(existing, k, v)
+            return
+
         if at is None:
             at = getCallStack()
-        if value is None or isinstance(value, dict):
+
+        if value is None:
             value = self.StructClass(instance, self, value, at=at, label=label, defaults=self.default)
         else:
             history = instance._history.setdefault(self.name, [])
             history.append((value, at, label))
 
+        if not isinstance(value, ConfigurableAction):
+            raise FieldValidationError(self, instance,
+                                       "Can only assign things that are subclasses of Configurable Action")
         instance._storage[self.name] = value
 
-    def __get__(self, instance, owner=None, at=None, label="default"):
+    def __get__(self, instance, owner=None, at=None, label="default"
+                ) -> Union[StructClass, ConfigurableActionStruct]:
         if instance is None or not isinstance(instance, Config):
             return self
         else:
             return instance._storage.setdefault(self.name, self.StructClass)
 
     def rename(self, instance):
-        configStruct = self.__get__(instance)
-        if configStruct is not None:
-            for k, v in configStruct:
+        actionStruct: ConfigurableActionStruct = self.__get__(instance)
+        if actionStruct is not None:
+            for k, v in actionStruct:
                 fullname = _joinNamePath(instance._name, self.name, k)
                 v._rename(fullname)
 
@@ -137,32 +165,32 @@ class ConfigStructField(Field):
                 item.validate()
 
     def toDict(self, instance):
-        configStruct = self.__get__(instance)
-        if configStruct is None:
+        actionStruct = self.__get__(instance)
+        if actionStruct is None:
             return None
 
         dict_ = {}
-        for k, v in configStruct:
+        for k, v in actionStruct:
             dict_[k] = v.toDict()
 
         return dict_
 
     def save(self, outfile, instance):
-        configStruct = self.__get__(instance)
+        actionStruct = self.__get__(instance)
         fullname = _joinNamePath(instance._name, self.name)
-        if configStruct is None:
-            outfile.write(u"{}={!r}\n".format(fullname, configStruct))
+        if actionStruct is None:
+            outfile.write(u"{}={!r}\n".format(fullname, actionStruct))
             return
 
         outfile.write(u"{}={!r}\n".format(fullname, {}))
-        for _, v in configStruct:
+        for _, v in actionStruct:
             outfile.write(u"{}={}()\n".format(v._name, _typeStr(v)))
             v._save(outfile)
 
     def freeze(self, instance):
-        configStruct = self.__get__(instance)
-        if configStruct is not None:
-            for _, v in configStruct:
+        actionStruct = self.__get__(instance)
+        if actionStruct is not None:
+            for _, v in actionStruct:
                 v.freeze()
 
     def _compare(self, instance1, instance2, shortcut, rtol, atol, output):
