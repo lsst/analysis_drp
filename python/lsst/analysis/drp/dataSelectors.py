@@ -1,39 +1,65 @@
-from lsst.analysis.drp.configStructField import Config, Field
+__all__ = ("HighSnSelector", "LowSnSelector")
+
+from lsst.pex.config import ListField, Field
+from lsst.pipe.tasks.dataFrameActions import DataFrameAction
 
 
-class MainFlagSelector(Config):
+class MainFlagSelector(DataFrameAction):
     """The main set of flags to use to select valid sources for QA"""
+    filterColumns = ListField(doc="Names of the flag columns to filter on", dtype=str, optional=False,
+                              default=["base_PixelFlags_flag", "base_PsfFlux_flag"])
 
-    def select(self, cat):
+    @property
+    def columns(self):
+        yield from self.filterColumns
+
+    def __call__(self, df, **kwargs):
         """Select on the given flags"""
+        result = None
+        for flag in self.filterColumns:
+            selected = df[flag]
+            if result is None:
+                result = selected
+            else:
+                result &= selected
+        return result
 
-        keep = ((cat["base_PixelFlags_flag"] == 0) & (cat["base_PsfFlux_flag"] == 0))
-        return keep
+
+class BaseSNRSelector(DataFrameAction):
+    fluxField = Field(doc="Flux field to use in SNR calculation", dtype=str,
+                      default="base_PsfFlux_instFlux", optional=False)
+    errField = Field(doc="Flux err field to use in SNR calculation", dtype=str,
+                     default="base_PsfFlux_instFluxErr", optional=False)
+    threshold = Field(doc="The signal to noise threshold to select sources",
+                      dtype=float,
+                      optional=False)
+
+    @property
+    def columns(self):
+        return (self.fluxField, self.errField)
 
 
-class HighSnSelector(Config):
+class HighSnSelector(BaseSNRSelector):
     """Select high signal to noise sources, in PSF flux"""
 
-    threshold = Field(doc="The signal to noise threshold to select sources above.",
-                      dtype=float,
-                      default=2700)
-
-    def select(self, cat):
+    def __call__(self, df, **kwargs):
         """Selects sources with PSF SN ratio above self.threshold"""
 
-        use = (cat["base_PsfFlux_instFlux"] / cat["base_PsfFlux_instFluxErr"] > self.threshold)
-        return use
+        return (df[self.fluxField] / df[self.errField]) > self.threshold
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.threshold = 2700
 
 
-class LowSnSelector(Config):
+class LowSnSelector(BaseSNRSelector):
     """Select lower signal to noise sources, in PSF flux"""
 
-    threshold = Field(doc="The signal to noise threshold to select sources above.",
-                      dtype=float,
-                      default=500)
+    def __call__(self, df, **kwargs):
+        """Selects sources with PSF SN ratio below self.threshold"""
 
-    def select(self, cat):
-        """Selects sources with PSF SN ratio above self.threshold"""
+        return (df[self.fluxField] / df[self.errField]) > self.threshold
 
-        use = (cat["base_PsfFlux_instFlux"] / cat["base_PsfFlux_instFluxErr"] > self.threshold)
-        return use
+    def setDefaults(self):
+        super().setDefaults()
+        self.threshold = 500

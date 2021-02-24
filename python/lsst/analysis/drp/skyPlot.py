@@ -6,11 +6,12 @@ from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
-from .configStructField import ConfigStructField
+from lsst.pipe.tasks.configurableActions import ConfigurableActionsField
+from lsst.pipe.tasks.dataFrameActions import CoordColumn, DivideColumns
 from lsst.skymap import BaseSkyMap
 
 from .dataSelectors import MainFlagSelector, LowSnSelector
-from .calcFunctors import RadToDeg, SNCalculator
+from .calcFunctors import SNCalculator
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
 
 # Changing this because it keeps throwing warnings despite using the
@@ -43,18 +44,6 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
 
     # These can stop being functors as defaults if the catalogue
     # moves natively to degrees
-    xColName = pexConfig.Field(
-        doc="The column name for the values to be plotted on the x axis.",
-        dtype=str,
-        default="Functor",
-    )
-
-    yColName = pexConfig.Field(
-        doc="The column name for the values to be plotted on the y axis.",
-        dtype=str,
-        default="Functor",
-    )
-
     xLabel = pexConfig.Field(
         doc="The x axis label",
         dtype=str,
@@ -85,25 +74,26 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         default="Functor"
     )
 
-    axisFunctors = ConfigStructField(
-        doc="The functor to use to calculate the values used on each axis. Used if <axis>ColName is "
+    axisActions = ConfigurableActionsField(
+        doc="The actions to use to calculate the values used on each axis. Used if <axis>ColName is "
             "set to 'Functor'.",
-        default={"xFunctor": RadToDeg, "yFunctor": RadToDeg, "zFunctor": SNCalculator},
+        default={"xAction": CoordColumn, "yAction": CoordColumn, "zAction": SNCalculator},
     )
 
-    selectorRegistry = ConfigStructField(
+    selectorActions = ConfigurableActionsField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={"mainFlagSelector": MainFlagSelector},
     )
 
-    statisticSelectors = ConfigStructField(
+    statisticActions = ConfigurableActionsField(
         doc="Selectors to use to decide which points to use for calculating statistics.",
         default={"statSelector": LowSnSelector},
     )
 
     def setDefaults(self):
-        self.axisFunctors.xFunctor.colName = "coord_ra"
-        self.axisFunctors.yFunctor.colName = "coord_dec"
+        super().setDefaults()
+        self.axisActions.xAction.column = "coord_ra"
+        self.axisActions.yAction.column = "coord_dec"
 
 
 class SkyPlotTask(pipeBase.PipelineTask):
@@ -113,8 +103,21 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
+
+        # fetch the catPlot explicitly, so only required columns are loaded
+        # This bit can likely be factored into a reusable function
+        catPlotId = inputRefs.catPlot
+        del inputRefs.catPlot
+
+        columnNames = set()
+        for action in zip(self.config.axisActions, self.config.selectorActions,
+                          self.config.statisticActions):
+            columnNames.add(action.columns)
+        dataFrame = butlerQC.get(catPlotId, parameters={"columns": columnNames})
+
         inputs = butlerQC.get(inputRefs)
-        runName = inputRefs.catPlot.run
+        inputs['catPlot'] = dataFrame
+        runName = catPlotId.run
         dataId = butlerQC.quantum.dataId
         inputs["dataId"] = dataId
         inputs["runName"] = runName
@@ -149,7 +152,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         Notes
         -----
         The catalogue is first narrowed down using the selectors specified in
-        `self.config.selectorRegistry`.
+        `self.config.selectorActions`.
         If the column names are 'Functor' then the functors specified in
         `self.config.axisFunctors` are used to calculate the required values.
         After this the following functions are run:
@@ -170,35 +173,19 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
         # Apply the selectors to narrow down the sources to use
         mask = np.ones(len(catPlot), dtype=bool)
-        for name, selector in self.config.selectorRegistry:
-            mask *= selector.select(catPlot)
+        for _, selector in self.config.selectorActions:
+            mask *= selector(catPlot)
         catPlot = catPlot[mask]
 
-        # Calculate extra columns as needed
-        if self.config.xColName == "Functor":
-            xVals, colName = self.config.axisFunctors.xFunctor.calculate(catPlot)
-            catPlot.loc[:, colName] = xVals
-            self.xColName = colName
-        else:
-            self.xColName = self.config.xColName
-
-        if self.config.yColName == "Functor":
-            yVals, colName = self.config.axisFunctors.yFunctor.calculate(catPlot)
-            catPlot.loc[:, colName] = yVals
-            self.yColName = colName
-        else:
-            self.yColName = self.config.yColName
-
-        if self.config.zColName == "Functor":
-            zVals, colName = self.config.axisFunctors.zFunctor.calculate(catPlot)
-            catPlot.loc[:, colName] = zVals
-            self.zColName = colName
-        else:
-            self.zColName = self.config.zColName
+        for field, attr in ("x", "y", "z"):
+            action = getattr(self.config.axisActions, f"{field}Action")
+            colName = action.column
+            setattr(self, f"{field}ColName", colName)
+            catPlot.loc[:, colName] = action(catP)
 
         # Decide which points to use for stats calculation
         useForStats = np.zeros(len(catPlot))
-        statPoints = self.config.statisticSelectors.statSelector.select(catPlot)
+        statPoints = self.config.statisticSelectors.statSelector(catPlot)
         useForStats[statPoints] = 1
         catPlot.loc[:, "useForStats"] = useForStats
 
@@ -247,7 +234,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         Uses the config options `self.config.xColName` and
         `self.config.yColName` to plot points color coded by `self.zColName`.
         The points plotted are those selected by the selectors specified in
-        `self.config.selectorRegistry`.
+        `self.config.selectorActions`.
         """
 
         self.log.info("Plotting {}: the values of {} for {} on a sky plot.".format(

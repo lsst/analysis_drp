@@ -1,39 +1,28 @@
-from lsst.analysis.drp.configStructField import Config, Field
-import numpy as np
+from lsst.pex.config import Field
+from lsst.pipe.tasks.dataFrameActions import DivideColumns, SingleColumnAction
 
 
-class SNCalculator(Config):
-
+class SNCalculator(SingleColumnAction):
     # Not needed yet but added for the change of catalogues
     band = Field(doc="Which band to use.",
                  dtype=str,
                  default="i")
 
-    def calculate(self, cat):
-        """Calculate the signal to noise ratio for the PSF flux"""
-
-        sn = cat["base_PsfFlux_instFlux"] / cat["base_PsfFlux_instFluxErr"]
-        return sn, "PsSn"
-
-
-class RadToDeg(Config):
-    """Convert a column in radians to degrees"""
-
-    colName = Field(doc="Name of the column to convert from radians to degrees.",
-                    dtype=str,
-                    default="coord_ra")
+    def __call__(self, df, **kwargs):
+        return df[self.column] / df[f"{self.column}_instfluxErr"]
 
     def setDefaults(self):
         super().setDefaults()
-
-    def calculate(self, cat):
-        """Convert radians to degrees and return the column name
-           with '_deg' appended"""
-        return np.rad2deg(cat[self.colName]), self.colName + "_deg"
+        self.column = "base_PsfFlux_instFlux"
 
 
-class KronFluxDivPsfFlux(Config):
+class KronFluxDivPsfFlux(DivideColumns):
     """Divide the Kron instFLux by the PSF instFlux"""
 
-    def calculate(self, cat):
-        return cat["ext_photometryKron_KronFlux_instFlux"] / cat["base_PsfFlux_instFlux"]
+    def __call__(self, cat, **kwargs):
+        return self.actions.numerator(cat, kwargs) / self.actions.divisor(cat, kwargs)
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.actions.ColA.column = "ext_photometryKron_KronFlux_instFlux"
+        self.actions.ColB.column = "base_PsfFlux_instFlux"
