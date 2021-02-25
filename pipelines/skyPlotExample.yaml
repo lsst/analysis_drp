@@ -12,13 +12,13 @@ tasks:
   plot_KronDivPsf_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      axisFunctors.zFunctor: KronFluxDivPsfFlux
+      axisActions.zAction: KronFluxDivPsfFlux
       connections.plotName: KronDivPsf_sky
       python: from lsst.analysis.drp.calcFunctors import KronFluxDivPsfFlux
   plot_PsfSn_highSN_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      statisticSelectors: {"statSelector": HighSnSelector}
+      statisticSelectors.statSelector: HighSnSelector
       connections.plotName: PsfSn_high_sky
       statisticSelectors.statSelector.threshold: 4000
       python: from lsst.analysis.drp.dataSelectors import HighSnSelector

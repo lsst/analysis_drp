@@ -8,6 +8,10 @@ class SNCalculator(SingleColumnAction):
                  dtype=str,
                  default="i")
 
+    @property
+    def columns(self):
+        pass
+
     def __call__(self, df, **kwargs):
         return df[self.column] / df[f"{self.column}_instfluxErr"]
 

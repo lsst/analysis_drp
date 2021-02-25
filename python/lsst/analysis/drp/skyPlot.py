@@ -6,8 +6,8 @@ from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
-from lsst.pipe.tasks.configurableActions import ConfigurableActionsField
-from lsst.pipe.tasks.dataFrameActions import CoordColumn, DivideColumns
+from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
+from lsst.pipe.tasks.dataFrameActions import CoordColumn
 from lsst.skymap import BaseSkyMap
 
 from .dataSelectors import MainFlagSelector, LowSnSelector
@@ -74,18 +74,18 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         default="Functor"
     )
 
-    axisActions = ConfigurableActionsField(
+    axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values used on each axis. Used if <axis>ColName is "
             "set to 'Functor'.",
         default={"xAction": CoordColumn, "yAction": CoordColumn, "zAction": SNCalculator},
     )
 
-    selectorActions = ConfigurableActionsField(
+    selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={"mainFlagSelector": MainFlagSelector},
     )
 
-    statisticActions = ConfigurableActionsField(
+    statisticActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating statistics.",
         default={"statSelector": LowSnSelector},
     )
@@ -113,7 +113,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         for action in zip(self.config.axisActions, self.config.selectorActions,
                           self.config.statisticActions):
             columnNames.add(action.columns)
-        dataFrame = butlerQC.get(catPlotId, parameters={"columns": columnNames})
+        dataFrame = catPlotId.get(parameters={"columns": columnNames})
 
         inputs = butlerQC.get(inputRefs)
         inputs['catPlot'] = dataFrame
@@ -177,11 +177,16 @@ class SkyPlotTask(pipeBase.PipelineTask):
             mask *= selector(catPlot)
         catPlot = catPlot[mask]
 
+        # These attributes are about to be dynamically created, spell them
+        # out here, so static analizers are satisfied
+        self.xColName: str
+        self.yColName: str
+        self.zColName: str
         for field, attr in ("x", "y", "z"):
             action = getattr(self.config.axisActions, f"{field}Action")
             colName = action.column
             setattr(self, f"{field}ColName", colName)
-            catPlot.loc[:, colName] = action(catP)
+            catPlot.loc[:, colName] = action(catPlot)
 
         # Decide which points to use for stats calculation
         useForStats = np.zeros(len(catPlot))
