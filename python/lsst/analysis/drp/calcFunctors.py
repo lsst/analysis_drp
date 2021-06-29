@@ -49,6 +49,7 @@ class MagDiff(MultiColumnAction):
     fluxUnits1 = Field(doc="Units for col1", dtype=str, default="nanojansky")
     col2 = Field(doc="Column to subtract", dtype=str)
     fluxUnits2 = Field(doc="Units for col2", dtype=str, default="nanojansky")
+    returnMillimags = Field(doc="Use millimags or not?", dtype=bool, default=True)
 
     @property
     def columns(self):
@@ -61,4 +62,8 @@ class MagDiff(MultiColumnAction):
         flux2 = df[self.col2].values * u.Unit(self.fluxUnits2)
         mag2 = flux2.to(u.ABmag)
 
-        return (mag1 - mag2)*1000.0
+        magDiff = mag1 - mag2
+
+        if self.returnMillimags:
+            magDiff = magDiff*1000.0
+        return magDiff

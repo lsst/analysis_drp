@@ -8,20 +8,30 @@ tasks:
   plot_GaussFlux_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
+<<<<<<< HEAD
       axisActions.zAction.column: iCModelFlux
       connections.plotName: CModelFlux_sky
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel Flux"}
 
  # Change what is plotted on the z axis
+=======
+      axisActions.zAction.column: base_GaussianFlux_instFlux
+      connections.plotName: GaussFlux_sky
+
+  # Change what is plotted on the z axis
+>>>>>>> dbb5c0e (Add a pipeline to test and demonstrate the usage of skyplots.)
   # in this case use a predefined action (defined in calcFunctors.py)
   plot_PsfSn_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       connections.plotName: PsfSn_sky
       axisActions.zAction: SNCalculator
+<<<<<<< HEAD
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "PS Flux S/N"}
       python: >
         from lsst.analysis.drp.calcFunctors import SNCalculator
+=======
+>>>>>>> dbb5c0e (Add a pipeline to test and demonstrate the usage of skyplots.)
 
   # Change what is plotted on the z axis
   # Here use a predefined action that is imported from calcFunctors
@@ -32,9 +42,12 @@ tasks:
     config:
       axisActions.zAction: KronFluxDivPsfFlux
       connections.plotName: KronDivPsf_sky
+<<<<<<< HEAD
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron Flux / PS Flux"}
       python: >
         from lsst.analysis.drp.calcFunctors import KronFluxDivPsfFlux
+=======
+>>>>>>> dbb5c0e (Add a pipeline to test and demonstrate the usage of skyplots.)
 
   # Change the selector used to choose the points that go into
   # calculating the displayed statistics.
@@ -45,6 +58,7 @@ tasks:
       axisActions.zAction: SNCalculator
       statisticSelectorActions.statSelector: HighSnSelector
       connections.plotName: PsfSn_high_sky
+<<<<<<< HEAD
       statisticSelectorActions.statSelector.threshold: 3000
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "PS Flux S/N"}
       python: |
@@ -55,10 +69,18 @@ tasks:
   # Also use the high SN Selector to select for points to plot not
   # just to use for stats, to do this we use the update functionality
   # to preserve the other default selectors.
+=======
+      statisticSelectorActions.statSelector.threshold: 4000
+
+  # Add a new selector, the CModel flag selector.
+  # Also use the high SN Selector to select for points to plot not
+  # just to use for stats
+>>>>>>> dbb5c0e (Add a pipeline to test and demonstrate the usage of skyplots.)
   plot_psfSn_goodCmodel_sky:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: SNCalculator
+<<<<<<< HEAD
       selectorActions.update: {"PhotomFlagSelector": PsfFlagSelector, "SnSelector": HighSnSelector}
       connections.plotName: PsfSn_goodCModel_sky
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "PS Flux S/N"}
@@ -67,6 +89,12 @@ tasks:
         from lsst.analysis.drp.calcFunctors import SNCalculator
 
  # Same as above but this time plot it for galaxies not stars
+=======
+      selectorActions.update: {"PhotomFlagSelector": CModelFlagSelector, "SnSelector": HighSnSelector}
+      connections.plotName: PsfSn_goodCModel_sky
+
+ # Same as above bu tths time plot it for galaxies not stars
+>>>>>>> dbb5c0e (Add a pipeline to test and demonstrate the usage of skyplots.)
  # The defualt is stars but you can also use all for both.
  # Then adjust the SN threshold for points to be included in the plot.
   plot_psfSn_goodCmodel_gals_sky:

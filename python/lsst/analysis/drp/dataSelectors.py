@@ -129,12 +129,23 @@ class BaseSNRSelector(DataFrameAction):
 
 class SnSelector(DataFrameAction):
     """Selects points that have S/N > threshold in the given flux type"""
-    fluxType = Field(doc="Flux type to calculate the S/N in.", dtype=str, default="iPsFlux")
-    threshold = Field(doc="The S/N threshold to remove sources with.", dtype=float, default=500.0)
+    fluxType = Field(doc="Flux type to calculate the S/N in.",
+                     dtype=str,
+                     default="PsFlux")
+    threshold = Field(doc="The S/N threshold to remove sources with.",
+                      dtype=float,
+                      default=500.0)
+    bands = ListField(doc="The bands to apply the signal to noise cut in.",
+                      dtype=str,
+                      default=["i"])
 
     @property
     def columns(self):
-        return (self.fluxType, self.fluxType + "Err")
+        cols = []
+        for band in self.bands:
+            cols += [band + self.fluxType, band + self.fluxType + "Err"]
+
+        return cols
 
     def __call__(self, df):
         """Makes a mask of objects that have S/N greater than
@@ -151,7 +162,11 @@ class SnSelector(DataFrameAction):
             S/N cut.
         """
 
-        return (df[self.fluxType] / df[self.fluxType + "Err"]) > self.threshold
+        mask = np.ones(len(df), dtype=bool)
+        for band in self.bands:
+            mask &= ((df[band + self.fluxType] / df[band + self.fluxType + "Err"]) > self.threshold)
+
+        return mask
 
 
 class StarIdentifier(DataFrameAction):
