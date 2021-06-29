@@ -1,5 +1,5 @@
 __all__ = ("HighSnSelector", "LowSnSelector", "MainFlagSelector", "PsfFlagSelector", "StarIdentifier",
-           "GalaxyIdentifier")
+           "GalaxyIdentifier", "UnknownIdentifier", "CoaddPlotFlagSelector")
 
 from lsst.pex.config import ListField, Field
 from lsst.pipe.tasks.dataFrameActions import DataFrameAction
@@ -12,7 +12,7 @@ class FlagSelector(DataFrameAction):
     selectWhenFalse = ListField(doc="Names of the flag columns to select on when False",
                                 dtype=str,
                                 optional=False,
-                                default=["base_PixelFlags_flag"])
+                                default=[])
 
     selectWhenTrue = ListField(doc="Names of the flag columns to select on when False",
                                dtype=str,
@@ -87,6 +87,19 @@ class BaseSNRSelector(DataFrameAction):
         return (self.band + self.fluxField, self.band + self.errField)
 
 
+class SnSelector(DataFrameAction):
+    """Selects points that have S/N > threshold in the given flux type"""
+    fluxType = Field(doc="Flux type to calculate the S/N in.", dtype=str, default="iPsFlux")
+    threshold = Field(doc="The S/N threshold to remove sources with.", dtype=float, default=500.0)
+
+    @property
+    def columns(self):
+        return (self.fluxType, self.fluxType + "Err")
+
+    def __call__(self, df):
+        return (df[self.fluxType] / df[self.fluxType + "Err"]) > self.threshold
+
+
 class HighSnSelector(BaseSNRSelector):
     """Select high signal to noise sources, in PSF flux"""
 
@@ -137,7 +150,7 @@ class GalaxyIdentifier(DataFrameAction):
     """Identifies galaxies from the dataFrame and marks them as a 2
        in the added sourceType column"""
 
-    band = Field(doc="The band the object is to be classified as a star in.",
+    band = Field(doc="The band the object is to be classified as a galaxy in.",
                  default="i",
                  dtype=str)
 
@@ -151,3 +164,41 @@ class GalaxyIdentifier(DataFrameAction):
         sourceType = np.zeros(len(df))
         sourceType[gals] = 2
         return sourceType
+
+
+class UnknownIdentifier(DataFrameAction):
+    """Identifies un classified objects from the dataFrame and marks them as a
+       9 in the added sourceType column"""
+
+    band = Field(doc="The band the object is to be classified as an unkown in.",
+                 default="i",
+                 dtype=str)
+
+    @property
+    def columns(self):
+        return [self.band + "Extendedness"]
+
+    def __call__(self, df, **kwargs):
+        """Identifies sources classed as unknowns"""
+        unknowns = (df[self.band + "Extendedness"] == 9.0)
+        sourceType = np.zeros(len(df))
+        sourceType[unknowns] = 9
+        return sourceType
+
+
+class CoaddPlotFlagSelector(FlagSelector):
+    """The flags to use for selecting sources for coadd QA"""
+
+    bands = ListField(doc="The bands to apply the flags in",
+                      dtype=str,
+                      default=["g", "r", "i", "z", "y"])
+
+    def setDefaults(self):
+        super().setDefaults()
+        # This is missing one of the PA flags because they are not
+        # currently in the objectTablesbase_SdssCentroid_flag, is it
+        # redundant with xy_flag?
+        flagCols = ["PsfFlux_flag", "PixelFlags_saturatedCenter", "Extendedness_flag"]
+
+        filterColumns = ["xy_flag"] + [band + flag for flag in flagCols for band in self.bands]
+        self.selectWhenFalse = filterColumns

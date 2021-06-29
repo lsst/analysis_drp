@@ -163,6 +163,8 @@ class SkyPlotTask(pipeBase.PipelineTask):
             # rather than a mask this allows the information about which
             # type of sources are being plotted to be propagated
             sourceTypes += selector(catPlot)
+        if list(self.config.sourceSelectorActions) == []:
+            sourceTypes = [10]*len(plotDf)
         plotDf.loc[:, "sourceType"] = sourceTypes
 
         # Decide which points to use for stats calculation
@@ -247,7 +249,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
                             + "{}".format(len(xsGalaxies)))
             # Add statistics
             bbox = dict(facecolor="C1", alpha=0.3, edgecolor="none")
-            ax.text(0.7, 0.91, galStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            ax.text(0.63, 0.91, galStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 1):
 
@@ -262,11 +264,39 @@ class SkyPlotTask(pipeBase.PipelineTask):
             bbox = dict(facecolor="C0", alpha=0.3, edgecolor="none")
             ax.text(0.8, 0.91, starStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
 
+        if np.any(catPlot["sourceType"] == 10):
+
+            statAll = (catPlot["useForStats"] == 1)
+            statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
+            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+
+            allStatsText = ("Median: {:0.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
+                            + "{:0.2f}\n".format(statAllMad) + r"n$_{points}$: "
+                            + "{}".format(len(catPlot)))
+            bbox = dict(facecolor="purple", alpha=0.2, edgecolor="none")
+            ax.text(0.8, 0.91, allStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+
+        if np.any(catPlot["sourceType"] == 9):
+
+            statAll = (catPlot["useForStats"] == 1)
+            statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
+            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+
+            allStatsText = ("Median: {:0.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
+                            + "{:0.2f}\n".format(statAllMad) + r"n$_{points}$: "
+                            + "{}".format(len(catPlot)))
+            bbox = dict(facecolor="green", alpha=0.2, edgecolor="none")
+            ax.text(0.8, 0.91, allStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+
         toPlotList = []
         if np.any(catPlot["sourceType"] == 1):
             toPlotList.append((xsStars, ysStars, colorValsStars, "winter_r", "Stars"))
-        elif np.any(catPlot["sourceType"] == 2):
+        if np.any(catPlot["sourceType"] == 2):
             toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, "autumn_r", "Galaxies"))
+        if np.any(catPlot["sourceType"] == 10):
+            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "plasma", "All"))
+        if np.any(catPlot["sourceType"] == 9):
+            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
 
         # Corner plot of patches showing summary stat in each
         patches = []
