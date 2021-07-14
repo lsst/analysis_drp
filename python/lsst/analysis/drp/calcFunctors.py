@@ -1,4 +1,4 @@
-__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff"]
+__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "PsfTraceSizeDiff"]
 
 from lsst.pipe.tasks.dataFrameActions import DivideColumns, MultiColumnAction
 from lsst.pex.config import Field
@@ -38,3 +38,22 @@ class MagDiff(MultiColumnAction):
         mag2 = -2.5*np.log10((df[self.col2]*1e-9) / 3631.0)
 
         return (mag1 - mag2)*1000.0
+
+
+class PsfTraceSizeDiff(MultiColumnAction):
+    """Calculate the trace radius size difference (%) between object and
+    PSF model.
+    """
+
+    col1 = Field(doc="Object size xx", dtype=str)
+    col2 = Field(doc="Object size yy", dtype=str)
+
+    @property
+    def columns(self):
+        return (self.col1, self.col2, self.col1 + "Psf", self.col2 + "Psf")
+
+    def __call__(self, df):
+        srcSize = np.sqrt(0.5*(df[self.col1] + df[self.col2]))
+        psfSize = np.sqrt(0.5*(df[self.col1 + "Psf"] + df[self.col2 + "Psf"]))
+        sizeDiff = 100*(srcSize - psfSize)/(0.5*(srcSize + psfSize))
+        return np.array(sizeDiff)
