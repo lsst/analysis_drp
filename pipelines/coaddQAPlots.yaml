@@ -190,6 +190,23 @@ tasks:
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, StarIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-
-
-
+  plot_PsfTrace_sub_PSFHsmTraceDiff_meas_sky_stars:
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      axisActions.zAction: PsfTraceSizeDiff
+      axisActions.zAction.col1: "iIxx"
+      axisActions.zAction.col2: "iIyy"
+      connections.plotName: PsfTrace_sub_HsmTraceDiff_meas_stars_sky
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["iCalib_psf_used"]
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
+                   "z": "200*(Size-PSF size)/(Size+PSF size) (Meas)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, StarIdentifier, SnSelector)
+        from lsst.analysis.drp.calcFunctors import PsfTraceSizeDiff
