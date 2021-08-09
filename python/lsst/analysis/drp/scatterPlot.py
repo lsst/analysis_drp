@@ -59,17 +59,17 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"mainFlagSelector": dataSelectors.MainFlagSelector},
+        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
     )
 
     highSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the high SN statistics.",
-        default={"statSelector": dataSelectors.HighSnSelector},
+        default={"statSelector": dataSelectors.SnSelector},
     )
 
     lowSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the low SN statistics.",
-        default={"statSelector": dataSelectors.LowSnSelector},
+        default={"statSelector": dataSelectors.SnSelector},
     )
 
     sourceSelectorActions = ConfigurableActionStructField(
@@ -77,10 +77,18 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         default={"sourceSelector": dataSelectors.StarIdentifier},
     )
 
+    nBins = pexConfig.Field(
+        doc="Number of bins to put on the x axis.",
+        default=40.0,
+        dtype=float,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.magAction.column = "iCModelFlux"
         self.axisActions.xAction.column = "iCModelFlux"
+        self.highSnStatisticSelectorActions.statSelector.threshold = 2700
+        self.lowSnStatisticSelectorActions.statSelector.threshold = 500
 
 
 class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
@@ -177,6 +185,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             # rather than a mask this allows the information about which
             # type of sources are being plotted to be propagated
             sourceTypes += selector(catPlot)
+        if list(self.config.sourceSelectorActions) == []:
+            sourceTypes = [10]*len(plotDf)
         plotDf.loc[:, "sourceType"] = sourceTypes
 
         # Decide which points to use for stats calculation
@@ -272,47 +282,35 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         ysStars = catPlot.loc[stars, yCol]
 
         highStats = []
+        highMags = []
         lowStats = []
+        lowMags = []
+
+        # sourceTypes: 1 - stars, 2 - galaxies, 9 - unknowns
+        # 10 - all
+        sourceTypeList = [1, 2, 9, 10]
         # Calculate some statistics
-        if np.any(catPlot["sourceType"] == 2):
-            highSnGals = ((catPlot["useForStats"] == 1) & galaxies)
-            highSnGalMed = np.nanmedian(catPlot.loc[highSnGals, yCol])
-            highSnGalMad = sigmaMad(catPlot.loc[highSnGals, yCol], nan_policy="omit")
+        for sourceType in sourceTypeList:
+            if np.any(catPlot["sourceType"] == sourceType):
+                sources = (catPlot["sourceType"] == sourceType)
+                highSn = ((catPlot["useForStats"] == 1) & sources)
+                highSnMed = np.nanmedian(catPlot.loc[highSn, yCol])
+                highSnMad = sigmaMad(catPlot.loc[highSn, yCol], nan_policy="omit")
 
-            lowSnGals = (((catPlot["useForStats"] == 1) | (catPlot["useForStats"] == 2)) & galaxies)
-            lowSnGalMed = np.nanmedian(catPlot.loc[lowSnGals, yCol])
-            lowSnGalMad = sigmaMad(catPlot.loc[lowSnGals, yCol], nan_policy="omit")
+                lowSn = (((catPlot["useForStats"] == 1) | (catPlot["useForStats"] == 2)) & sources)
+                lowSnMed = np.nanmedian(catPlot.loc[lowSn, yCol])
+                lowSnMad = sigmaMad(catPlot.loc[lowSn, yCol], nan_policy="omit")
 
-            highStats += ["Median: {:0.2f}".format(highSnGalMed),
-                          r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnGalMad)]
-            lowStats += ["Median: {:0.2f}".format(lowSnGalMed),
-                         r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnGalMad)]
-
-        if np.any(catPlot["sourceType"] == 1):
-            highSnStars = ((catPlot["useForStats"] == 1) & stars)
-            highSnStarMed = np.nanmedian(catPlot.loc[highSnStars, yCol])
-            highSnStarMad = sigmaMad(catPlot.loc[highSnStars, yCol], nan_policy="omit")
-            approxHighMag = np.nanmax(catPlot.loc[highSnStars, magCol])
-
-            lowSnStars = (((catPlot["useForStats"] == 1) | (catPlot["useForStats"] == 2)) & stars)
-            lowSnStarMed = np.nanmedian(catPlot.loc[lowSnStars, yCol])
-            lowSnStarMad = sigmaMad(catPlot.loc[lowSnStars, yCol], nan_policy="omit")
-            approxLowMag = np.nanmax(catPlot.loc[lowSnStars, magCol])
-
-            highStats += ["Median: {:0.2f}".format(highSnStarMed),
-                          r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnStarMad)]
-            lowStats += ["Median: {:0.2f}".format(lowSnStarMed),
-                         r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnStarMad)]
+                highStats += ["Median: {:0.2f}".format(highSnMed),
+                              r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnMad)]
+                lowStats += ["Median: {:0.2f}".format(lowSnMed),
+                             r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnMad)]
+                highMags.append(np.nanmax(catPlot.loc[highSn, magCol]))
+                lowMags.append(np.nanmax(catPlot.loc[lowSn, magCol]))
 
         # Main scatter plot
         ax = fig.add_subplot(gs[1:, :-1])
         binThresh = 50
-
-        [xs1, xs25, xs50, xs75, xs95, xs97] = np.nanpercentile(xsStars, [1, 25, 50, 75, 95, 97])
-        xScale = (xs97 - xs1)/20.0  # This is ~5% of the data range
-        # 40 was used as the number of bins because it looked good,
-        # might need to be changed in the future
-        xEdges = np.arange(xs1 - xScale, xs95, (xs95 - (xs1 - xScale))/40.0)
 
         yBinsOut = []
         linesForLegend = []
@@ -324,8 +322,18 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         elif np.any(catPlot["sourceType"] == 1) and np.any(catPlot["sourceType"] == 2):
             toPlotList = [(xsGalaxies.values, ysGalaxies.values, "C3"),
                           (xsStars.values, ysStars.values, "C0")]
+        if np.any(catPlot["sourceType"] == 9):
+            unknowns = (catPlot["sourceType"] == 9)
+            toPlotList = [(catPlot.loc[unknowns, xCol].values, catPlot.loc[unknowns, yCol].values, "green")]
+        if np.any(catPlot["sourceType"] == 10):
+            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple")]
 
         for (xs, ys, color) in toPlotList:
+            [xs1, xs25, xs50, xs75, xs95, xs97] = np.nanpercentile(xs, [1, 25, 50, 75, 95, 97])
+            xScale = (xs97 - xs1)/20.0  # This is ~5% of the data range
+
+            # 40 was used as the default number of bins because it looked good,
+            xEdges = np.arange(xs1 - xScale, xs95, (xs95 - (xs1 - xScale))/self.config.nBins)
             medYs = np.nanmedian(ys)
             sigMadYs = sigmaMad(ys, nan_policy="omit")
             fiveSigmaHigh = medYs + 5.0*sigMadYs
@@ -341,7 +349,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             xEdgesPlot = xEdges[ids][1:]
             xEdges = xEdges[ids]
 
-            if len(ids) > 0:
+            if len(ids) > 1:
                 # Create the codes needed to turn the sigmaMad lines
                 # into a path to speed up checking which points are
                 # inside the area.
@@ -393,10 +401,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             else:
                 points, = ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
-                medLine, = ax.plot(xs, meds, color, label="Median: {:0.2f}".format(np.nanmedian(ys)))
+                medLine, = ax.plot(xs, meds, color, label="Median: {:0.2f}".format(np.nanmedian(ys)), lw=0.8)
                 linesForLegend.append(medLine)
                 sigMads = np.array([sigmaMad(ys, nan_policy="omit")]*len(xs))
-                sigMadLine, = ax.plot(xs, meds + 1.0*sigMads, color, alpha=0.8,
+                sigMadLine, = ax.plot(xs, meds + 1.0*sigMads, color, alpha=0.8, lw=0.8,
                                       label=r"$\sigma_{MAD}$: " + "{:0.2f}".format(sigMads[0]))
                 ax.plot(xs, meds - 1.0*sigMads, color, alpha=0.8)
                 linesForLegend.append(sigMadLine)
@@ -438,7 +446,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             topHist.hist(xsStars, bins=100, color="C0", histtype="step", log=True,
                          label="Stars ({})".format(len(np.where(stars)[0])))
         topHist.axes.get_xaxis().set_visible(False)
-        topHist.set_ylabel("Number")
+        topHist.set_ylabel("Number", fontsize=8)
         topHist.legend(fontsize=6, framealpha=0.9, borderpad=0.4, loc="lower left", ncol=3, edgecolor="k")
 
         # Side histogram
@@ -454,7 +462,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             sideHist.hist(ysStars[np.isfinite(ysStars)], bins=bins, color="C0", histtype="step",
                           orientation="horizontal", log=True)
         sideHist.axes.get_yaxis().set_visible(False)
-        sideHist.set_xlabel("Number")
+        sideHist.set_xlabel("Number", fontsize=8)
 
         # Corner plot of patches showing summary stat in each
         axCorner = plt.gcf().add_subplot(gs[0, -1])
@@ -512,19 +520,23 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             linesForLegend[i].set_label(newLabel)
         highStatThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
         lowStatThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
-        highLegendTitle = "S/N > {} Stats \n({} < {:0.2f})".format(highStatThresh, magCol, approxHighMag)
-        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.81, 0.655), edgecolor="k",
-                   bbox_transform=fig.transFigure, title=highLegendTitle, title_fontsize=6)
+        approxHighMag = highMags[0]
+        highLegendTitle = "S/N > {} Stats ({} < {:0.2f})".format(highStatThresh, magCol, approxHighMag)
+        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.9, 0.13), edgecolor="none",
+                   bbox_transform=fig.transFigure, title=highLegendTitle, title_fontsize=6,
+                   ncol=len(highStats))
         for (i, newLabel) in enumerate(lowStats):
             linesForLegend[i].set_label(newLabel)
-        lowLegendTitle = "S/N > {} Stats \n({} < {:0.2f})".format(lowStatThresh, magCol, approxLowMag)
-        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.81, 0.355), edgecolor="k",
-                   bbox_transform=fig.transFigure, title=lowLegendTitle, title_fontsize=6)
+        approxLowMag = lowMags[0]
+        lowLegendTitle = "S/N > {} Stats ({} < {:0.2f})".format(lowStatThresh, magCol, approxLowMag)
+        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.9, 0.07), edgecolor="none",
+                   bbox_transform=fig.transFigure, title=lowLegendTitle, title_fontsize=6,
+                   ncol=len(lowStats))
 
         # Add useful information to the plot
 
         plt.draw()
-        plt.subplots_adjust(wspace=0.0, hspace=0.0)
+        plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22)
         fig = plt.gcf()
 
         fig = addPlotInfo(fig, plotInfo)
