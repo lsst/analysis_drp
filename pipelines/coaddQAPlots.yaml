@@ -260,3 +260,18 @@ tasks:
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, GalaxyIdentifier,
         SnSelector, UnknownIdentifier)
         from lsst.analysis.drp.calcFunctors import MagDiff
+
+  plot_CircAp9_forced_skyObj_sky:
+    # Make a plot showing the 9-pixel radius circular aperture flux in units of nJy.
+    # This plot shows the on sky distribution of these values for sky objects.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      axisActions.zAction.column: "iAp9Flux"
+      connections.plotName: CircAp9_forced_skyObj_sky
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenTrue: ["merge_peak_sky"]
+      sourceSelectorActions: None
+      statisticSelectorActions.statSelector.threshold: 0
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (FlagSelector)
