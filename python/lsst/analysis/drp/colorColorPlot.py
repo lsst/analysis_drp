@@ -41,9 +41,9 @@ class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
         itemtype=str,
     )
 
-    sourceSelectorActions = ConfigurableActionStructField(
+    sourceIdentifierActions = ConfigurableActionStructField(
         doc="What types of sources to use.",
-        default={"starSelector": dataSelectors.StarIdentifier(),
+        default={"starIdentifier": dataSelectors.StarIdentifier(),
                  "galaxyIdentifier": dataSelectors.GalaxyIdentifier()},
     )
 
@@ -63,7 +63,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
 
         columnNames = set(["patchId"])
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
-                             self.config.sourceSelectorActions]:
+                             self.config.sourceIdentifierActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
@@ -94,12 +94,14 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         plotDf = pd.DataFrame(columns)
 
         sourceTypes = np.zeros(len(plotDf))
-        for selector in self.config.sourceSelectorActions:
-            # The source selectors return 1 for a star and 2 for a galaxy
+        for identifier in self.config.sourceIdentifierActions:
+            # The source identifiers return 1 for a star and 2 for a galaxy
             # rather than a mask this allows the information about which
             # type of sources are being plotted to be propagated
-            sourceTypes += selector(catPlot)
-        if list(self.config.sourceSelectorActions) == []:
+            sourceTypes += identifier(catPlot)
+        # If the plot requires all the sources then assign 10 to
+        # signify this.
+        if list(self.config.sourceIdentifierActions) == []:
             sourceTypes = [10]*len(plotDf)
         plotDf.loc[:, "sourceType"] = sourceTypes
 
@@ -179,8 +181,8 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                                 vmin=vminStars, vmax=vmaxStars)
 
         # Add text details
-        fig.text(0.70, 0.9, "Num. Galaxies: {}".format(len(np.where(galaxies)[0])), color="C1")
-        fig.text(0.70, 0.93, "Num. Stars: {}".format(len(np.where(stars)[0])), color="C0")
+        fig.text(0.70, 0.9, "Num. Galaxies: {}".format(galaxies.sum()), color="C1")
+        fig.text(0.70, 0.93, "Num. Stars: {}".format(stars.sum()), color="C0")
 
         # Add colorbars
         galCbAx = fig.add_axes([0.85, 0.11, 0.04, 0.75])
