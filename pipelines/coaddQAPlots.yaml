@@ -15,7 +15,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
@@ -34,7 +34,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -57,7 +57,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
@@ -79,7 +79,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -103,7 +103,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -124,7 +124,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions: None
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -144,7 +144,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PS (mmag) (Meas)"}
@@ -164,7 +164,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PS (mmag) (Meas)"}
@@ -184,7 +184,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PS (mmag) (Meas)"}
@@ -204,7 +204,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PS (mmag) (Meas)"}
@@ -227,7 +227,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
                                      "unknownSelector": UnknownIdentifier}
@@ -250,7 +250,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "iPsFlux"
+      selectorActions.SnSelector.fluxType: "PsFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
                                      "unknownSelector": UnknownIdentifier}
@@ -275,3 +275,29 @@ tasks:
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (FlagSelector)
+
+  plot_ri_gr_cmodel:
+    # Make a color color plot of gri in CModel magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: ri_gr_cmodel
+      axisActions.xAction.col1: "gCModelFlux"
+      axisActions.xAction.col2: "rCModelFlux"
+      axisActions.yAction.col1: "rCModelFlux"
+      axisActions.yAction.col2: "iCModelFlux"
+      axisActions.zAction.column: "iCModelFlux"
+      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.returnMillimags: False
+      axisLabels: {"x": "g - r CModel Magnitude (mag)",
+                   "y": "r - i CModel Magnitude (mag)",
+                   "z": "iCModelMag (mag)"}
+      selectorActions.coaddSelector: FlagSelector
+      selectorActions.coaddSelector.selectWhenFalse: ["gCModel_flag", "rCModel_flag", "iCModel_flag"]
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.fluxType: "CModelFlux"
+      selectorActions.SnSelector.threshold: 50
+      selectorActions.SnSelector.bands: ["g", "r", "i"]
+      python: >
+       from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
