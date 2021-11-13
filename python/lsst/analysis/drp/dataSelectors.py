@@ -94,7 +94,7 @@ class PsfFlagSelector(FlagSelector):
         """
 
         result = None
-        flagCols = ["_psfFlux_flag", "_pixelFlags_saturatedCenter", "_extendedness_flag"]
+        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag"]
         filterColumns = ["xy_flag"]
         filterColumns += [band + flag for flag in flagCols for band in self.bands]
         for flag in filterColumns:
@@ -262,6 +262,46 @@ class UnknownIdentifier(DataFrameAction):
         sourceType = np.zeros(len(df))
         sourceType[unknowns] = 9
         return sourceType
+
+
+class VisitPlotFlagSelector(DataFrameAction):
+
+    @property
+    def columns(self):
+        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag"]
+        yield from flagCols
+
+    def __call__(self, df, **kwargs):
+        """The flags to use for selecting sources for visit QA
+
+        Parameters
+        ----------
+        df : `pandas.core.frame.DataFrame`
+
+        Returns
+        -------
+        result : `numpy.ndarray`
+            A mask of the objects that satisfy the given
+            flag cuts.
+
+        Notes
+        -----
+        These flags are taken from pipe_analysis and are considered to
+        be the standard flags for general QA plots. Some of the plots
+        will require a different set of flags, or additional ones on
+        top of the ones specified here. These should be specifed in
+        an additional selector rather than adding to this one.
+        """
+
+        result = None
+        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag"]
+        for flag in flagCols:
+            selected = (df[flag].values == 0)
+            if result is None:
+                result = selected
+            else:
+                result &= selected
+        return result
 
 
 class CoaddPlotFlagSelector(DataFrameAction):
