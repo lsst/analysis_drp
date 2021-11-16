@@ -426,11 +426,17 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 linesForLegend.append(sigMadLine)
 
         # Set the scatter plot limits
-        plotMed = np.nanmedian(ysStars)
+        if len(ysStars) > 0:
+            plotMed = np.nanmedian(ysStars)
+        else:
+            plotMed = np.nanmedian(ysGalaxies)
         if yLims:
             ax.set_ylim(yLims[0], yLims[1])
         else:
-            [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])
+            if len(ysStars) > 0:
+                [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])
+            else:
+                [ys1, ys99] = np.nanpercentile(ysGalaxies, [1, 99])
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs

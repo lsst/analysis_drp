@@ -125,7 +125,6 @@ class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):
             for action in actionStruct:
                 for col in action.columns:
                     columns.update({col: catPlot[col]})
-
         plotDf = pd.DataFrame(columns)
 
         sourceTypes = np.zeros(len(plotDf))
