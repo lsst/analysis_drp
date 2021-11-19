@@ -4,6 +4,7 @@ import lsst.pipe.base as pipeBase
 from .plotUtils import generateSummaryStatsVisit, parsePlotInfo
 from .skyPlot import SkyPlotTask
 import pandas as pd
+import matplotlib.pyplot as plt
 
 __all__ = ["SkyPlotVisitTaskConfig", "SkyPlotVisitTask"]
 
@@ -66,6 +67,7 @@ class SkyPlotVisitTask(SkyPlotTask):
         inputs["tableName"] = localConnections.catPlot.name
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
+        plt.close()
 
     def run(self, catPlot, dataId, runName, tableName, visitSummaryTable):
         """Prep the catalogue and then make a skyPlot of the given column.

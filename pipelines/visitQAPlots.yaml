@@ -156,7 +156,7 @@ tasks:
                                      "unknownSelector": UnknownIdentifier}
       sourceSelectorActions.galaxySelector.band: ""
       sourceSelectorActions.unknownSelector.band: ""
-      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
@@ -180,7 +180,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: ""
-      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
@@ -203,7 +203,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: ""
-      axisLabels: {"x": "Circ Ap 25 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 25 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
@@ -226,7 +226,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
@@ -249,7 +249,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "Circ Ap 25 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (msg)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 25 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
@@ -269,7 +269,7 @@ tasks:
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
-      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
@@ -290,7 +290,7 @@ tasks:
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
-      axisLabels: {"x": "Circ Ap 25 (mag)", "mag": "PS Magnitude (mag)",
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 25 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
@@ -311,3 +311,15 @@ tasks:
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
       python: |
        from lsst.analysis.drp.dataSelectors import (FlagSelector)
+
+  plot_skyObject_hist:
+    # Make a plot showing histograms of the PSFlux and 9-pixel radius circular aperture flux.
+    # The left panel histograms show flux in units of nJy.
+    # The right panel histograms show the equivalent sigma flux values (flux/fluxErr)
+    class: lsst.analysis.drp.histPlot.HistPlotTask
+    config:
+      connections.plotName: skyObject_hist
+      selectorActions.flagSelector: FlagSelector
+      selectorActions.flagSelector.selectWhenTrue: ["sky_source"]
+      python: |
+        from lsst.analysis.drp.dataSelectors import (FlagSelector)
