@@ -68,7 +68,8 @@ class PsfFlagSelector(FlagSelector):
 
     @property
     def columns(self):
-        flagCols = ["PsfFlux_flag", "PsfFlux_flag_apCorr", "PsfFlux_flag_edge", "PsfFlux_flag_noGoodPixels"]
+        flagCols = ["_psfFlux_flag", "_psfFlux_flag_apCorr", "_psfFlux_flag_edge",
+                    "_psfFlux_flag_noGoodPixels"]
         filterColumns = [band + flag for flag in flagCols for band in self.bands]
         yield from filterColumns
 
@@ -93,7 +94,7 @@ class PsfFlagSelector(FlagSelector):
         """
 
         result = None
-        flagCols = ["PsfFlux_flag", "PixelFlags_saturatedCenter", "Extendedness_flag"]
+        flagCols = ["_psfFlux_flag", "_pixelFlags_saturatedCenter", "_extendedness_flag"]
         filterColumns = ["xy_flag"]
         filterColumns += [band + flag for flag in flagCols for band in self.bands]
         for flag in filterColumns:
@@ -112,9 +113,9 @@ class BaseSNRSelector(DataFrameAction):
     given threshold"""
 
     fluxField = Field(doc="Flux field to use in SNR calculation", dtype=str,
-                      default="PsFlux", optional=False)
+                      default="_psfFlux", optional=False)
     errField = Field(doc="Flux err field to use in SNR calculation", dtype=str,
-                     default="PsFluxErr", optional=False)
+                     default="_psfFluxErr", optional=False)
     threshold = Field(doc="The signal to noise threshold to select sources",
                       dtype=float,
                       optional=False)
@@ -131,7 +132,7 @@ class SnSelector(DataFrameAction):
     """Selects points that have S/N > threshold in the given flux type"""
     fluxType = Field(doc="Flux type to calculate the S/N in.",
                      dtype=str,
-                     default="PsFlux")
+                     default="_psfFlux")
     threshold = Field(doc="The S/N threshold to remove sources with.",
                       dtype=float,
                       default=500.0)
@@ -179,7 +180,7 @@ class StarIdentifier(DataFrameAction):
 
     @property
     def columns(self):
-        return [self.band + "Extendedness"]
+        return [self.band + "_extendedness"]
 
     def __call__(self, df, **kwargs):
         """Identifies sources classified as stars
@@ -195,7 +196,7 @@ class StarIdentifier(DataFrameAction):
             stars marked with a 1.
         """
 
-        stars = (df[self.band + "Extendedness"] == 0.0)
+        stars = (df[self.band + "_extendedness"] == 0.0)
         sourceType = np.zeros(len(df))
         sourceType[stars] = 1
         return sourceType
@@ -211,7 +212,7 @@ class GalaxyIdentifier(DataFrameAction):
 
     @property
     def columns(self):
-        return [self.band + "Extendedness"]
+        return [self.band + "_extendedness"]
 
     def __call__(self, df, **kwargs):
         """Identifies sources classified as galaxies
@@ -226,7 +227,7 @@ class GalaxyIdentifier(DataFrameAction):
             An array with the objects that are classified as
             galaxies marked with a 2.
         """
-        gals = (df[self.band + "Extendedness"] == 1.0)
+        gals = (df[self.band + "_extendedness"] == 1.0)
         sourceType = np.zeros(len(df))
         sourceType[gals] = 2
         return sourceType
@@ -242,7 +243,7 @@ class UnknownIdentifier(DataFrameAction):
 
     @property
     def columns(self):
-        return [self.band + "Extendedness"]
+        return [self.band + "_extendedness"]
 
     def __call__(self, df, **kwargs):
         """Identifies sources classed as unknowns
@@ -257,7 +258,7 @@ class UnknownIdentifier(DataFrameAction):
             An array with the objects that are classified as
             unknown marked with a 9.
         """
-        unknowns = (df[self.band + "Extendedness"] == 9.0)
+        unknowns = (df[self.band + "_extendedness"] == 9.0)
         sourceType = np.zeros(len(df))
         sourceType[unknowns] = 9
         return sourceType
@@ -291,7 +292,7 @@ class CoaddPlotFlagSelector(DataFrameAction):
 
     @property
     def columns(self):
-        flagCols = ["PsfFlux_flag", "PixelFlags_saturatedCenter", "Extendedness_flag"]
+        flagCols = ["_psfFlux_flag", "_pixelFlags_saturatedCenter", "_extendedness_flag"]
         filterColumns = ["xy_flag", "detect_isPatchInner", "detect_isDeblendedSource"]
         filterColumns += [band + flag for flag in flagCols for band in self.bands]
         yield from filterColumns
@@ -319,7 +320,7 @@ class CoaddPlotFlagSelector(DataFrameAction):
         """
 
         result = None
-        flagCols = ["PsfFlux_flag", "PixelFlags_saturatedCenter", "Extendedness_flag"]
+        flagCols = ["_psfFlux_flag", "_pixelFlags_saturatedCenter", "_extendedness_flag"]
         filterColumns = ["xy_flag"]
         filterColumns += [band + flag for flag in flagCols for band in self.bands]
         for flag in filterColumns:

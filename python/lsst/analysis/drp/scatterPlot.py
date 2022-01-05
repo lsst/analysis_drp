@@ -212,7 +212,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         return pipeBase.Struct(scatterPlot=fig)
 
     def scatterPlotWithTwoHists(self, catPlot, plotInfo, sumStats, yLims=False, xLims=False):
-
         """Makes a generic plot with a 2D histogram and collapsed histograms of
         each axis.
 
@@ -534,11 +533,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                    ncol=len(lowStats))
 
         # Add useful information to the plot
-
         plt.draw()
         plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22)
         fig = plt.gcf()
-
         fig = addPlotInfo(fig, plotInfo)
 
         return fig

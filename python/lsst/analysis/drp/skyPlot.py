@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
-from matplotlib import patheffects
 from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
@@ -186,7 +185,6 @@ class SkyPlotTask(pipeBase.PipelineTask):
         return pipeBase.Struct(skyPlot=fig)
 
     def skyPlot(self, catPlot, plotInfo, sumStats):
-
         """Makes a generic plot showing the value at given points on the sky.
 
         Parameters
@@ -321,7 +319,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             cenY = dec + height / 2
             if dataId != "tract":
                 ax.annotate(dataId, (cenX, cenY), color="k", fontsize=7, ha="center", va="center",
-                            path_effects=[patheffects.withStroke(linewidth=2, foreground="w")])
+                            path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
 
         for (i, (xs, ys, colorVals, cmap, label)) in enumerate(toPlotList):
             med = np.median(colorVals)

@@ -312,4 +312,28 @@ tasks:
       selectorActions.SnSelector.threshold: 50
       selectorActions.SnSelector.bands: ["g", "r", "i"]
       python: >
+        from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
+
+  plot_ri_gr_psf:
+    # Make a color color plot of gri in PSF magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: ri_gr_psf
+      axisActions.xAction.col1: "gPsFlux"
+      axisActions.xAction.col2: "rPsFlux"
+      axisActions.yAction.col1: "rPsFlux"
+      axisActions.yAction.col2: "iPsFlux"
+      axisActions.zAction.column: "iPsFlux"
+      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.returnMillimags: False
+      axisLabels: {"x": "g - r PSF Magnitude (mag)",
+                   "y": "r - i PSF Magnitude (mag)",
+                   "z": "iPsfMag (mag)"}
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.threshold: 50
+      selectorActions.SnSelector.bands: ["g", "r", "i"]
+      python: >
        from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
