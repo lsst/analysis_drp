@@ -83,7 +83,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
 
-        columnNames = set(["patchId"])
+        columnNames = set(["patch"])
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.statisticSelectorActions, self.config.sourceSelectorActions]:
             for action in actionStruct:
@@ -153,7 +153,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         columns = {self.config.axisLabels["x"]: self.config.axisActions.xAction(catPlot),
                    self.config.axisLabels["y"]: self.config.axisActions.yAction(catPlot),
                    self.config.axisLabels["z"]: self.config.axisActions.zAction(catPlot),
-                   "patchId": catPlot["patchId"]}
+                   "patch": catPlot["patch"]}
         plotDf = pd.DataFrame(columns)
 
         sourceTypes = np.zeros(len(plotDf))
