@@ -1,4 +1,10 @@
-description: Make coadd plots for QA
+description: |
+    Make visit level plots for QA, this pipeline makes sky distribution plots and histograms of
+    various quantities for the purposes of QA. These plots focus on photometry QA and look at the
+    differences between different types of magnitude.
+    For visit level plots the bands needs to be set to [""] to allow the code to be reused between
+    the coadd level tables, which have band_ prepended to their column names, and the visit level
+    tables which do not.
 parameters:
   ApFluxName: "ap12Flux"
   band: i

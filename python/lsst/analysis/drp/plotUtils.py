@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.odr as scipyODR
 
 from lsst.geom import Box2D, SpherePoint, degrees
-import lsst.geom
 
 
 def parsePlotInfo(dataId, runName, tableName):
@@ -33,7 +33,7 @@ def parsePlotInfo(dataId, runName, tableName):
 
 
 def generateSummaryStats(cat, colName, skymap, plotInfo):
-    """Generate a summary statistic in each patch
+    """Generate a summary statistic in each patch or detector
 
     Parameters
     ----------
@@ -85,13 +85,13 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
 
 
 def generateSummaryStatsVisit(cat, colName, visitSummaryTable, plotInfo):
-    """Generate a summary statistic in each patch
+    """Generate a summary statistic in each patch or detector
 
     Parameters
     ----------
     cat : `pandas.core.frame.DataFrame`
     colName : `str`
-    visitSummaryTable : 
+    visitSummaryTable : `pandas.core.frame.DataFrame`
     plotInfo : `dict`
 
     Returns

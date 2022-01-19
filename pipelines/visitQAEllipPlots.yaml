@@ -1,5 +1,10 @@
-description: Make coadd plots for QA
+description: |
+    Make visit level ellipticity plots for QA, makes plots of the e1, e2 and size measurements
+    for the PSF shape measurements and the shape measurements in the shape slot, typically
+    CModel. Makes 18 plots that get saved as pngs.
 tasks:
+  # Make a scatter plot with collapsed histograms for the axes showing E1 for
+  # all the points in a visit against the PSF magnitude of the sources.
   plot_e1_scatter_visit:
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
@@ -19,6 +24,7 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE1
 
   plot_e1_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of E1
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcE1
@@ -36,6 +42,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE1
 
   plot_e2_scatter_visit:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for
+    # all the points in a visit against the PSF magnitude of the sources.
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: CalcE2
@@ -55,6 +63,7 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE2
 
   plot_e2_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of E2
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcE2
@@ -73,6 +82,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE2
 
   plot_shapeSize_scatter_visit:
+    # Plot a scatter plot of the values of (ixx*iyy - ixy^2)^(1/4) a measurement of
+    # the size of the objects.
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: CalcShapeSize
@@ -92,6 +103,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
 
   plot_shapeSize_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of a shape
+    # measurement defined by (ixx*iyy - ixy^2)^(1/4)
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcShapeSize
@@ -110,6 +123,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
 
   plot_e1PSF_scatter_visit:
+    # Make a scatter plot with collapsed histograms for the axes showing E1 for the PSF
+    # for all the points in a visit against the PSF magnitude of the sources.
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: CalcE1
@@ -128,6 +143,7 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE1
 
   plot_e1PSF_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of E1 for the PSF
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcE1
@@ -146,6 +162,7 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE1
 
   plot_e2PSF_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of E2 for the PSF
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcE2
@@ -164,6 +181,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE2
 
   plot_e2PSF_scatter_visit:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for the PSF
+    # for all the points in a visit against the PSF magnitude of the sources.
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: CalcE2
@@ -183,6 +202,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcE2
 
   plot_shapeSizePSF_scatter_visit:
+    # Make a sky plot showing the on-sky distribution of the values of a shape
+    # measurement defined by (ixx*ixy - ixy^2)^(1/4) for the PSF
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: CalcShapeSize
@@ -202,6 +223,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
 
   plot_shapeSizePSF_sky_visit:
+    # Make a sky plot showing the on-sky distribution of the values of a shape
+    # measurement defined by (ixx*ixy - ixy^2)^(1/4) from the PSF
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcShapeSize
@@ -221,6 +244,8 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
 
   plot_shapeSizeDiff_scatter_visit:
+    # Calculates the difference between the shapes calculated from CModel and the PSF
+    # and then plots it against magnitude
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: SubtractColumns
@@ -246,6 +271,8 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
   plot_E1Diff_scatter_visit:
+    # Plots the difference between the calculated E1 for CModel and the PSF against
+    # PSF magnitude
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: SubtractColumns
@@ -269,6 +296,8 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
   plot_E2Diff_scatter_visit:
+    # Plots the difference between the calculated E2 for CModel and the PSF against
+    # the PSF magnitude
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
       axisActions.yAction: SubtractColumns
@@ -292,6 +321,8 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
   plot_E1Diff_sky_visit:
+    # Plots the on-sky distribution of the differences between E1 calculated for the PSF
+    # and for CModel
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: SubtractColumns
@@ -314,6 +345,8 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
   plot_E2Diff_sky_visit:
+    # Plots the on-sky distribution of the differences between E2 calculated for the PSF
+    # and for CModel.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: SubtractColumns
@@ -338,6 +371,8 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
   plot_ShapeDiff_sky_visit:
+    # Plots the on-sky distribution of the difference between the sizes calculated
+    # for the PSF and for CModel.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: SubtractColumns
@@ -360,5 +395,3 @@ tasks:
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-
-

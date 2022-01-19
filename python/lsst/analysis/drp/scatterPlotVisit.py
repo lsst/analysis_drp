@@ -43,6 +43,9 @@ class ScatterPlotVisitConfig(ScatterPlotWithTwoHistsTask.ConfigClass,
 
 
 class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):
+    """This task makes scatter plots with axis histograms
+    for the given columns for visit level data. Stars are
+    plotted in blue and galaxies in red."""
 
     ConfigClass = ScatterPlotVisitConfig
     _DefaultName = "scatterPlotVisitTask"

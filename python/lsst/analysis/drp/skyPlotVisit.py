@@ -43,6 +43,14 @@ class SkyPlotVisitTaskConfig(SkyPlotTask.ConfigClass, pipelineConnections=SkyPlo
 
 
 class SkyPlotVisitTask(SkyPlotTask):
+    """A task to make a plot that shows the on sky distribution of a
+    given column. Stars are plotted using a blue color map, galaxies
+    with a red one and when all sources are shown it is plotted
+    using a purple colormap. These plots are useful to study whether
+    or not there is a spatial distribution to the plotted variable.
+    Either in terms of RA/Dec or corresponding to the overplotted
+    ccd outlines.
+    """
 
     ConfigClass = SkyPlotVisitTaskConfig
     _DefaultName = "skyPlotVisitTask"
