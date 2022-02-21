@@ -85,8 +85,8 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
 
     def setDefaults(self):
         super().setDefaults()
-        self.axisActions.magAction.column = "iCModelFlux"
-        self.axisActions.xAction.column = "iCModelFlux"
+        self.axisActions.magAction.column = "i_cModelFlux"
+        self.axisActions.xAction.column = "i_cModelFlux"
         self.highSnStatisticSelectorActions.statSelector.threshold = 2700
         self.lowSnStatisticSelectorActions.statSelector.threshold = 500
 
@@ -98,7 +98,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
-        columnNames = set(["patchId"])
+        columnNames = set(["patch"])
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.highSnStatisticSelectorActions,
                              self.config.lowSnStatisticSelectorActions,
@@ -169,7 +169,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         columns = {self.config.axisLabels["x"]: self.config.axisActions.xAction(catPlot),
                    self.config.axisLabels["y"]: self.config.axisActions.yAction(catPlot),
                    self.config.axisLabels["mag"]: self.config.axisActions.magAction(catPlot),
-                   "patchId": catPlot["patchId"]}
+                   "patch": catPlot["patch"]}
         for actionStruct in [self.config.highSnStatisticSelectorActions,
                              self.config.lowSnStatisticSelectorActions,
                              self.config.sourceSelectorActions]:

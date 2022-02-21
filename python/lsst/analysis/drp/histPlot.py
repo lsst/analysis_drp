@@ -112,12 +112,12 @@ class HistPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
     def setDefaults(self):
         super().setDefaults()
-        self.leftPanelActions.hist1.column = "iPsFlux"
-        self.leftPanelActions.hist2.column = "iAp9Flux"
-        self.rightPanelActions.hist1.colA.column = "iPsFlux"
-        self.rightPanelActions.hist1.colB.column = "iPsFluxErr"
-        self.rightPanelActions.hist2.colA.column = "iAp9Flux"
-        self.rightPanelActions.hist2.colB.column = "iAp9FluxErr"
+        self.leftPanelActions.hist1.column = "i_psfFlux"
+        self.leftPanelActions.hist2.column = "i_ap09Flux"
+        self.rightPanelActions.hist1.colA.column = "i_psfFlux"
+        self.rightPanelActions.hist1.colB.column = "i_psfFluxErr"
+        self.rightPanelActions.hist2.colA.column = "i_ap09Flux"
+        self.rightPanelActions.hist2.colB.column = "i_ap09FluxErr"
         # assign dummy labels if any are missing
         used_labels = []
         for key in self.leftPanelActions.fieldNames:
@@ -139,7 +139,7 @@ class HistPlotTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
-        columnNames = set(["patchId"])
+        columnNames = set(["patch"])
         for actionStruct in [self.config.leftPanelActions,
                              self.config.rightPanelActions,
                              self.config.selectorActions]:
@@ -207,7 +207,7 @@ class HistPlotTask(pipeBase.PipelineTask):
             mask &= selector(catPlot)
         catPlot = catPlot[mask]
 
-        columns = {"patchId": catPlot["patchId"]}
+        columns = {"patch": catPlot["patch"]}
 
         for key in self.config.leftPanelActions.fieldNames:
             label = self.config.leftPanelLabels[key]

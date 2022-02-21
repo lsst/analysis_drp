@@ -1,6 +1,6 @@
 description: Make coadd plots for QA
 parameters:
-  ApFluxName: "iApFlux"
+  ApFluxName: "i_ap09Flux"
   band: i
 tasks:
   # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
@@ -10,12 +10,12 @@ tasks:
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: parameters.ApFluxName
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_stars_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
@@ -28,13 +28,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iApFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_ap12Flux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_gals_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -49,15 +49,15 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iApFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_ap12Flux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_stars_sky
       selectorActions.calibPointSelector: FlagSelector
-      selectorActions.calibPointSelector.selectWhenTrue: ["iCalib_psf_used"]
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
@@ -71,15 +71,15 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iApFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_ap12Flux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_gals_sky
       selectorActions.calibPointSelector: FlagSelector
-      selectorActions.calibPointSelector.selectWhenTrue: ["iCalib_psf_used"]
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -95,15 +95,15 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iApFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_ap12Flux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unkowns_sky
       selectorActions.calibPointSelector: FlagSelector
-      selectorActions.calibPointSelector.selectWhenTrue: ["iCalib_psf_used"]
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -118,13 +118,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: DivideColumns
-      axisActions.zAction.colA.column: "iPsFlux"
-      axisActions.zAction.colB.column: "iPsFluxErr"
+      axisActions.zAction.colA.column: "i_psfFlux"
+      axisActions.zAction.colB.column: "i_psfFluxErr"
       connections.plotName: PSFluxSN_meas_all_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions: None
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
@@ -138,13 +138,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iKronFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_kronFlux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: Kron_sub_PS_meas_galaxies_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PS (mmag) (Meas)"}
@@ -158,13 +158,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iKronFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_kronFlux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: Kron_sub_PS_meas_stars_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PS (mmag) (Meas)"}
@@ -178,13 +178,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iCModelFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_cModelFlux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CModel_sub_PS_meas_galaxies_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PS (mmag) (Meas)"}
@@ -198,13 +198,13 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "iCModelFlux"
-      axisActions.zAction.col2: "iPsFlux"
+      axisActions.zAction.col1: "i_cModelFlux"
+      axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CModel_sub_PS_meas_stars_sky
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PS (mmag) (Meas)"}
@@ -219,15 +219,15 @@ tasks:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "iApFlux"
-      axisActions.yAction.col2: "iPsFlux"
+      axisActions.yAction.col1: "i_ap12Flux"
+      axisActions.yAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_scatter
       selectorActions.calibPointSelector: FlagSelector
-      selectorActions.calibPointSelector.selectWhenTrue: ["iCalib_psf_used"]
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
                                      "unknownSelector": UnknownIdentifier}
@@ -244,13 +244,13 @@ tasks:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "iApFlux"
-      axisActions.yAction.col2: "iPsFlux"
+      axisActions.yAction.col1: "i_ap12Flux"
+      axisActions.yAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_scatter
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
                                      "unknownSelector": UnknownIdentifier}
@@ -266,7 +266,7 @@ tasks:
     # This plot shows the on sky distribution of these values for sky objects.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      axisActions.zAction.column: "iAp9Flux"
+      axisActions.zAction.column: "i_ap09Flux"
       connections.plotName: skyObject_sky
       selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["merge_peak_sky"]
@@ -293,22 +293,22 @@ tasks:
     class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
     config:
       connections.plotName: ri_gr_cmodel
-      axisActions.xAction.col1: "gCModelFlux"
-      axisActions.xAction.col2: "rCModelFlux"
-      axisActions.yAction.col1: "rCModelFlux"
-      axisActions.yAction.col2: "iCModelFlux"
-      axisActions.zAction.column: "iCModelFlux"
+      axisActions.xAction.col1: "g_cModelFlux"
+      axisActions.xAction.col2: "r_cModelFlux"
+      axisActions.yAction.col1: "r_cModelFlux"
+      axisActions.yAction.col2: "i_cModelFlux"
+      axisActions.zAction.column: "i_cModelFlux"
       axisActions.yAction.returnMillimags: False
       axisActions.xAction.returnMillimags: False
       axisLabels: {"x": "g - r CModel Magnitude (mag)",
                    "y": "r - i CModel Magnitude (mag)",
-                   "z": "iCModelMag (mag)"}
+                   "z": "i_cModelMag (mag)"}
       selectorActions.coaddSelector: FlagSelector
-      selectorActions.coaddSelector.selectWhenFalse: ["gCModel_flag", "rCModel_flag", "iCModel_flag"]
+      selectorActions.coaddSelector.selectWhenFalse: ["g_cModel_flag", "r_cModel_flag", "i_cModel_flag"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "CModelFlux"
+      selectorActions.SnSelector.fluxType: "_cModelFlux"
       selectorActions.SnSelector.threshold: 50
       selectorActions.SnSelector.bands: ["g", "r", "i"]
       python: >
@@ -319,11 +319,11 @@ tasks:
     class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
     config:
       connections.plotName: ri_gr_psf
-      axisActions.xAction.col1: "gPsFlux"
-      axisActions.xAction.col2: "rPsFlux"
-      axisActions.yAction.col1: "rPsFlux"
-      axisActions.yAction.col2: "iPsFlux"
-      axisActions.zAction.column: "iPsFlux"
+      axisActions.xAction.col1: "g_psfFlux"
+      axisActions.xAction.col2: "r_psfFlux"
+      axisActions.yAction.col1: "r_psfFlux"
+      axisActions.yAction.col2: "i_psfFlux"
+      axisActions.zAction.column: "i_psfFlux"
       axisActions.yAction.returnMillimags: False
       axisActions.xAction.returnMillimags: False
       axisLabels: {"x": "g - r PSF Magnitude (mag)",
@@ -332,7 +332,7 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "PsFlux"
+      selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 50
       selectorActions.SnSelector.bands: ["g", "r", "i"]
       python: >

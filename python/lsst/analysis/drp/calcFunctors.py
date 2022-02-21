@@ -10,8 +10,8 @@ class SNCalculator(DivideColumns):
 
     def setDefaults(self):
         super().setDefaults()
-        self.colA.column = "i_PsfFlux"
-        self.colB.column = "i_PsfFluxErr"
+        self.colA.column = "i_psfFlux"
+        self.colB.column = "i_psfFluxErr"
 
 
 class KronFluxDivPsfFlux(DivideColumns):
@@ -19,8 +19,8 @@ class KronFluxDivPsfFlux(DivideColumns):
 
     def setDefaults(self):
         super().setDefaults()
-        self.colA.column = "i_KronFlux"
-        self.colB.column = "i_PsfFlux"
+        self.colA.column = "i_kronFlux"
+        self.colB.column = "i_psfFlux"
 
 
 class MagDiff(MultiColumnAction):

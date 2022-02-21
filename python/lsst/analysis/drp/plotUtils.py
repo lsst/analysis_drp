@@ -51,12 +51,12 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     # For now also convert the gen 2 patchIds to gen 3
 
     patchInfoDict = {}
-    for patch in cat.patchId.unique():
+    for patch in cat.patch.unique():
         if patch is None:
             continue
         # Once the objectTable_tract catalogues are using gen 3 patches
         # this will go away
-        onPatch = (cat["patchId"] == patch)
+        onPatch = (cat["patch"] == patch)
         stat = np.nanmedian(cat[colName].values[onPatch])
         try:
             patchTuple = (int(patch.split(",")[0]), int(patch.split(",")[-1]))
