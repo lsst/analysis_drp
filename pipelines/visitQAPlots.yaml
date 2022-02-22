@@ -317,15 +317,3 @@ tasks:
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
       python: |
        from lsst.analysis.drp.dataSelectors import (FlagSelector)
-
-  plot_skyObject_hist:
-    # Make a plot showing histograms of the PSFlux and 9-pixel radius circular aperture flux.
-    # The left panel histograms show flux in units of nJy.
-    # The right panel histograms show the equivalent sigma flux values (flux/fluxErr)
-    class: lsst.analysis.drp.histPlot.HistPlotTask
-    config:
-      connections.plotName: skyObject_hist
-      selectorActions.flagSelector: FlagSelector
-      selectorActions.flagSelector.selectWhenTrue: ["sky_source"]
-      python: |
-        from lsst.analysis.drp.dataSelectors import (FlagSelector)
