@@ -73,11 +73,12 @@ class SkyPlotVisitTask(SkyPlotTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.skyPlot.name
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
         plt.close()
 
-    def run(self, catPlot, dataId, runName, tableName, visitSummaryTable):
+    def run(self, catPlot, dataId, runName, tableName, visitSummaryTable, plotName):
         """Prep the catalogue and then make a skyPlot of the given column.
 
         Parameters
@@ -151,8 +152,14 @@ class SkyPlotVisitTask(SkyPlotTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
+        # Get the S/N cut
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, dataId["band"], plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStatsVisit(plotDf, self.config.axisLabels["z"], visitSummaryTable,
                                              plotInfo)

@@ -6,7 +6,6 @@ from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.path import Path
 from matplotlib.collections import PatchCollection
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
 from lsst.skymap import BaseSkyMap
@@ -99,6 +98,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.highSnStatisticSelectorActions,
                              self.config.lowSnStatisticSelectorActions,
@@ -106,7 +106,11 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -115,10 +119,12 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.scatterPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a scatterPlot of the given column.
 
         Parameters
@@ -202,8 +208,14 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         useForStats[highSnMask] = 1
         plotDf.loc[:, "useForStats"] = useForStats
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot
@@ -261,7 +273,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         self.log.info("Plotting {}: the values of {} on a scatter plot.".format(
                       self.config.connections.plotName, self.config.axisLabels["y"]))
 
-        fig = plt.figure()
+        fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(4, 4)
 
         # Need to separate stars and galaxies
@@ -454,7 +466,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             ax.set_xlim(xs1 - xScale, xs97)
 
         # Add axes labels
-        ax.set_ylabel(yCol, fontsize=12)
+        ax.set_ylabel(yCol, fontsize=12, labelpad=10)
         ax.set_xlabel(xCol, fontsize=12)
 
         # Top histogram
@@ -492,6 +504,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         axCorner.yaxis.set_label_position("right")
         axCorner.xaxis.tick_top()
         axCorner.xaxis.set_label_position("top")
+        axCorner.set_aspect("equal")
 
         patches = []
         colors = []
@@ -510,7 +523,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             cenX = ra + width / 2
             cenY = dec + height / 2
             if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center")
+                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
 
         cmapUse = plt.cm.coolwarm
         # Set the bad color to transparent and make a masked array
@@ -520,20 +533,19 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         collection.set_array(colors)
         axCorner.add_collection(collection)
 
-        axCorner.set_xlabel("R.A. (deg)", fontsize=8)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=8)
-        axCorner.tick_params(axis="both", labelsize=8)
+        axCorner.set_xlabel("R.A. (deg)", fontsize=7)
+        axCorner.set_ylabel("Dec. (deg)", fontsize=7)
+        axCorner.tick_params(axis="both", labelsize=6, length=0, pad=1.5)
+        axCorner.invert_xaxis()
 
         # Add a colorbar
-        divider = make_axes_locatable(axCorner)
-        cax = divider.append_axes("left", size="14%")
-        plt.colorbar(collection, cax=cax, orientation="vertical")
-        cax.yaxis.set_ticks_position("left")
-        for label in cax.yaxis.get_ticklabels():
-            label.set_bbox(dict(facecolor="w", ec="none", alpha=0.5))
-            label.set_fontsize(8)
-        cax.text(0.6, 0.5, "Median Value", color="k", rotation="vertical", transform=cax.transAxes,
-                 horizontalalignment="center", verticalalignment="center", fontsize=8)
+        pos = axCorner.get_position()
+        cax = fig.add_axes([pos.x0, pos.y0 + 0.23, pos.x1 - pos.x0, 0.025])
+        plt.colorbar(collection, cax=cax, orientation="horizontal")
+        cax.text(0.5, 0.5, "Median Value", color="k", transform=cax.transAxes, rotation="horizontal",
+                 horizontalalignment="center", verticalalignment="center", fontsize=6)
+        cax.tick_params(axis="x", labelsize=6, labeltop=True, labelbottom=False, bottom=False, top=True,
+                        pad=0.5, length=2)
 
         plt.draw()
 
@@ -557,7 +569,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         # Add useful information to the plot
         plt.draw()
-        plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22)
+        plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22, left=0.21)
         fig = plt.gcf()
         fig = addPlotInfo(fig, plotInfo)
 

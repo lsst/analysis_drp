@@ -17,13 +17,13 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: parameters.ApFluxName
       axisActions.zAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_stars_sky
+      connections.plotName: CircAp12_sub_PS_meas_stars
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: psfFlux
       selectorActions.SnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -36,7 +36,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "ap12Flux"
       axisActions.zAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_gals_sky
+      connections.plotName: CircAp12_sub_PS_meas_gals
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
@@ -44,7 +44,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -58,7 +58,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "ap12Flux"
       axisActions.zAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_stars_sky
+      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_stars
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
       selectorActions.flagSelector: VisitPlotFlagSelector
@@ -66,7 +66,7 @@ tasks:
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, FlagSelector, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -80,7 +80,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "ap12Flux"
       axisActions.zAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_gals_sky
+      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_gals
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
       selectorActions.flagSelector: VisitPlotFlagSelector
@@ -90,7 +90,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
         SnSelector)
@@ -105,7 +105,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "ap12Flux"
       axisActions.zAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unkowns_sky
+      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unkowns
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
       selectorActions.flagSelector: VisitPlotFlagSelector
@@ -115,7 +115,7 @@ tasks:
       selectorActions.SnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, UnknownIdentifier,
         SnSelector)
@@ -129,14 +129,14 @@ tasks:
       axisActions.zAction: DivideColumns
       axisActions.zAction.colA.column: "psfFlux"
       axisActions.zAction.colB.column: "psfFluxErr"
-      connections.plotName: PSFluxSN_meas_all_sky
+      connections.plotName: PSFluxSN_meas_all
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       selectorActions.SnSelector.bands: [""]
       sourceSelectorActions: None
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.pipe.tasks.dataFrameActions import DivideColumns
@@ -150,7 +150,7 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap12Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_scatter
+      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
       selectorActions.flagSelector: VisitPlotFlagSelector
@@ -163,7 +163,7 @@ tasks:
       sourceSelectorActions.galaxySelector.band: ""
       sourceSelectorActions.unknownSelector.band: ""
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
                                                      SnSelector, UnknownIdentifier)
@@ -178,7 +178,7 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap12Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_all_scatter
+      connections.plotName: CircAp12_sub_PS_all
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
@@ -187,7 +187,7 @@ tasks:
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: ""
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -201,7 +201,7 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap25Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_all_scatter
+      connections.plotName: CircAp25_sub_PS_all
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
@@ -210,7 +210,7 @@ tasks:
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: ""
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -224,7 +224,7 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap12Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_gals_scatter
+      connections.plotName: CircAp12_sub_PS_gals
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
@@ -233,7 +233,7 @@ tasks:
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -247,7 +247,7 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap25Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_gals_scatter
+      connections.plotName: CircAp25_sub_PS_gals
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
@@ -256,7 +256,7 @@ tasks:
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
       axisLabels: {"x": "PSF Magnitude (msg)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
@@ -269,14 +269,14 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap12Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_scatter
+      connections.plotName: CircAp12_sub_PS_meas
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
         SnSelector, UnknownIdentifier)
@@ -290,14 +290,14 @@ tasks:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "ap25Flux"
       axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_meas_scatter
+      connections.plotName: CircAp25_sub_PS_meas
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
         SnSelector, UnknownIdentifier)
@@ -309,7 +309,7 @@ tasks:
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction.column: "ap09Flux"
-      connections.plotName: skyObject_sky
+      connections.plotName: skyObject
       selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["sky_source"]
       sourceSelectorActions: None

@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as scipyODR
+from matplotlib import colors
 
 from lsst.geom import Box2D, SpherePoint, degrees
 
 
-def parsePlotInfo(dataId, runName, tableName):
+def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
     """Parse plot info from the dataId
 
     Parameters
@@ -18,16 +19,20 @@ def parsePlotInfo(dataId, runName, tableName):
     -------
     plotInfo : `dict`
     """
-    plotInfo = {"run": runName, "tractTableType": tableName}
+    plotInfo = {"run": runName, "tractTableType": tableName, "plotName": plotName, "SN": SN}
 
     for dataInfo in dataId:
         plotInfo[dataInfo.name] = dataId[dataInfo.name]
 
-    if "filter" not in plotInfo.keys():
-        plotInfo["filter"] = "N/A"
+    bandStr = ""
+    for band in bands:
+        bandStr += (", " + band)
+    plotInfo["bands"] = bandStr[2:]
 
     if "tract" not in plotInfo.keys():
         plotInfo["tract"] = "N/A"
+    if "visit" not in plotInfo.keys():
+        plotInfo["visit"] = "N/A"
 
     return plotInfo
 
@@ -54,7 +59,9 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     # For now also convert the gen 2 patchIds to gen 3
 
     patchInfoDict = {}
-    for patch in cat.patch.unique():
+    maxPatchNum = tractInfo.num_patches.x*tractInfo.num_patches.y
+    patches = np.arange(0, maxPatchNum, 1)
+    for patch in patches:
         if patch is None:
             continue
         # Once the objectTable_tract catalogues are using gen 3 patches
@@ -135,14 +142,23 @@ def addPlotInfo(fig, plotInfo):
     photocalibDataset = "None"
     astroDataset = "None"
 
-    plt.text(0.02, 0.98, "Run:" + plotInfo["run"], fontsize=8, alpha=0.8, transform=fig.transFigure)
-    datasetType = ("Datasets used: photocalib: " + photocalibDataset + ", astrometry: " + astroDataset)
-    tableType = "Table: " + plotInfo["tractTableType"]
-    dataIdText = "Tract: " + str(plotInfo["tract"]) + " , Filter: " + plotInfo["filter"]
-    plt.text(0.02, 0.95, datasetType, fontsize=8, alpha=0.8, transform=fig.transFigure)
+    plt.text(0.01, 0.99, plotInfo["plotName"], fontsize=8, transform=fig.transFigure, ha="left", va="top")
 
-    plt.text(0.02, 0.92, tableType, fontsize=8, alpha=0.8, transform=fig.transFigure)
-    plt.text(0.02, 0.89, dataIdText, fontsize=8, alpha=0.8, transform=fig.transFigure)
+    run = plotInfo["run"]
+    datasetsUsed = f"\nPhotoCalib: {photocalibDataset}, Astrometry: {astroDataset}"
+    tableType = f"\nTable: {plotInfo['tractTableType']}"
+
+    dataIdText = ""
+    if str(plotInfo["tract"]) != "N/A":
+        dataIdText += f", Tract: {plotInfo['tract']}"
+    if str(plotInfo["visit"]) != "N/A":
+        dataIdText += f", Visit: {plotInfo['visit']}"
+
+    bandsText = f", Bands: {''.join(plotInfo['bands'].split(' '))}"
+    SNText = f", S/N: {plotInfo['SN']}"
+    infoText = f"\n{run}{datasetsUsed}{tableType}{dataIdText}{bandsText}{SNText}"
+    plt.text(0.01, 0.98, infoText, fontsize=7, transform=fig.transFigure, alpha=0.6, ha="left", va="top")
+
     return fig
 
 
@@ -237,7 +253,7 @@ def stellarLocusFit(xs, ys, paramDict):
     # When the gradient is really steep we need to use
     # the y limits of the box rather than the x ones
 
-    if np.fabs(mODR) > 1:
+    if np.abs(mODR) > 1:
         yBoxMin = paramDict["yMin"]
         xBoxMin = (yBoxMin - bODR)/mODR
         yBoxMax = paramDict["yMax"]
@@ -295,7 +311,56 @@ def perpDistance(p1, p2, points):
     dists = []
     for point in points:
         point = np.array(point)
-        distToLine = np.cross(p1 - point, p2 - point)/np.linalg.norm(p2 - point)
+        distToLine = np.cross(p2 - p1, point - p1)/np.linalg.norm(p2 - p1)
         dists.append(distToLine)
 
     return dists
+
+
+def mkColormap(colorNames):
+    """Make a colormap from the list of color names.
+
+    Parameters
+    ----------
+    colorNames : `list`
+        A list of strings that correspond to matplotlib
+        named colors.
+
+    Returns
+    -------
+    cmap : `matplotlib.colors.LinearSegmentedColormap`
+    """
+
+    nums = np.linspace(0, 1, len(colorNames))
+    blues = []
+    greens = []
+    reds = []
+    for (num, color) in zip(nums, colorNames):
+        r, g, b = colors.colorConverter.to_rgb(color)
+        blues.append((num, b, b))
+        greens.append((num, g, g))
+        reds.append((num, r, r))
+
+    colorDict = {"blue": blues, "red": reds, "green": greens}
+    cmap = colors.LinearSegmentedColormap("newCmap", colorDict)
+    return cmap
+
+
+def extremaSort(xs):
+    """Return the ids of the points reordered so that those
+    furthest from the median, in absolute terms, are last.
+
+    Parameters
+    ----------
+    xs : `np.array`
+        An array of the values to sort
+
+    Returns
+    -------
+    ids : `np.array`
+    """
+
+    med = np.median(xs)
+    dists = np.abs(xs - med)
+    ids = np.argsort(dists)
+    return ids
