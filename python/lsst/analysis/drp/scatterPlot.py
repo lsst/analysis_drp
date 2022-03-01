@@ -99,6 +99,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.highSnStatisticSelectorActions,
                              self.config.lowSnStatisticSelectorActions,
@@ -106,7 +107,11 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -115,10 +120,12 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.scatterPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a scatterPlot of the given column.
 
         Parameters
@@ -202,8 +209,14 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         useForStats[highSnMask] = 1
         plotDf.loc[:, "useForStats"] = useForStats
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot

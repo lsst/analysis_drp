@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as scipyODR
+from matplotlib import colors
 
 from lsst.geom import Box2D
 
 
-def parsePlotInfo(dataId, runName, tableName):
+def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
     """Parse plot info from the dataId
 
     Parameters
@@ -18,13 +19,15 @@ def parsePlotInfo(dataId, runName, tableName):
     -------
     plotInfo : `dict`
     """
-    plotInfo = {"run": runName, "tractTableType": tableName}
+    plotInfo = {"run": runName, "tractTableType": tableName, "plotName": plotName, "SN": SN}
 
     for dataInfo in dataId:
         plotInfo[dataInfo.name] = dataId[dataInfo.name]
 
-    if "filter" not in plotInfo.keys():
-        plotInfo["filter"] = "N/A"
+    bandStr = ""
+    for band in bands:
+        bandStr += (", " + band)
+    plotInfo["bands"] = bandStr[2:]
 
     return plotInfo
 
@@ -98,14 +101,19 @@ def addPlotInfo(fig, plotInfo):
     photocalibDataset = "None"
     astroDataset = "None"
 
-    plt.text(0.02, 0.98, "Run:" + plotInfo["run"], fontsize=8, alpha=0.8, transform=fig.transFigure)
-    datasetType = ("Datasets used: photocalib: " + photocalibDataset + ", astrometry: " + astroDataset)
+    plt.text(0.01, 0.98, "Plot Name: " + plotInfo["plotName"], fontsize=8, transform=fig.transFigure)
+    plt.text(0.01, 0.95, "Run: " + plotInfo["run"], fontsize=8, alpha=0.6, transform=fig.transFigure)
+    datasetType = ("Datasets Used: photocalib: " + photocalibDataset + ", astrometry: " + astroDataset)
     tableType = "Table: " + plotInfo["tractTableType"]
-    dataIdText = "Tract: " + str(plotInfo["tract"]) + " , Filter: " + plotInfo["filter"]
-    plt.text(0.02, 0.95, datasetType, fontsize=8, alpha=0.8, transform=fig.transFigure)
+    tractText = "Tract: " + str(plotInfo["tract"])
+    bandsText = "Bands: " + plotInfo["bands"]
+    SNText = "S/N: " + str(plotInfo["SN"])
+    plt.text(0.01, 0.92, datasetType, fontsize=8, alpha=0.6, transform=fig.transFigure)
 
-    plt.text(0.02, 0.92, tableType, fontsize=8, alpha=0.8, transform=fig.transFigure)
-    plt.text(0.02, 0.89, dataIdText, fontsize=8, alpha=0.8, transform=fig.transFigure)
+    plt.text(0.01, 0.89, tableType, fontsize=8, alpha=0.6, transform=fig.transFigure)
+    plt.text(0.01, 0.86, tractText, fontsize=8, alpha=0.6, transform=fig.transFigure)
+    plt.text(0.01, 0.83, bandsText, fontsize=8, alpha=0.6, transform=fig.transFigure)
+    plt.text(0.01, 0.80, SNText, fontsize=8, alpha=0.6, transform=fig.transFigure)
     return fig
 
 
@@ -262,3 +270,54 @@ def perpDistance(p1, p2, points):
         dists.append(distToLine)
 
     return dists
+
+
+def mkColormap(colorNames):
+    """Make a colormap from the list of color names.
+
+    Parameters
+    ----------
+    colorNames : `list`
+        A list of strings that correspond to matplotlib
+        named colors.
+
+    Returns
+    -------
+    cmap : `matplotlib.colors.LinearSegmentedColormap`
+    """
+
+    nums = np.linspace(0, 1, len(colorNames))
+    blues = []
+    greens = []
+    reds = []
+    for (num, color) in zip(nums, colorNames):
+        r, g, b = colors.colorConverter.to_rgb(color)
+        blues.append((num, b, b))
+        greens.append((num, g, g))
+        reds.append((num, r, r))
+
+    colorDict = {"blue": blues, "red": reds, "green": greens}
+    cmap = colors.LinearSegmentedColormap("newCmap", colorDict)
+    return cmap
+
+
+def extremaSort(xs):
+    """Return the ids of the points reordered so that those
+    furthest from the median, in absolute terms, are last.
+
+    Parameters
+    ----------
+    xs : `np.array`
+        An array of the values to sort
+
+    Returns
+    -------
+    ids : `np.array`
+    """
+
+    med = np.median(xs)
+    dists = np.fabs(xs - med)
+    ids = np.argsort(dists)
+    return ids
+
+

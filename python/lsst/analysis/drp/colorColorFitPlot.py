@@ -353,7 +353,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         alphas = [1.0, 0.5]
         handles = [Rectangle((0, 0), 1, 1, color="none", ec="C0", alpha=a) for a in alphas]
         labels = ["Refit", "HW"]
-        axHist.legend(handles, labels, fontsize=6, loc="lower right")
+        axHist.legend(handles, labels, fontsize=6, loc="upper right")
 
         # Add a contour plot showing the magnitude dependance
         # of the distance to the fit

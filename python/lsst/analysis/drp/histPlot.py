@@ -140,13 +140,18 @@ class HistPlotTask(pipeBase.PipelineTask):
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.leftPanelActions,
                              self.config.rightPanelActions,
                              self.config.selectorActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -155,10 +160,12 @@ class HistPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.histPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a two-panel plot showing various
         histograms in each panel.
 
@@ -221,8 +228,14 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         plotDf = pd.DataFrame(columns)
 
+        #Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.summaryStatsLabel, skymap, plotInfo)
         # Make the plot
@@ -271,7 +284,7 @@ class HistPlotTask(pipeBase.PipelineTask):
                       f"panel 1 = {self.config.leftPanelLabels}; "
                       f"panel 2 = {self.config.rightPanelLabels} ")
 
-        fig = plt.figure()
+        fig = plt.figure(dpi=200)
         gs = gridspec.GridSpec(100, 100)
 
         # left panel limits

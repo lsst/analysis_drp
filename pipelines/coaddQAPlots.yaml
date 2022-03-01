@@ -17,6 +17,7 @@ tasks:
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
+      fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
@@ -59,6 +60,7 @@ tasks:
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
+      fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, FlagSelector, SnSelector
@@ -167,6 +169,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
+      fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, StarIdentifier, SnSelector)
@@ -207,6 +210,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "_psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
+      fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PS (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, StarIdentifier, SnSelector)

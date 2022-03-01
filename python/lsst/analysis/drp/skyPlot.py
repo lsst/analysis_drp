@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import binned_statistic_2d
 from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
@@ -10,7 +12,7 @@ from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
 
@@ -67,6 +69,12 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         default={"statSelector": dataSelectors.SnSelector},
     )
 
+    fixAroundZero = pexConfig.Field(
+        doc="Fix the center of the colorscale to be zero.",
+        default=False,
+        dtype=bool,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.xAction.column = "coord_ra"
@@ -84,12 +92,17 @@ class SkyPlotTask(pipeBase.PipelineTask):
         # Docs inherited from base class
 
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.statisticSelectorActions, self.config.sourceSelectorActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -98,10 +111,12 @@ class SkyPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.skyPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a skyPlot of the given column.
 
         Parameters
@@ -175,8 +190,14 @@ class SkyPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.axisLabels["z"], skymap, plotInfo)
         # Make the plot
@@ -221,8 +242,13 @@ class SkyPlotTask(pipeBase.PipelineTask):
         self.log.info("Plotting {}: the values of {} on a sky plot.".format(
                       self.config.connections.plotName, self.config.axisLabels["z"]))
 
-        fig = plt.figure()
+        fig = plt.figure(dpi=200)
         ax = fig.add_subplot(111)
+
+        # Make divergent colormaps for stars, galaxes and all the points
+        blueGreen = mkColormap(["midnightblue", "lightcyan", "darkgreen"])
+        redPurple = mkColormap(["indigo", "lemonchiffon", "firebrick"])
+        orangeBlue = mkColormap(["darkOrange", "thistle", "midnightblue"])
 
         # Need to separate stars and galaxies
         stars = (catPlot["sourceType"] == 1)
@@ -233,14 +259,18 @@ class SkyPlotTask(pipeBase.PipelineTask):
         zCol = self.config.axisLabels["z"]
 
         # For galaxies
-        xsGalaxies = catPlot.loc[galaxies, xCol]
-        ysGalaxies = catPlot.loc[galaxies, yCol]
-        colorValsGalaxies = catPlot.loc[galaxies, zCol]
+        colorValsGalaxies = catPlot.loc[galaxies, zCol].values
+        ids = extremaSort(colorValsGalaxies)
+        xsGalaxies = catPlot.loc[galaxies, xCol].values[ids]
+        ysGalaxies = catPlot.loc[galaxies, yCol].values[ids]
+        colorValsGalaxies = colorValsGalaxies[ids]
 
         # For stars
-        xsStars = catPlot.loc[stars, xCol]
-        ysStars = catPlot.loc[stars, yCol]
-        colorValsStars = catPlot.loc[stars, zCol]
+        colorValsStars = catPlot.loc[stars, zCol].values
+        ids = extremaSort(colorValsStars)
+        xsStars = catPlot.loc[stars, xCol].values[ids]
+        ysStars = catPlot.loc[stars, yCol].values[ids]
+        colorValsStars = colorValsStars[ids]
 
         # Calculate some statistics
         if np.any(catPlot["sourceType"] == 2):
@@ -294,11 +324,13 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
         toPlotList = []
         if np.any(catPlot["sourceType"] == 1):
-            toPlotList.append((xsStars, ysStars, colorValsStars, "winter_r", "Stars"))
+            toPlotList.append((xsStars, ysStars, colorValsStars, blueGreen, "Stars"))
         if np.any(catPlot["sourceType"] == 2):
-            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, "autumn_r", "Galaxies"))
+            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, redPurple, "Galaxies"))
         if np.any(catPlot["sourceType"] == 10):
-            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "plasma", "All"))
+            ids = extremaSort(catPlot[zCol].values)
+            toPlotList.append((catPlot[xCol].values[ids], catPlot[yCol].values[ids],
+                               catPlot[zCol].values[ids], orangeBlue, "All"))
         if np.any(catPlot["sourceType"] == 9):
             toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
 
@@ -317,18 +349,47 @@ class SkyPlotTask(pipeBase.PipelineTask):
             ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
             cenX = ra + width / 2
             cenY = dec + height / 2
+            if dataId == "tract":
+                minRa = np.min(ras)
+                minDec = np.min(decs)
+                maxRa = np.max(ras)
+                maxDec = np.max(decs)
             if dataId != "tract":
-                ax.annotate(dataId, (cenX, cenY), color="k", fontsize=7, ha="center", va="center",
+                ax.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center",
                             path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
 
         for (i, (xs, ys, colorVals, cmap, label)) in enumerate(toPlotList):
             med = np.median(colorVals)
             mad = sigmaMad(colorVals)
-            vmin = med - 3*mad
-            vmax = med + 3*mad
-            scatterOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=4.0, vmin=vmin, vmax=vmax)
+            vmin = med - 2*mad
+            vmax = med + 2*mad
+            if self.config.fixAroundZero:
+                scaleEnd = np.max([np.fabs(vmin), np.fabs(vmax)])
+                vmin = -1*scaleEnd
+                vmax = scaleEnd
+            nBins = 50
+            xBins = np.linspace(minRa, maxRa, nBins)
+            yBins = np.linspace(minDec, maxDec, nBins)
+            binnedStats, xEdges, yEdges, binNums = binned_statistic_2d(xs, ys, colorVals, statistic="median",
+                                                                       bins=(xBins, yBins))
+
+            if len(xs) > 10000:
+                s = 50000/(len(xs)**1.1)
+                plotOut = ax.imshow(binnedStats.T, cmap=cmap,
+                                    extent=[xEdges[0], xEdges[-1], yEdges[0], yEdges[-1]], vmin=vmin,
+                                    vmax=vmax)
+                # find the most extreme 15% of points, because the list
+                # is ordered by the distance from the median this is just
+                # the final 15% of points
+                extremes = int(np.floor((len(xs)/100))*85)
+                ax.scatter(xs[extremes:], ys[extremes:], c=colorVals[extremes:], s=s, cmap=cmap, vmin=vmin,
+                           vmax=vmax)
+
+            else:
+                plotOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=7, vmin=vmin, vmax=vmax)
+
             cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.77])
-            plt.colorbar(scatterOut, cax=cax, extend="both")
+            plt.colorbar(plotOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
             text = cax.text(0.6, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
                             ha="center", va="center", fontsize=10)
@@ -339,7 +400,11 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
         ax.set_xlabel(xCol)
         ax.set_ylabel(yCol)
+        ax.tick_params(axis="x", labelrotation=25)
+        ax.tick_params(labelsize=7)
 
+        ax.set_aspect("equal")
+        ax.invert_xaxis()
         plt.draw()
 
         # Add useful information to the plot
