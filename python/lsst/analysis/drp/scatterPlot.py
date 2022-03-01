@@ -6,6 +6,7 @@ from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.path import Path
 from matplotlib.collections import PatchCollection
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
 from lsst.skymap import BaseSkyMap
@@ -14,7 +15,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
@@ -86,6 +87,13 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         doc="Number of bins to put on the x axis.",
         default=40.0,
         dtype=float,
+    )
+
+    plot2DHist = pexConfig.Field(
+        doc="Plot a 2D histogram in the densist area of points on the scatter plot."
+            "Doesn't look great if plotting mulitple datasets on top of each other.",
+        default=True,
+        dtype=bool,
     )
 
     def setDefaults(self):
@@ -284,6 +292,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(4, 4)
 
+        newBlues = mkColormap(["paleturquoise", "midnightBlue"])
+        newReds = mkColormap(["lemonchiffon", "firebrick"])
+
         # Need to separate stars and galaxies
         stars = (catPlot["sourceType"] == 1)
         galaxies = (catPlot["sourceType"] == 2)
@@ -300,14 +311,15 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         xsStars = catPlot.loc[stars, xCol]
         ysStars = catPlot.loc[stars, yCol]
 
-        highStats = []
-        highMags = []
-        lowStats = []
-        lowMags = []
+        highStats = {}
+        highMags = {}
+        lowStats = {}
+        lowMags = {}
 
         # sourceTypes: 1 - stars, 2 - galaxies, 9 - unknowns
         # 10 - all
         sourceTypeList = [1, 2, 9, 10]
+        sourceTypeMapper = {"stars": 1, "galaxies": 2, "unknowns": 9, "all": 10}
         # Calculate some statistics
         for sourceType in sourceTypeList:
             if np.any(catPlot["sourceType"] == sourceType):
@@ -320,40 +332,52 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 lowSnMed = np.nanmedian(catPlot.loc[lowSn, yCol])
                 lowSnMad = sigmaMad(catPlot.loc[lowSn, yCol], nan_policy="omit")
 
-                highStats += ["Median: {:0.2f}".format(highSnMed),
-                              r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnMad)]
-                lowStats += ["Median: {:0.2f}".format(lowSnMed),
-                             r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnMad)]
+                highStatsStr = ("Median: {:0.2f}    ".format(highSnMed)
+                                + r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnMad))
+                highStats[sourceType] = highStatsStr
+
+                lowStatsStr = ("Median: {:0.2f}    ".format(lowSnMed)
+                               + r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnMad))
+                lowStats[sourceType] = lowStatsStr
+
                 if np.sum(highSn) > 0:
-                    highMags.append(np.nanmax(catPlot.loc[highSn, magCol]))
+                    highMags[sourceType] = f"{np.nanmax(catPlot.loc[highSn, magCol]):.2f}"
                 else:
-                    highMags.append(0.0)
-                if np.sum(lowSn):
-                    lowMags.append(np.nanmax(catPlot.loc[lowSn, magCol]))
+                    highMags[sourceType] = "-"
+                if np.sum(lowSn) > 0.0:
+                    lowMags[sourceType] = f"{np.nanmax(catPlot.loc[lowSn, magCol]):.2f}"
                 else:
-                    lowMags.append(np.nan)
+                    lowMags[sourceType] = "-"
 
         # Main scatter plot
         ax = fig.add_subplot(gs[1:, :-1])
-        binThresh = 50
+        binThresh = 5
 
         yBinsOut = []
         linesForLegend = []
 
-        if np.any(catPlot["sourceType"] == 1) and not np.any(catPlot["sourceType"] == 2):
-            toPlotList = [(xsStars.values, ysStars.values, "C0")]
-        elif np.any(catPlot["sourceType"] == 2) and not np.any(catPlot["sourceType"] == 1):
-            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "C3")]
-        elif np.any(catPlot["sourceType"] == 1) and np.any(catPlot["sourceType"] == 2):
-            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "C3"),
-                          (xsStars.values, ysStars.values, "C0")]
-        if np.any(catPlot["sourceType"] == 9):
-            unknowns = (catPlot["sourceType"] == 9)
-            toPlotList = [(catPlot.loc[unknowns, xCol].values, catPlot.loc[unknowns, yCol].values, "green")]
-        if np.any(catPlot["sourceType"] == 10):
-            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple")]
+        if (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
+                and not np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])):
+            toPlotList = [(xsStars.values, ysStars.values, "midnightblue", newBlues,
+                           sourceTypeMapper["stars"])]
+        elif (np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])
+                and not np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])):
+            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds,
+                           sourceTypeMapper["galaxies"])]
+        elif (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
+                and np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])):
+            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds,
+                           sourceTypeMapper["galaxies"]),
+                          (xsStars.values, ysStars.values, "midnightblue", newBlues,
+                           sourceTypeMapper["stars"])]
+        if np.any(catPlot["sourceType"] == sourceTypeMapper["unknowns"]):
+            unknowns = (catPlot["sourceType"] == sourceTypeMapper["unknowns"])
+            toPlotList = [(catPlot.loc[unknowns, xCol].values, catPlot.loc[unknowns, yCol].values,
+                           "green", sourceTypeMapper["unknowns"])]
+        if np.any(catPlot["sourceType"] == sourceTypeMapper["all"]):
+            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", sourceTypeMapper["all"])]
 
-        for (xs, ys, color) in toPlotList:
+        for (j, (xs, ys, color, cmap, sourceType)) in enumerate(toPlotList):
             if len(xs) < 2:
                 medLine, = ax.plot(xs, np.nanmedian(ys), color,
                                    label="Median: {:0.2f}".format(np.nanmedian(ys)), lw=0.8)
@@ -369,7 +393,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             xScale = (xs97 - xs1)/20.0  # This is ~5% of the data range
 
             # 40 was used as the default number of bins because it looked good
-            xEdges = np.arange(xs1 - xScale, xs95, (xs95 - (xs1 - xScale))/self.config.nBins)
+            xEdges = np.arange(np.nanmin(xs) - xScale, np.nanmax(xs) + xScale,
+                               (np.nanmax(xs) + xScale - (np.nanmin(xs) - xScale))/self.config.nBins)
             medYs = np.nanmedian(ys)
             sigMadYs = sigmaMad(ys, nan_policy="omit")
             fiveSigmaHigh = medYs + 5.0*sigMadYs
@@ -406,9 +431,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     threeSigMadVerts[i, :] = [xEdge, med + 3*sigMad]
                     threeSigMadVerts[-(i + 1), :] = [xEdge, med - 3*sigMad]
 
-                medDiff = np.nanmedian(ys)
-                sigMadDiff = sigmaMad(ys, nan_policy="omit")
-                medLine, = ax.plot(xEdgesPlot, meds, color, label="Median: {:0.2f}".format(medDiff))
+                medLine, = ax.plot(xEdgesPlot, meds, color, label="Running Median")
                 linesForLegend.append(medLine)
 
                 # Make path to check which points lie within one sigma mad
@@ -416,17 +439,20 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
                 # Add lines for the median +/- 3 * sigma MAD
                 threeSigMadLine, = ax.plot(xEdgesPlot, threeSigMadVerts[:len(xEdgesPlot), 1], color,
-                                           alpha=0.4)
+                                           alpha=0.4, label=r"3$\sigma_{MAD}$")
                 ax.plot(xEdgesPlot[::-1], threeSigMadVerts[len(xEdgesPlot):, 1], color, alpha=0.4)
 
                 # Add lines for the median +/- 1 * sigma MAD
                 sigMadLine, = ax.plot(xEdgesPlot, meds + 1.0*sigMads, color, alpha=0.8,
-                                      label=r"$\sigma_{MAD}$: " + "{:0.2f}".format(sigMadDiff))
+                                      label=r"$\sigma_{MAD}$")
                 linesForLegend.append(sigMadLine)
                 ax.plot(xEdgesPlot, meds - 1.0*sigMads, color, alpha=0.8)
 
                 # Add lines for the median +/- 2 * sigma MAD
-                twoSigMadLine, = ax.plot(xEdgesPlot, meds + 2.0*sigMads, color, alpha=0.6)
+                twoSigMadLine, = ax.plot(xEdgesPlot, meds + 2.0*sigMads, color, alpha=0.6,
+                                         label=r"2$\sigma_{MAD}$")
+                linesForLegend.append(twoSigMadLine)
+                linesForLegend.append(threeSigMadLine)
                 ax.plot(xEdgesPlot, meds - 2.0*sigMads, color, alpha=0.6)
 
                 # Check which points are outside 3 sigma MAD of the median
@@ -434,14 +460,36 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
                 points, = ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color,
                                   zorder=-1)
+
+                # Add some stats text
+                xPos = 0.65 - 0.4*j
+                bbox = dict(edgecolor=color, linestyle="--", facecolor="none")
+                highThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
+                statText = f"S/N > {highThresh} Stats ({magCol} < {highMags[sourceType]})\n"
+                statText += highStats[sourceType]
+                fig.text(xPos, 0.087, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if highMags[sourceType] != "-":
+                    ax.axvline(float(highMags[sourceType]), color=color, ls="--")
+
+                bbox = dict(edgecolor=color, linestyle=":", facecolor="none")
+                lowThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
+                statText = f"S/N > {lowThresh} Stats ({magCol} < {lowMags[sourceType]})\n"
+                statText += lowStats[sourceType]
+                fig.text(xPos, 0.017, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if lowMags[sourceType] != "-":
+                    ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
+
+                if self.config.plot2DHist:
+                    histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
+
             else:
                 points, = ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
-                medLine, = ax.plot(xs, meds, color, label="Median: {:0.2f}".format(np.nanmedian(ys)), lw=0.8)
+                medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.2f}", lw=0.8)
                 linesForLegend.append(medLine)
                 sigMads = np.array([sigmaMad(ys, nan_policy="omit")]*len(xs))
                 sigMadLine, = ax.plot(xs, meds + 1.0*sigMads, color, alpha=0.8, lw=0.8,
-                                      label=r"$\sigma_{MAD}$: " + "{:0.2f}".format(sigMads[0]))
+                                      label=r"$\sigma_{MAD}$: " + f"{sigMads[0]:0.2f}")
                 ax.plot(xs, meds - 1.0*sigMads, color, alpha=0.8)
                 linesForLegend.append(sigMadLine)
 
@@ -472,21 +520,26 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             ax.set_xlim(xLims[0], xLims[1])
         else:
             ax.set_xlim(xs1 - xScale, xs97)
+            ax.set_xlim(np.nanmin(xs), np.nanmax(xs))
+
+        # Add a line legend
+        ax.legend(handles=linesForLegend, ncol=4, fontsize=6, loc="upper left", framealpha=0.9,
+                  edgecolor="k", borderpad=0.4, handlelength=1)
 
         # Add axes labels
-        ax.set_ylabel(yCol, fontsize=12, labelpad=10)
-        ax.set_xlabel(xCol, fontsize=12)
+        ax.set_ylabel(yCol, fontsize=10, labelpad=10)
+        ax.set_xlabel(xCol, fontsize=10, labelpad=2)
 
         # Top histogram
         topHist = plt.gcf().add_subplot(gs[0, :-1], sharex=ax)
         topHist.hist(catPlot[xCol].values, bins=100, color="grey", alpha=0.3, log=True,
-                     label="All ({})".format(len(catPlot)))
+                     label=f"All ({len(catPlot)})")
         if np.any(catPlot["sourceType"] == 2):
-            topHist.hist(xsGalaxies, bins=100, color="C3", histtype="step", log=True,
-                         label="Galaxies ({})".format(len(np.where(galaxies)[0])))
+            topHist.hist(xsGalaxies, bins=100, color="firebrick", histtype="step", log=True,
+                         label=f"Galaxies ({len(np.where(galaxies)[0])})")
         if np.any(catPlot["sourceType"] == 1):
-            topHist.hist(xsStars, bins=100, color="C0", histtype="step", log=True,
-                         label="Stars ({})".format(len(np.where(stars)[0])))
+            topHist.hist(xsStars, bins=100, color="midnightblue", histtype="step", log=True,
+                         label=f"Stars ({len(np.where(stars)[0])})")
         topHist.axes.get_xaxis().set_visible(False)
         topHist.set_ylabel("Number", fontsize=8)
         topHist.legend(fontsize=6, framealpha=0.9, borderpad=0.4, loc="lower left", ncol=3, edgecolor="k")
@@ -497,14 +550,36 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         bins = np.linspace(yLimMin, yLimMax)
         sideHist.hist(catPlot[yCol].values[finiteObjs], bins=bins, color="grey", alpha=0.3,
                       orientation="horizontal", log=True)
-        if np.any(catPlot["sourceType"] == 2):
-            sideHist.hist(ysGalaxies[np.isfinite(ysGalaxies)], bins=bins, color="C3", histtype="step",
+        if np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"]):
+            sideHist.hist(ysGalaxies[np.isfinite(ysGalaxies)], bins=bins, color="firebrick", histtype="step",
                           orientation="horizontal", log=True)
-        if np.any(catPlot["sourceType"] == 1):
-            sideHist.hist(ysStars[np.isfinite(ysStars)], bins=bins, color="C0", histtype="step",
+            if highMags[sourceTypeMapper["galaxies"]] != "-":
+                sideHist.hist(ysGalaxies[np.isfinite(ysGalaxies) & (xsGalaxies < float(highMags[2]))],
+                              bins=bins, color="firebrick", histtype="step", orientation="horizontal",
+                              log=True, ls="--")
+            if lowMags[sourceTypeMapper["galaxies"]] != "-":
+                sideHist.hist(ysGalaxies[np.isfinite(ysGalaxies) & (xsGalaxies < float(lowMags[2]))],
+                              bins=bins, color="firebrick", histtype="step", orientation="horizontal",
+                              log=True, ls=":")
+
+        if np.any(catPlot["sourceType"] == sourceTypeMapper["stars"]):
+            sideHist.hist(ysStars[np.isfinite(ysStars)], bins=bins, color="midnightblue", histtype="step",
                           orientation="horizontal", log=True)
+            if highMags[sourceTypeMapper["stars"]] != "-":
+                sideHist.hist(ysStars[np.isfinite(ysStars) & (xsStars < float(highMags[1]))], bins=bins,
+                              color="midnightblue", histtype="step", orientation="horizontal", log=True,
+                              ls="--")
+            if lowMags[sourceTypeMapper["stars"]] != "-":
+                sideHist.hist(ysStars[np.isfinite(ysStars) & (xsStars < float(lowMags[1]))], bins=bins,
+                              color="midnightblue", histtype="step", orientation="horizontal", log=True,
+                              ls=":")
+
         sideHist.axes.get_yaxis().set_visible(False)
         sideHist.set_xlabel("Number", fontsize=8)
+        if self.config.plot2DHist:
+            divider = make_axes_locatable(sideHist)
+            cax = divider.append_axes("right", size="8%", pad=0)
+            plt.colorbar(histIm, cax=cax, orientation="vertical", label="Number of Points Per Bin")
 
         # Corner plot of patches showing summary stat in each
         axCorner = plt.gcf().add_subplot(gs[0, -1])
@@ -555,27 +630,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         cax.tick_params(axis="x", labelsize=6, labeltop=True, labelbottom=False, bottom=False, top=True,
                         pad=0.5, length=2)
 
-        plt.draw()
-
-        # Add a legend
-        for (i, newLabel) in enumerate(highStats):
-            linesForLegend[i].set_label(newLabel)
-        highStatThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
-        lowStatThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
-        approxHighMag = highMags[0]
-        highLegendTitle = "S/N > {} Stats ({} < {:0.2f})".format(highStatThresh, magCol, approxHighMag)
-        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.9, 0.13), edgecolor="none",
-                   bbox_transform=fig.transFigure, title=highLegendTitle, title_fontsize=6,
-                   ncol=len(highStats))
-        for (i, newLabel) in enumerate(lowStats):
-            linesForLegend[i].set_label(newLabel)
-        approxLowMag = lowMags[0]
-        lowLegendTitle = "S/N > {} Stats ({} < {:0.2f})".format(lowStatThresh, magCol, approxLowMag)
-        fig.legend(handles=linesForLegend, fontsize=6, bbox_to_anchor=(0.9, 0.07), edgecolor="none",
-                   bbox_transform=fig.transFigure, title=lowLegendTitle, title_fontsize=6,
-                   ncol=len(lowStats))
-
-        # Add useful information to the plot
         plt.draw()
         plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22, left=0.21)
         fig = plt.gcf()

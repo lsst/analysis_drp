@@ -3,15 +3,15 @@ parameters:
   ApFluxName: "i_ap09Flux"
   band: i
 tasks:
-  # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
+  # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
   # This plot shows the on sky distribution of these values for stars.
-  plot_CircAp12_sub_PS_meas_sky_stars:
+  plot_CircAp12_sub_PSF_meas_sky_stars:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: parameters.ApFluxName
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_stars_i
+      connections.plotName: CircAp12_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -23,15 +23,15 @@ tasks:
         from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_sky_gals:
-    # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
+  plot_CircAp12_sub_PSF_meas_sky_gals:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_ap12Flux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_gals_i
+      connections.plotName: CircAp12_sub_PSF_meas_gals_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -43,8 +43,8 @@ tasks:
         from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_calib_psf_used_sky_stars:
-    # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_stars:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars that were selected as
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
@@ -52,7 +52,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_ap12Flux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_stars_i
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
@@ -61,13 +61,13 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       fixAroundZero: True
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, FlagSelector, SnSelector
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_calib_psf_used_sky_gals:
-    # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_gals:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies that were selected as
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
@@ -75,7 +75,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_ap12Flux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_gals_i
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
@@ -90,8 +90,8 @@ tasks:
         SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_calib_psf_used_sky_unknown:
-    # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_unknown:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for objects of unknown classification
     # that were selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
@@ -99,7 +99,7 @@ tasks:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_ap12Flux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unkowns_i
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_unkowns_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
@@ -115,14 +115,14 @@ tasks:
         from lsst.analysis.drp.calcFunctors import MagDiff
 
   plot_PSFluxSN_meas_sky_all:
-    # Make a plot showing the signal to noise ratio for the PS flux.
+    # Make a plot showing the signal to noise ratio for the PSF flux.
     # This plot shows the on sky distribution of these values for all objects.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: DivideColumns
       axisActions.zAction.colA.column: "i_psfFlux"
       axisActions.zAction.colB.column: "i_psfFluxErr"
-      connections.plotName: PSFluxSN_meas_all_i
+      connections.plotName: PSFFluxSN_meas_all_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -135,14 +135,14 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import DivideColumns
 
   plot_Kron_sub_PSFmag_meas_sky_galaxies:
-    # Make a plot showing the difference between the kron magnitude and the PS magnitude.
+    # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_kronFlux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: Kron_sub_PS_meas_galaxies_i
+      connections.plotName: Kron_sub_PSF_meas_galaxies_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -155,14 +155,14 @@ tasks:
         from lsst.analysis.drp.calcFunctors import MagDiff
 
   plot_Kron_sub_PSFmag_meas_sky_stars:
-    # Make a plot showing the difference between the kron magnitude and the PS magnitude.
+    # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_kronFlux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: Kron_sub_PS_meas_stars_i
+      connections.plotName: Kron_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -176,14 +176,14 @@ tasks:
         from lsst.analysis.drp.calcFunctors import MagDiff
 
   plot_CModel_sub_PSFmag_meas_sky_galaxies:
-    # Make a plot showing the difference between the cmodel magnitude and the PS magnitude.
+    # Make a plot showing the difference between the cmodel magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_cModelFlux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CModel_sub_PS_meas_galaxies_i
+      connections.plotName: CModel_sub_PSF_meas_galaxies_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -196,14 +196,14 @@ tasks:
         from lsst.analysis.drp.calcFunctors import MagDiff
 
   plot_CModel_sub_PSFmag_meas_sky_stars:
-    # Make a plot showing the difference between the cmodel magnitude and the PS magnitude.
+    # Make a plot showing the difference between the cmodel magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
       axisActions.zAction.col1: "i_cModelFlux"
       axisActions.zAction.col2: "i_psfFlux"
-      connections.plotName: CModel_sub_PS_meas_stars_i
+      connections.plotName: CModel_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
@@ -216,16 +216,15 @@ tasks:
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, StarIdentifier, SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_calib_psf_used_scatter:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_stars_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for stars. These objects were all selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "i_ap12Flux"
       axisActions.yAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_i
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
@@ -233,37 +232,83 @@ tasks:
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
-      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
-                                     "unknownSelector": UnknownIdentifier}
+      sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-        SnSelector, UnknownIdentifier)
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, StarIdentifier,
+        SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
 
-  plot_CircAp12_sub_PS_meas_scatter:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object.
+  plot_CircAp12_sub_PSF_meas_stars_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for stars.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       axisActions.yAction: MagDiff
       axisActions.yAction.col1: "i_ap12Flux"
       axisActions.yAction.col2: "i_psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_i
+      connections.plotName: CircAp12_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
-      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
-                                     "unknownSelector": UnknownIdentifier}
+      sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PS (mmag) (Meas)"}
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, StarIdentifier,
+        SnSelector)
+        from lsst.analysis.drp.calcFunctors import MagDiff
+
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_gals_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for galaxies. These objects were all selected as having the flag
+    # calib_psf_used = True.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: MagDiff
+      axisActions.yAction.col1: "i_ap12Flux"
+      axisActions.yAction.col2: "i_psfFlux"
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-        SnSelector, UnknownIdentifier)
+        SnSelector)
         from lsst.analysis.drp.calcFunctors import MagDiff
+
+  plot_CircAp12_sub_PSF_meas_gals_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for galaxies.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: MagDiff
+      axisActions.yAction.col1: "i_ap12Flux"
+      axisActions.yAction.col2: "i_psfFlux"
+      connections.plotName: CircAp12_sub_PSF_meas_gals_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, FlagSelector, GalaxyIdentifier,
+        SnSelector)
+        from lsst.analysis.drp.calcFunctors import MagDiff
+
 
   plot_skyObject_sky:
     # Make a plot showing the 9-pixel radius circular aperture flux in units of nJy.
