@@ -1,0 +1,10 @@
+description: Make coadd plots for QA
+tasks:
+  plot_imageMask_NO_DATA:
+    class: lsst.analysis.drp.scatterImagePlot.ScatterPlotFromImageTask
+    config:
+      axisActions.yAction.column: "WHY ARE YOU HERE"
+      connections.plotName: imageMask_NO_DATA_scatter
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PS (mmag) (Meas)"}
+      python: |
+        from lsst.analysis.drp.calcFunctors import MagDiff
