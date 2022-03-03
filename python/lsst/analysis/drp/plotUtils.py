@@ -319,5 +319,3 @@ def extremaSort(xs):
     dists = np.fabs(xs - med)
     ids = np.argsort(dists)
     return ids
-
-
