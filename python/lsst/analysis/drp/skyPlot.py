@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from matplotlib import colors
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
 from scipy.stats import binned_statistic_2d
