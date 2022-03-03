@@ -228,7 +228,7 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         plotDf = pd.DataFrame(columns)
 
-        #Get the S/N cut used
+        # Get the S/N cut used
         try:
             SN = self.config.selectorActions.SnSelector.threshold
         except AttributeError:
