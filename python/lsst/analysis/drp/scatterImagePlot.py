@@ -1,12 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from scipy.stats import median_absolute_deviation as sigmaMad
-from matplotlib import gridspec
-from matplotlib.patches import Rectangle
-from matplotlib.path import Path
-from matplotlib.collections import PatchCollection
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from lsst.skymap import BaseSkyMap
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
@@ -14,15 +6,17 @@ from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from . import dataSelectors as dataSelectors
-from .scatterPlot import ScatterPlotWithTwoHistsTask
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+# from . import dataSelectors as dataSelectors
+# from .scatterPlot import ScatterPlotWithTwoHistsTask
+from .plotUtils import generateSummaryStats, parsePlotInfo
+
+from .imageAnalysis import maskPixelsPercentCalc
 
 
 class ScatterPlotFromImageTaskConnections(pipeBase.PipelineTaskConnections,
-                                             dimensions=("tract", "skymap"),
-                                             defaultTemplates={"inputCoaddName": "deep",
-                                                               "plotName": "deltaCoords"}):
+                                          dimensions=("tract", "skymap"),
+                                          defaultTemplates={"inputCoaddName": "deep",
+                                                            "plotName": "deltaCoords"}):
 
     images = pipeBase.connectionTypes.Input(doc="The image to make plots from.",
                                             storageClass="ExposureF",
@@ -38,7 +32,7 @@ class ScatterPlotFromImageTaskConnections(pipeBase.PipelineTaskConnections,
     scatterPlot = pipeBase.connectionTypes.Output(doc="A scatter plot with histograms for both axes.",
                                                   storageClass="Plot",
                                                   name="scatterTwoHistPlot_{plotName}",
-                                                  dimensions=("tract", "skymap"))
+                                                  dimensions=("tract", "skymap", "band"))
 
 
 class ScatterPlotFromImageTaskConfig(pipeBase.PipelineTaskConfig,
@@ -135,7 +129,7 @@ class ScatterPlotFromImageTask(pipeBase.PipelineTask):
 
         for patch in images.keys():
             patches.append(patch)
-            yVals.append(self.config.axisAction.yAction(images[patch]))
+            yVals.append(maskPixelsPercentCalc(images[patch], 'NO_DATA'))
 
         columns = {"patchId": patches, self.config.axisLabels["y"]: yVals}
         plotDf = pd.DataFrame(columns)
@@ -147,5 +141,4 @@ class ScatterPlotFromImageTask(pipeBase.PipelineTask):
         # Make the plot
         fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
 
-        fig = plt.figure()
         return pipeBase.Struct(scatterPlot=fig)
