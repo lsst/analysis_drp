@@ -304,8 +304,14 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                               r"$\sigma_{MAD}$: " + "{:0.2f}".format(highSnMad)]
                 lowStats += ["Median: {:0.2f}".format(lowSnMed),
                              r"$\sigma_{MAD}$: " + "{:0.2f}".format(lowSnMad)]
-                highMags.append(np.nanmax(catPlot.loc[highSn, magCol]))
-                lowMags.append(np.nanmax(catPlot.loc[lowSn, magCol]))
+                if np.sum(highSn) > 0:
+                    highMags.append(np.nanmax(catPlot.loc[highSn, magCol]))
+                else:
+                    highMags.append(0.0)
+                if np.sum(lowSn):
+                    lowMags.append(np.nanmax(catPlot.loc[lowSn, magCol]))
+                else:
+                    lowMags.append(np.nan)
 
         # Main scatter plot
         ax = fig.add_subplot(gs[1:, :-1])
@@ -328,10 +334,21 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple")]
 
         for (xs, ys, color) in toPlotList:
+            if len(xs) < 2:
+                medLine, = ax.plot(xs, np.nanmedian(ys), color,
+                                   label="Median: {:0.2f}".format(np.nanmedian(ys)), lw=0.8)
+                linesForLegend.append(medLine)
+                sigMads = np.array([sigmaMad(ys, nan_policy="omit")]*len(xs))
+                sigMadLine, = ax.plot(xs, np.nanmedian(ys) + 1.0*sigMads, color, alpha=0.8, lw=0.8,
+                                      label=r"$\sigma_{MAD}$: " + "{:0.2f}".format(sigMads[0]))
+                ax.plot(xs, np.nanmedian(ys) - 1.0*sigMads, color, alpha=0.8)
+                linesForLegend.append(sigMadLine)
+                continue
+
             [xs1, xs25, xs50, xs75, xs95, xs97] = np.nanpercentile(xs, [1, 25, 50, 75, 95, 97])
             xScale = (xs97 - xs1)/20.0  # This is ~5% of the data range
 
-            # 40 was used as the default number of bins because it looked good,
+            # 40 was used as the default number of bins because it looked good
             xEdges = np.arange(xs1 - xScale, xs95, (xs95 - (xs1 - xScale))/self.config.nBins)
             medYs = np.nanmedian(ys)
             sigMadYs = sigmaMad(ys, nan_policy="omit")
@@ -409,11 +426,17 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 linesForLegend.append(sigMadLine)
 
         # Set the scatter plot limits
-        plotMed = np.nanmedian(ysStars)
+        if len(ysStars) > 0:
+            plotMed = np.nanmedian(ysStars)
+        else:
+            plotMed = np.nanmedian(ysGalaxies)
         if yLims:
             ax.set_ylim(yLims[0], yLims[1])
         else:
-            [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])
+            if len(ysStars) > 0:
+                [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])
+            else:
+                [ys1, ys99] = np.nanpercentile(ysGalaxies, [1, 99])
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs

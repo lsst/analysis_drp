@@ -226,7 +226,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
             SN = self.config.selectorActions.SnSelector.threshold
             SNBand = self.config.axisLabels["mag"][0]
             SNFlux = self.config.selectorActions.SnSelector.fluxType
-            SNs = catPlot[SNBand + SNFlux]/catPlot[SNBand + SNFlux + "Err"]
+            SNs = catPlot[SNBand + "_" + SNFlux]/catPlot[SNBand + "_" + SNFlux + "Err"]
             ids = (SNs < SN + 10.0)
             medMag = np.nanmedian(mags[ids])
         except AttributeError:

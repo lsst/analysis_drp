@@ -3,6 +3,7 @@ __all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff"]
 from lsst.pipe.tasks.dataFrameActions import DivideColumns, MultiColumnAction
 from lsst.pex.config import Field
 from astropy import units as u
+import numpy as np
 
 
 class SNCalculator(DivideColumns):
@@ -67,3 +68,78 @@ class MagDiff(MultiColumnAction):
         if self.returnMillimags:
             magDiff = magDiff*1000.0
         return magDiff
+
+
+class CalcE1(MultiColumnAction):
+    """Calculate E1: (ixx - iyy)/(ixx + iyy)
+    This is a shape measurement used for doing QA on the ellipticity
+    of the sources."""
+
+    colXx = Field(doc="The column name to get the xx shape component from.",
+                  dtype=str,
+                  default="ixx")
+
+    colYy = Field(doc="The column name to get the yy shape component from.",
+                  dtype=str,
+                  default="iyy")
+
+    @property
+    def columns(self):
+        return (self.colXx, self.colYy)
+
+    def __call__(self, df):
+        e1 = (df[self.colXx] - df[self.colYy])/(df[self.colXx] + df[self.colYy])
+
+        return e1
+
+
+class CalcE2(MultiColumnAction):
+    """Calculate E2: 2ixy/(ixx+iyy)
+    This is a shape measurement used for doing QA on the ellipticity
+    of the sources."""
+
+    colXx = Field(doc="The column name to get the xx shape component from.",
+                  dtype=str,
+                  default="ixx")
+
+    colYy = Field(doc="The column name to get the yy shape component from.",
+                  dtype=str,
+                  default="iyy")
+
+    colXy = Field(doc="The column name to get the xy shape component from.",
+                  dtype=str,
+                  default="ixy")
+
+    @property
+    def columns(self):
+        return (self.colXx, self.colYy, self.colXy)
+
+    def __call__(self, df):
+        e2 = 2*df[self.colXy]/(df[self.colXx] + df[self.colYy])
+        return e2
+
+
+class CalcShapeSize(MultiColumnAction):
+    """Calculate a size: (ixx*iyy - ixy**2)**0.25
+    This is a size measurement used for doing QA on the ellipticity
+    of the sources."""
+
+    colXx = Field(doc="The column name to get the xx shape component from.",
+                  dtype=str,
+                  default="ixx")
+
+    colYy = Field(doc="The column name to get the yy shape component from.",
+                  dtype=str,
+                  default="iyy")
+
+    colXy = Field(doc="The column name to get the xy shape component from.",
+                  dtype=str,
+                  default="ixy")
+
+    @property
+    def columns(self):
+        return (self.colXx, self.colYy, self.colXy)
+
+    def __call__(self, df):
+        size = np.power(df[self.colXx]*df[self.colYy] - df[self.colXy]**2, 0.25)
+        return size

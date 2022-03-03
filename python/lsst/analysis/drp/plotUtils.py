@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as scipyODR
 
-from lsst.geom import Box2D
+from lsst.geom import Box2D, SpherePoint, degrees
 
 
 def parsePlotInfo(dataId, runName, tableName):
@@ -26,11 +26,14 @@ def parsePlotInfo(dataId, runName, tableName):
     if "filter" not in plotInfo.keys():
         plotInfo["filter"] = "N/A"
 
+    if "tract" not in plotInfo.keys():
+        plotInfo["tract"] = "N/A"
+
     return plotInfo
 
 
 def generateSummaryStats(cat, colName, skymap, plotInfo):
-    """Generate a summary statistic in each patch
+    """Generate a summary statistic in each patch or detector
 
     Parameters
     ----------
@@ -79,6 +82,40 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     patchInfoDict["tract"] = (skyCoords, np.nan)
 
     return patchInfoDict
+
+
+def generateSummaryStatsVisit(cat, colName, visitSummaryTable, plotInfo):
+    """Generate a summary statistic in each patch or detector
+
+    Parameters
+    ----------
+    cat : `pandas.core.frame.DataFrame`
+    colName : `str`
+    visitSummaryTable : `pandas.core.frame.DataFrame`
+    plotInfo : `dict`
+
+    Returns
+    -------
+    visitInfoDict : `dict`
+    """
+
+    visitInfoDict = {}
+    for ccd in cat.detector.unique():
+        if ccd is None:
+            continue
+        onCcd = (cat["detector"] == ccd)
+        stat = np.nanmedian(cat[colName].values[onCcd])
+
+        sumRow = (visitSummaryTable["id"] == ccd)
+        corners = zip(visitSummaryTable["raCorners"][sumRow][0], visitSummaryTable["decCorners"][sumRow][0])
+        cornersOut = []
+        for (ra, dec) in corners:
+            corner = SpherePoint(ra, dec, units=degrees)
+            cornersOut.append(corner)
+
+        visitInfoDict[ccd] = (cornersOut, stat)
+
+    return visitInfoDict
 
 
 def addPlotInfo(fig, plotInfo):
