@@ -270,6 +270,31 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
+  plot_shapeSizeFractionalDiff_scatter_visit:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "ixx"
+      axisActions.yAction.colA.colYy: "iyy"
+      axisActions.yAction.colA.colXy: "ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "ixxPSF"
+      axisActions.yAction.colB.colYy: "iyyPSF"
+      axisActions.yAction.colB.colXy: "ixyPSF"
+      connections.plotName: shapeFractionDiff_sizePSF_scatter
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: [""]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 10
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Fractional shape difference (ixx - ixxPSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+
   plot_E1Diff_scatter_visit:
     # Plots the difference between the calculated E1 for CModel and the PSF against
     # PSF magnitude
