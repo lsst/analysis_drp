@@ -1,4 +1,4 @@
-__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff"]
+__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull"]
 
 from lsst.pipe.tasks.dataFrameActions import DivideColumns, MultiColumnAction
 from lsst.pex.config import Field
