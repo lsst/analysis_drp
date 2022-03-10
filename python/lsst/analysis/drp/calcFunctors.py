@@ -205,16 +205,16 @@ class ColorDiff(MultiColumnAction):
 
     def __call__(self, df):
         color1_flux1 = df[self.color1_flux1].values*u.Unit(self.color1_flux1_units)
-        color1_mag1 = color1_flux1.to(u.ABmag)
+        color1_mag1 = color1_flux1.to(u.ABmag).value
 
-        color1_flux2 = df[self.color1_flux1].values*u.Unit(self.color1_flux2_units)
-        color1_mag2 = color1_flux2.to(u.ABmag)
+        color1_flux2 = df[self.color1_flux2].values*u.Unit(self.color1_flux2_units)
+        color1_mag2 = color1_flux2.to(u.ABmag).value
 
         color2_flux1 = df[self.color2_flux1].values*u.Unit(self.color2_flux1_units)
-        color2_mag1 = color2_flux1.to(u.ABmag)
+        color2_mag1 = color2_flux1.to(u.ABmag).value
 
         color2_flux2 = df[self.color2_flux2].values*u.Unit(self.color2_flux2_units)
-        color2_mag2 = color2_flux2.to(u.ABmag)
+        color2_mag2 = color2_flux2.to(u.ABmag).value
 
         color1 = color1_mag1 - color1_mag2
         color2 = color2_mag1 - color2_mag2
@@ -289,22 +289,22 @@ class ColorDiffPull(ColorDiff):
         k = 2.5/np.log(10.)
 
         color1_flux1 = df[self.color1_flux1].values*u.Unit(self.color1_flux1_units)
-        color1_mag1 = color1_flux1.to(u.ABmag)
+        color1_mag1 = color1_flux1.to(u.ABmag).value
         color1_mag1_err = k*df[self.color1_flux1_err].values/df[self.color1_flux1].values
 
-        color1_flux2 = df[self.color1_flux1].values*u.Unit(self.color1_flux2_units)
-        color1_mag2 = color1_flux2.to(u.ABmag)
+        color1_flux2 = df[self.color1_flux2].values*u.Unit(self.color1_flux2_units)
+        color1_mag2 = color1_flux2.to(u.ABmag).value
         color1_mag2_err = k*df[self.color1_flux2_err].values/df[self.color1_flux2].values
 
         color2_flux1 = df[self.color2_flux1].values*u.Unit(self.color2_flux1_units)
-        color2_mag1 = color2_flux1.to(u.ABmag)
+        color2_mag1 = color2_flux1.to(u.ABmag).value
         if self.color2_flux1_err:
             color2_mag1_err = k*df[self.color2_flux1_err].values/df[self.color2_flux1].values
         else:
             color2_mag1_err = 0.0
 
         color2_flux2 = df[self.color2_flux2].values*u.Unit(self.color2_flux2_units)
-        color2_mag2 = color2_flux2.to(u.ABmag)
+        color2_mag2 = color2_flux2.to(u.ABmag).value
         if self.color2_flux2_err:
             color2_mag2_err = k*df[self.color2_flux2_err].values/df[self.color2_flux2].values
         else:

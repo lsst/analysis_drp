@@ -73,11 +73,11 @@ class RedGalaxyTruthAssociationConfig(pipeBase.PipelineTaskConfig,
         if len(self.err_fields) != len(self.flux_fields):
             raise pexConfig.FieldValidationError(RedGalaxyTruthAssociationConfig.err_fields,
                                                  self,
-                                                 'err_fields must have same length as flux_fields.')
+                                                 "err_fields must have same length as flux_fields.")
         if len(self.flag_fields) != len(self.flux_fields):
             raise pexConfig.FieldValidationError(RedGalaxyTruthAssociationConfig.flag_fields,
                                                  self,
-                                                 'flag_fields must have same length as flux_fields.')
+                                                 "flag_fields must have same length as flux_fields.")
 
 
 class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
@@ -89,7 +89,7 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
         input_ref_dict = butlerQC.get(inputRefs)
 
         # Determine columns to read
-        obj_columns = set({'objectId', 'coord_ra', 'coord_dec'})
+        obj_columns = set({"objectId", "patch", "coord_ra", "coord_dec"})
         for action in self.config.selector_actions:
             for col in action.columns:
                 obj_columns.add(col)
@@ -98,18 +98,18 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
             for flux_field, err_field, flag_field in zip(self.config.flux_fields,
                                                          self.config.err_fields,
                                                          self.config.flag_fields):
-                obj_columns.update([f'{band}_{flux_field}',
-                                    f'{band}_{err_field}',
-                                    f'{band}_{flag_field}'])
+                obj_columns.update([f"{band}_{flux_field}",
+                                    f"{band}_{err_field}",
+                                    f"{band}_{flag_field}"])
 
-            obj_columns.add(f'{band}_extendedness')
+            obj_columns.add(f"{band}_extendedness")
 
-        redgal_columns = set({'ra', 'dec', 'ztrue'})
+        redgal_columns = set({"ra", "dec", "ztrue"})
         for band in self.config.bands:
-            redgal_columns.add(f'{band}_mag')
+            redgal_columns.add(f"{band}_mag")
 
-        object_table = input_ref_dict['object_table'].get(parameters={'columns': obj_columns})
-        redgal_table = input_ref_dict['redgal_table'].get(parameters={'columns': redgal_columns})
+        object_table = input_ref_dict["object_table"].get(parameters={"columns": obj_columns})
+        redgal_table = input_ref_dict["redgal_table"].get(parameters={"columns": redgal_columns})
 
         struct = self.run(object_table, redgal_table)
 
@@ -142,50 +142,52 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
         redgal_table = redgal_table.to_records()
 
         # Match tables
-        with Matcher(redgal_table['ra'], redgal_table['dec']) as matcher:
-            idx, i1, i2, d = matcher.query_radius(object_table['coord_ra'],
-                                                  object_table['coord_dec'],
+        with Matcher(redgal_table["ra"], redgal_table["dec"]) as matcher:
+            idx, i1, i2, d = matcher.query_radius(object_table["coord_ra"],
+                                                  object_table["coord_dec"],
                                                   self.config.match_radius/3600.,
                                                   return_indices=True)
         # Output dtype
-        dtype = [('objectId', 'i8'),
-                 ('ra', 'f8'),
-                 ('dec', 'f8')]
+        dtype = [("objectId", "i8"),
+                 ("coord_ra", "f8"),
+                 ("coord_dec", "f8"),
+                 ("patch", "i4")]
 
         obj_cols_to_copy = set()
         for band in self.config.bands:
             for flux_field in self.config.flux_fields:
-                flux_col = f'{band}_{flux_field}'
+                flux_col = f"{band}_{flux_field}"
                 if flux_col not in obj_cols_to_copy:
-                    dtype.append((flux_col, 'f4'))
+                    dtype.append((flux_col, "f4"))
                     obj_cols_to_copy.add(flux_col)
             for err_field in self.config.err_fields:
-                err_col = f'{band}_{err_field}'
+                err_col = f"{band}_{err_field}"
                 if err_col not in obj_cols_to_copy:
-                    dtype.append((err_col, 'f4'))
+                    dtype.append((err_col, "f4"))
                     obj_cols_to_copy.add(err_col)
             for flag_field in self.config.flag_fields:
-                flag_col = f'{band}_{flag_field}'
+                flag_col = f"{band}_{flag_field}"
                 if flag_col not in obj_cols_to_copy:
-                    dtype.append((flag_col, '?'))
+                    dtype.append((flag_col, "?"))
                     obj_cols_to_copy.add(flag_col)
 
-            dtype.append((f'{band}_trueFlux', 'f4'))
+            dtype.append((f"{band}_trueFlux", "f4"))
 
-            extendedness_col = f'{band}_extendedness'
-            dtype.append((extendedness_col, 'f4'))
+            extendedness_col = f"{band}_extendedness"
+            dtype.append((extendedness_col, "f4"))
             obj_cols_to_copy.add(extendedness_col)
 
         matched_red_galaxies = np.zeros(i1.size, dtype=dtype)
-        matched_red_galaxies['ra'] = redgal_table['ra'][i1]
-        matched_red_galaxies['dec'] = redgal_table['dec'][i1]
-        matched_red_galaxies['objectId'] = object_table['objectId'][i2]
+        matched_red_galaxies["coord_ra"] = redgal_table["ra"][i1]
+        matched_red_galaxies["coord_dec"] = redgal_table["dec"][i1]
+        matched_red_galaxies["objectId"] = object_table["objectId"][i2]
+        matched_red_galaxies["patch"] = object_table["patch"][i2]
 
         for obj_col_to_copy in obj_cols_to_copy:
             matched_red_galaxies[obj_col_to_copy] = object_table[obj_col_to_copy][i2]
 
         for band in self.config.bands:
-            mag = redgal_table[f'{band}_mag']*u.ABmag
-            matched_red_galaxies[f'{band}_trueFlux'] = mag.to(u.nJy).value[i1]
+            mag = redgal_table[f"{band}_mag"]*u.ABmag
+            matched_red_galaxies[f"{band}_trueFlux"] = mag.to(u.nJy).value[i1]
 
         return pipeBase.Struct(matched_red_galaxies=matched_red_galaxies)
