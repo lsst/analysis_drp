@@ -102,6 +102,8 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
                                     f'{band}_{err_field}',
                                     f'{band}_{flag_field}'])
 
+            obj_columns.add(f'{band}_extendedness')
+
         redgal_columns = set({'ra', 'dec', 'ztrue'})
         for band in self.config.bands:
             redgal_columns.add(f'{band}_mag')
@@ -169,6 +171,10 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
                     obj_cols_to_copy.add(flag_col)
 
             dtype.append((f'{band}_trueFlux', 'f4'))
+
+            extendedness_col = f'{band}_extendedness'
+            dtype.append((extendedness_col, 'f4'))
+            obj_cols_to_copy.add(extendedness_col)
 
         matched_red_galaxies = np.zeros(i1.size, dtype=dtype)
         matched_red_galaxies['ra'] = redgal_table['ra'][i1]
