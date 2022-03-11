@@ -40,7 +40,7 @@ class FitTest(lsst.utils.tests.TestCase):
         # then calculates the perpedicular distance of the testPoints
         # to this line
         dists = perpDistance(p1, p2, testPoints)
-        self.assertFloatsAlmostEqual(np.array([1.0, 0.0, -1.0]), np.array(dists))
+        self.assertFloatsAlmostEqual(np.array([1.0/np.sqrt(2), 0.0, -1.0/np.sqrt(2)]), np.array(dists))
 
 
 if __name__ == "__main__":

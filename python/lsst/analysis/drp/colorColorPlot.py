@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pathEffects
 import numpy as np
 import pandas as pd
 
@@ -7,7 +8,7 @@ import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import MagDiff
-from .plotUtils import parsePlotInfo, addPlotInfo
+from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
 
 
@@ -62,12 +63,17 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         # Docs inherited from base class
 
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.sourceIdentifierActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs["catPlot"] = dataFrame
@@ -76,10 +82,12 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.colorColorPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, tableName):
+    def run(self, catPlot, dataId, runName, tableName, bands, plotName):
 
         # Apply the selectors to narrow down the sources to use
         mask = np.ones(len(catPlot), dtype=bool)
@@ -111,8 +119,14 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Make the plot
         fig = self.colorColorPlot(plotDf, plotInfo)
 
@@ -152,8 +166,12 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                        self.config.connections.plotName, self.config.axisLabels["x"],
                        self.config.axisLabels["y"])))
 
-        fig = plt.figure()
-        ax = fig.add_axes([0.12, 0.11, 0.65, 0.75])
+        # Define a new colormap
+        newBlues = mkColormap(["paleturquoise", "midnightblue"])
+        newReds = mkColormap(["lemonchiffon", "firebrick"])
+
+        fig = plt.figure(dpi=300)
+        ax = fig.add_axes([0.15, 0.11, 0.65, 0.75])
 
         # Need to separate stars and galaxies
         stars = (catPlot["sourceType"] == 1)
@@ -175,14 +193,16 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
 
         [vminGals, vmaxGals] = np.nanpercentile(zsGalaxies, [1, 99])
         [vminStars, vmaxStars] = np.nanpercentile(zsStars, [1, 99])
-        galPoints = ax.scatter(xsGalaxies, ysGalaxies, c=zsGalaxies, cmap="autumn_r", label="Galaxies",
+        galPoints = ax.scatter(xsGalaxies, ysGalaxies, c=zsGalaxies, cmap=newReds, label="Galaxies",
                                s=0.5, vmin=vminGals, vmax=vmaxGals)
-        starPoints = ax.scatter(xsStars, ysStars, c=zsStars, cmap="winter_r", label="Stars", s=0.5,
+        starPoints = ax.scatter(xsStars, ysStars, c=zsStars, cmap=newBlues, label="Stars", s=0.5,
                                 vmin=vminStars, vmax=vmaxStars)
 
         # Add text details
-        fig.text(0.70, 0.9, "Num. Galaxies: {}".format(galaxies.sum()), color="C1")
-        fig.text(0.70, 0.93, "Num. Stars: {}".format(stars.sum()), color="C0")
+        galBBox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
+        fig.text(0.70, 0.9, "Num. Galaxies: {}".format(galaxies.sum()), bbox=galBBox, fontsize=8)
+        starBBox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
+        fig.text(0.70, 0.96, "Num. Stars: {}".format(stars.sum()), bbox=starBBox, fontsize=8)
 
         # Add colorbars
         galCbAx = fig.add_axes([0.85, 0.11, 0.04, 0.75])
@@ -191,10 +211,12 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         starCbAx = fig.add_axes([0.89, 0.11, 0.04, 0.75])
         plt.colorbar(starPoints, cax=starCbAx, extend="both")
         magLabel = self.config.axisLabels["z"]
-        galCbAx.text(0.6, 0.5, magLabel + ": Galaxies", color="k", rotation="vertical",
-                     transform=galCbAx.transAxes, ha="center", va="center", fontsize=10)
-        starCbAx.text(0.6, 0.5, magLabel + ": Stars", color="k", rotation="vertical",
-                      transform=starCbAx.transAxes, ha="center", va="center", fontsize=10)
+        galText = galCbAx.text(0.5, 0.5, magLabel + ": Galaxies", color="k", rotation="vertical",
+                               transform=galCbAx.transAxes, ha="center", va="center", fontsize=10)
+        galText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
+        starText = starCbAx.text(0.5, 0.5, magLabel + ": Stars", color="k", rotation="vertical",
+                                 transform=starCbAx.transAxes, ha="center", va="center", fontsize=10)
+        starText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
 
         ax.set_xlabel(self.config.axisLabels["x"])
         ax.set_ylabel(self.config.axisLabels["y"])
@@ -202,8 +224,9 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         # Set useful axis limits
         starPercsX = np.nanpercentile(xsStars, [1, 99.5])
         starPercsY = np.nanpercentile(ysStars, [1, 99.5])
-        ax.set_xlim(starPercsX[0], starPercsX[1])
-        ax.set_ylim(starPercsY[0], starPercsY[1])
+        pad = (starPercsX[1] - starPercsX[0])/10
+        ax.set_xlim(starPercsX[0] - pad, starPercsX[1] + pad)
+        ax.set_ylim(starPercsY[0] - pad, starPercsY[1] + pad)
 
         fig = addPlotInfo(plt.gcf(), plotInfo)
 

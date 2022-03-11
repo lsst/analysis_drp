@@ -3,8 +3,8 @@ import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
 import pandas as pd
 from sklearn.neighbors import KernelDensity
-from matplotlib import colors
 from matplotlib.patches import Rectangle
+import matplotlib.patheffects as pathEffects
 
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
@@ -13,7 +13,7 @@ from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
 from .calcFunctors import MagDiff
 from . import dataSelectors as dataSelectors
-from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance
+from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
 
 
 class ColorColorFitPlotTaskConnections(pipeBase.PipelineTaskConnections,
@@ -81,12 +81,17 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         # Docs inherited from base class
 
         columnNames = set()
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.sourceSelectorActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs["catPlot"] = dataFrame
@@ -95,11 +100,13 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.colorColorFitPlot.name
         inputs["fitParams"] = self.config.stellarLocusFitDict
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, tableName, fitParams):
+    def run(self, catPlot, dataId, runName, tableName, fitParams, bands, plotName):
 
         mask = np.ones(len(catPlot), dtype=bool)
         for actionStruct in [self.config.selectorActions, self.config.sourceSelectorActions]:
@@ -117,12 +124,18 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         except AttributeError:
             pass
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         plotDf = pd.DataFrame(columns)
 
         xs = plotDf[self.config.axisLabels["x"]].values
         ys = plotDf[self.config.axisLabels["y"]].values
 
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
         fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
 
@@ -193,15 +206,10 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                        self.config.axisLabels["y"])))
 
         # Define a new colormap
-        r, g, b = colors.colorConverter.to_rgb("C0")
-        r1, g1, b1 = colors.colorConverter.to_rgb("midnightblue")
-        colorDict = {"blue": ((0.0, b, b), (1.0, b1, b1)), "red": ((0.0, r, r), (1.0, r1, r1)),
-                     "green": ((0.0, g, g), (1.0, g1, g1))}
-        colorDict["alpha"] = ((0.0, 0.0, 0.0), (0.05, 0.3, 0.3), (0.5, 0.8, 0.8), (1.0, 1.0, 1.0))
-        newBlues = colors.LinearSegmentedColormap("newBlues", colorDict)
+        newBlues = mkColormap(["paleturquoise", "midnightblue"])
 
         # Make a figure with three panels
-        fig = plt.figure()
+        fig = plt.figure(dpi=300)
         ax = fig.add_axes([0.12, 0.25, 0.43, 0.60])
         axContour = fig.add_axes([0.65, 0.11, 0.3, 0.31])
         axHist = fig. add_axes([0.65, 0.51, 0.3, 0.31])
@@ -250,8 +258,10 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         # Add colorbar
         cbAx = fig.add_axes([0.12, 0.08, 0.43, 0.04])
         plt.colorbar(fitScatter, cax=cbAx, orientation="horizontal")
-        cbAx.text(0.5, 0.5, "Number Density", color="k", rotation="horizontal",
-                  transform=cbAx.transAxes, ha="center", va="center", fontsize=8)
+        cbText = cbAx.text(0.5, 0.5, "Number Density", color="k", rotation="horizontal",
+                           transform=cbAx.transAxes, ha="center", va="center", fontsize=8)
+        cbText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
+        cbAx.set_xticks([np.min(z[fitPoints]), np.max(z[fitPoints])], labels=["Less", "More"])
 
         ax.set_xlabel(self.config.axisLabels["x"])
         ax.set_ylabel(self.config.axisLabels["y"])
@@ -353,7 +363,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         alphas = [1.0, 0.5]
         handles = [Rectangle((0, 0), 1, 1, color="none", ec="C0", alpha=a) for a in alphas]
         labels = ["Refit", "HW"]
-        axHist.legend(handles, labels, fontsize=6, loc="lower right")
+        axHist.legend(handles, labels, fontsize=6, loc="upper right")
 
         # Add a contour plot showing the magnitude dependance
         # of the distance to the fit

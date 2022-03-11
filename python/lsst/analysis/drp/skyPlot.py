@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import binned_statistic_2d
 from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
@@ -10,7 +11,7 @@ from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
 
@@ -67,6 +68,18 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         default={"statSelector": dataSelectors.SnSelector},
     )
 
+    fixAroundZero = pexConfig.Field(
+        doc="Fix the center of the colorscale to be zero.",
+        default=False,
+        dtype=bool,
+    )
+
+    plotOutlines = pexConfig.Field(
+        doc="Plot the outlines of the ccds/patches?",
+        default=True,
+        dtype=bool,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.xAction.column = "coord_ra"
@@ -84,12 +97,17 @@ class SkyPlotTask(pipeBase.PipelineTask):
         # Docs inherited from base class
 
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.statisticSelectorActions, self.config.sourceSelectorActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -98,10 +116,12 @@ class SkyPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.skyPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a skyPlot of the given column.
 
         Parameters
@@ -175,8 +195,14 @@ class SkyPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.axisLabels["z"], skymap, plotInfo)
         # Make the plot
@@ -221,8 +247,13 @@ class SkyPlotTask(pipeBase.PipelineTask):
         self.log.info("Plotting {}: the values of {} on a sky plot.".format(
                       self.config.connections.plotName, self.config.axisLabels["z"]))
 
-        fig = plt.figure()
+        fig = plt.figure(dpi=300)
         ax = fig.add_subplot(111)
+
+        # Make divergent colormaps for stars, galaxes and all the points
+        blueGreen = mkColormap(["midnightblue", "lightcyan", "darkgreen"])
+        redPurple = mkColormap(["indigo", "lemonchiffon", "firebrick"])
+        orangeBlue = mkColormap(["darkOrange", "thistle", "midnightblue"])
 
         # Need to separate stars and galaxies
         stars = (catPlot["sourceType"] == 1)
@@ -233,14 +264,18 @@ class SkyPlotTask(pipeBase.PipelineTask):
         zCol = self.config.axisLabels["z"]
 
         # For galaxies
-        xsGalaxies = catPlot.loc[galaxies, xCol]
-        ysGalaxies = catPlot.loc[galaxies, yCol]
-        colorValsGalaxies = catPlot.loc[galaxies, zCol]
+        colorValsGalaxies = catPlot.loc[galaxies, zCol].values
+        ids = extremaSort(colorValsGalaxies)
+        xsGalaxies = catPlot.loc[galaxies, xCol].values[ids]
+        ysGalaxies = catPlot.loc[galaxies, yCol].values[ids]
+        colorValsGalaxies = colorValsGalaxies[ids]
 
         # For stars
-        xsStars = catPlot.loc[stars, xCol]
-        ysStars = catPlot.loc[stars, yCol]
-        colorValsStars = catPlot.loc[stars, zCol]
+        colorValsStars = catPlot.loc[stars, zCol].values
+        ids = extremaSort(colorValsStars)
+        xsStars = catPlot.loc[stars, xCol].values[ids]
+        ysStars = catPlot.loc[stars, yCol].values[ids]
+        colorValsStars = colorValsStars[ids]
 
         # Calculate some statistics
         if np.any(catPlot["sourceType"] == 2):
@@ -252,8 +287,15 @@ class SkyPlotTask(pipeBase.PipelineTask):
                             + "{:0.2f}\n".format(statGalMad) + r"n$_{points}$: "
                             + "{}".format(len(xsGalaxies)))
             # Add statistics
-            bbox = dict(facecolor="C1", alpha=0.3, edgecolor="none")
-            ax.text(0.63, 0.91, galStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            bbox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
+            # Check if plotting stars and galaxies, if so move the
+            # text box so that both can be seen. Needs to be
+            # > 2 becuase not being plotted points are assigned 0
+            if len(list(set(catPlot["sourceType"].values))) > 2:
+                boxLoc = 0.63
+            else:
+                boxLoc = 0.8
+            ax.text(boxLoc, 0.91, galStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 1):
 
@@ -265,7 +307,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
                              + "{:0.2f}\n".format(statStarMad) + r"n$_{points}$: "
                              + "{}".format(len(xsStars)))
             # Add statistics
-            bbox = dict(facecolor="C0", alpha=0.3, edgecolor="none")
+            bbox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
             ax.text(0.8, 0.91, starStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 10):
@@ -294,53 +336,106 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
         toPlotList = []
         if np.any(catPlot["sourceType"] == 1):
-            toPlotList.append((xsStars, ysStars, colorValsStars, "winter_r", "Stars"))
+            toPlotList.append((xsStars, ysStars, colorValsStars, blueGreen, "Stars"))
         if np.any(catPlot["sourceType"] == 2):
-            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, "autumn_r", "Galaxies"))
+            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, redPurple, "Galaxies"))
         if np.any(catPlot["sourceType"] == 10):
-            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "plasma", "All"))
+            ids = extremaSort(catPlot[zCol].values)
+            toPlotList.append((catPlot[xCol].values[ids], catPlot[yCol].values[ids],
+                               catPlot[zCol].values[ids], orangeBlue, "All"))
         if np.any(catPlot["sourceType"] == 9):
             toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
 
         # Corner plot of patches showing summary stat in each
-        patches = []
-        for dataId in sumStats.keys():
-            (corners, stat) = sumStats[dataId]
-            ra = corners[0][0].asDegrees()
-            dec = corners[0][1].asDegrees()
-            xy = (ra, dec)
-            width = corners[2][0].asDegrees() - ra
-            height = corners[2][1].asDegrees() - dec
-            patches.append(Rectangle(xy, width, height, alpha=0.3))
-            ras = [ra.asDegrees() for (ra, dec) in corners]
-            decs = [dec.asDegrees() for (ra, dec) in corners]
-            ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-            cenX = ra + width / 2
-            cenY = dec + height / 2
-            if dataId != "tract":
-                ax.annotate(dataId, (cenX, cenY), color="k", fontsize=7, ha="center", va="center",
-                            path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
+        if self.config.plotOutlines:
+            patches = []
+            for dataId in sumStats.keys():
+                (corners, stat) = sumStats[dataId]
+                ra = corners[0][0].asDegrees()
+                dec = corners[0][1].asDegrees()
+                xy = (ra, dec)
+                width = corners[2][0].asDegrees() - ra
+                height = corners[2][1].asDegrees() - dec
+                patches.append(Rectangle(xy, width, height, alpha=0.3))
+                ras = [ra.asDegrees() for (ra, dec) in corners]
+                decs = [dec.asDegrees() for (ra, dec) in corners]
+                ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
+                cenX = ra + width / 2
+                cenY = dec + height / 2
+                if dataId == "tract":
+                    minRa = np.min(ras)
+                    minDec = np.min(decs)
+                    maxRa = np.max(ras)
+                    maxDec = np.max(decs)
+                if dataId != "tract":
+                    ax.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center",
+                                path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
 
         for (i, (xs, ys, colorVals, cmap, label)) in enumerate(toPlotList):
+            if "tract" not in sumStats.keys() or not self.config.plotOutlines:
+                minRa = np.min(xs)
+                maxRa = np.max(xs)
+                minDec = np.min(ys)
+                maxDec = np.max(ys)
             med = np.median(colorVals)
             mad = sigmaMad(colorVals)
-            vmin = med - 3*mad
-            vmax = med + 3*mad
-            scatterOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=4.0, vmin=vmin, vmax=vmax)
+            vmin = med - 2*mad
+            vmax = med + 2*mad
+            if self.config.fixAroundZero:
+                scaleEnd = np.max([np.abs(vmin), np.abs(vmax)])
+                vmin = -1*scaleEnd
+                vmax = scaleEnd
+            nBins = 45
+            xBinEdges = np.linspace(minRa, maxRa, nBins + 1)
+            yBinEdges = np.linspace(minDec, maxDec, nBins + 1)
+            binnedStats, xEdges, yEdges, binNums = binned_statistic_2d(xs, ys, colorVals, statistic="median",
+                                                                       bins=(xBinEdges, yBinEdges))
+
+            if len(xs) > 5000:
+                s = 500/(len(xs)**0.5)
+                lw = (s**0.5) / 10
+                plotOut = ax.imshow(binnedStats.T, cmap=cmap,
+                                    extent=[xEdges[0], xEdges[-1], yEdges[-1], yEdges[0]], vmin=vmin,
+                                    vmax=vmax)
+                # find the most extreme 15% of points, because the list
+                # is ordered by the distance from the median this is just
+                # the final 15% of points
+                extremes = int(np.floor((len(xs)/100))*85)
+                ax.scatter(xs[extremes:], ys[extremes:], c=colorVals[extremes:], s=s, cmap=cmap, vmin=vmin,
+                           vmax=vmax, edgecolor="white", linewidths=lw)
+
+            else:
+                plotOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=7, vmin=vmin, vmax=vmax,
+                                     edgecolor="white", linewidths=0.2)
+
             cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.77])
-            plt.colorbar(scatterOut, cax=cax, extend="both")
+            plt.colorbar(plotOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
-            text = cax.text(0.6, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
+            text = cax.text(0.5, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
                             ha="center", va="center", fontsize=10)
             text.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
+            cax.tick_params(labelsize=7)
 
             if i == 0 and len(toPlotList) > 1:
                 cax.yaxis.set_ticks_position("left")
 
         ax.set_xlabel(xCol)
         ax.set_ylabel(yCol)
+        ax.tick_params(axis="x", labelrotation=25)
+        ax.tick_params(labelsize=7)
 
+        ax.set_aspect("equal")
         plt.draw()
+
+        # Find some useful axis limits
+        lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
+        if lenXs != [] and np.max(lenXs) > 1000:
+            padRa = (maxRa - minRa)/10
+            padDec = (maxDec - minDec)/10
+            ax.set_xlim(maxRa + padRa, minRa - padRa)
+            ax.set_ylim(minDec - padDec, maxDec + padDec)
+        else:
+            ax.invert_xaxis()
 
         # Add useful information to the plot
         plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85)

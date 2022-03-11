@@ -69,10 +69,11 @@ class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.scatterPlot.name
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, tableName, visitSummaryTable):
+    def run(self, catPlot, dataId, runName, tableName, visitSummaryTable, plotName):
         """Prep the catalogue and then make a scatterPlot of the given column.
 
         Parameters
@@ -153,8 +154,14 @@ class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):
         useForStats[highSnMask] = 1
         plotDf.loc[:, "useForStats"] = useForStats
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, dataId["band"], plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStatsVisit(plotDf, self.config.axisLabels["y"], visitSummaryTable,
                                              plotInfo)

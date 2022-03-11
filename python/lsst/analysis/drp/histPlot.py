@@ -140,13 +140,18 @@ class HistPlotTask(pipeBase.PipelineTask):
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
         columnNames = set(["patch"])
+        bands = []
         for actionStruct in [self.config.leftPanelActions,
                              self.config.rightPanelActions,
                              self.config.selectorActions]:
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
+                    band = col.split("_")[0]
+                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                        bands.append(band)
 
+        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
@@ -155,10 +160,12 @@ class HistPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.histPlot.name
+        inputs["bands"] = bands
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
-    def run(self, catPlot, dataId, runName, skymap, tableName):
+    def run(self, catPlot, dataId, runName, skymap, tableName, bands, plotName):
         """Prep the catalogue and then make a two-panel plot showing various
         histograms in each panel.
 
@@ -221,8 +228,14 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         plotDf = pd.DataFrame(columns)
 
+        # Get the S/N cut used
+        try:
+            SN = self.config.selectorActions.SnSelector.threshold
+        except AttributeError:
+            SN = "N/A"
+
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.summaryStatsLabel, skymap, plotInfo)
         # Make the plot
@@ -271,7 +284,7 @@ class HistPlotTask(pipeBase.PipelineTask):
                       f"panel 1 = {self.config.leftPanelLabels}; "
                       f"panel 2 = {self.config.rightPanelLabels} ")
 
-        fig = plt.figure()
+        fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(100, 100)
 
         # left panel limits
@@ -286,7 +299,7 @@ class HistPlotTask(pipeBase.PipelineTask):
         leftPanelUpper = np.max(pUppers)
 
         # left panel plotting
-        leftPanelAx = fig.add_subplot(gs[:, 0:34])
+        leftPanelAx = fig.add_subplot(gs[:, 26:60])
         for count, key in enumerate(self.config.leftPanelActions.fieldNames):
             column = self.config.leftPanelLabels[key]
             mask = np.isfinite(catPlot[column].values)
@@ -303,7 +316,8 @@ class HistPlotTask(pipeBase.PipelineTask):
         leftPanelAx.set_xlim(leftPanelLower, leftPanelUpper)
         leftPanelAx.set_xlabel(self.config.axisLabels["xLeft"])
         leftPanelAx.set_ylabel(self.config.axisLabels["yLeft"])
-        leftPanelAx.legend(loc="upper left", bbox_to_anchor=(0.76, 0.55),
+        leftPanelAx.tick_params(labelsize=7)
+        leftPanelAx.legend(loc="upper left", bbox_to_anchor=(0.00, 0.77),
                            bbox_transform=fig.transFigure, fontsize=7, handleheight=1.5)
         leftPanelAx.axvline(0, ls='--', lw=2, c='k')
 
@@ -319,7 +333,7 @@ class HistPlotTask(pipeBase.PipelineTask):
         rightPanelUpper = np.max(pUppers)
 
         # right panel plotting
-        rightPanelAx = fig.add_subplot(gs[:, 42:76])
+        rightPanelAx = fig.add_subplot(gs[:, 66:])
         plt.rcParams["hatch.color"] = "white"
         for count, key in enumerate(self.config.rightPanelActions.fieldNames):
             column = self.config.rightPanelLabels[key]
@@ -337,17 +351,16 @@ class HistPlotTask(pipeBase.PipelineTask):
             rightPanelAx.axvline(datMed, ls=':', lw=2, c=col)
         rightPanelAx.set_xlim(rightPanelLower, rightPanelUpper)
         rightPanelAx.set_xlabel(self.config.axisLabels["xRight"])
+        rightPanelAx.tick_params(labelsize=7)
         yStep = 0.038*len(self.config.leftPanelActions.fieldNames) + 0.01
-        rightPanelAx.legend(loc="upper left", bbox_to_anchor=(0.76, 0.55-yStep),
+        rightPanelAx.legend(loc="upper left", bbox_to_anchor=(0.00, 0.77-yStep),
                             bbox_transform=fig.transFigure, fontsize=7, handleheight=1.5)
         rightPanelAx.axvline(0, ls='--', lw=2, c='k')
 
         # Corner plot of patches showing summary stat in each
-        axCorner = plt.gcf().add_subplot(gs[0:26, -20:-3])
-        axCorner.yaxis.tick_right()
-        axCorner.yaxis.set_label_position("right")
-        axCorner.xaxis.tick_top()
-        axCorner.xaxis.set_label_position("top")
+        axCorner = plt.gcf().add_subplot(gs[70:96, 3:21])
+        axCorner.set_aspect("equal")
+        axCorner.invert_xaxis()
 
         patches = []
         colors = []
@@ -366,7 +379,7 @@ class HistPlotTask(pipeBase.PipelineTask):
             cenX = ra + width / 2
             cenY = dec + height / 2
             if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center")
+                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
 
         cmapUse = plt.cm.coolwarm
         # Set the bad color to transparent and make a masked array
@@ -376,29 +389,25 @@ class HistPlotTask(pipeBase.PipelineTask):
         collection.set_array(colors)
         axCorner.add_collection(collection)
 
-        axCorner.set_xlabel("R.A. (deg)", fontsize=8)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=8)
-        axCorner.tick_params(axis="both", labelsize=8)
+        axCorner.set_xlabel("R.A. (deg)", fontsize=7)
+        axCorner.set_ylabel("Dec. (deg)", fontsize=7)
+        axCorner.tick_params(labelsize=5)
 
         # Add a colorbar
         divider = make_axes_locatable(axCorner)
-        cax = divider.append_axes("bottom", size="14%")
+        cax = divider.append_axes("top", size="14%", pad=0)
         cbar = plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cbar.ax.tick_params(labelsize=8)
-        cax.yaxis.set_ticks_position("left")
-        for label in cax.yaxis.get_ticklabels():
-            label.set_bbox(dict(facecolor="w", ec="none", alpha=0.5))
-            label.set_fontsize(8)
+        cbar.ax.tick_params(labelsize=5, labeltop=True, labelbottom=False, top=True, bottom=False)
         cax.text(0.5, 0.42, "Median Value", color="k", rotation="horizontal", transform=cax.transAxes,
-                 horizontalalignment="center", verticalalignment="center", fontsize=8)
-        axCorner.text(0.5, -0.5, self.config.summaryStatsLabel, color="k", rotation="horizontal",
+                 horizontalalignment="center", verticalalignment="center", fontsize=7)
+        axCorner.text(0.5, 1.45, self.config.summaryStatsLabel, color="k", rotation="horizontal",
                       transform=axCorner.transAxes, horizontalalignment="center", verticalalignment="center",
-                      fontsize=9)
+                      fontsize=7)
 
         plt.draw()
 
         # Add useful information to the plot
-        plt.subplots_adjust(right=0.95)
+        plt.subplots_adjust(left=0.02, right=0.95)
         fig = plt.gcf()
 
         fig = addPlotInfo(fig, plotInfo)
