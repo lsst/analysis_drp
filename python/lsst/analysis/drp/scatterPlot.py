@@ -56,6 +56,12 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         itemtype=str
     )
 
+    nonBandColumnPrefixes = pexConfig.ListField(
+        doc="Column prefixes that are not bands and which should not be added to the set of bands",
+        dtype=str,
+        default=["coord", "extend", "detect", "xy", "merge"],
+    )
+
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
@@ -97,8 +103,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
-        columnNames = set(["patch"])
-        bands = []
+        columnNames = {"patch"}
+        bands = set()
         for actionStruct in [self.config.axisActions, self.config.selectorActions,
                              self.config.highSnStatisticSelectorActions,
                              self.config.lowSnStatisticSelectorActions,
@@ -106,11 +112,13 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             for action in actionStruct:
                 for col in action.columns:
                     columnNames.add(col)
-                    band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
-                        bands.append(band)
+                    column_split = col.split("_")
+                    # If there's no underscore, it doesn't have a band prefix
+                    if len(column_split) > 1:
+                        band = column_split[0]
+                        if band not in self.config.nonBandColumnPrefixes:
+                            bands.add(band)
 
-        bands = set(bands)
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
