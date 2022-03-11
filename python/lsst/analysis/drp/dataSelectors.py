@@ -43,19 +43,11 @@ class FlagSelector(DataFrameAction):
         selectWhenTrue to decide which columns to
         select on in each circumstance.
         """
-        result = None
+        result = np.ones(len(df), dtype=bool)
         for flag in self.selectWhenFalse:
-            selected = (df[flag].values == 0)
-            if result is None:
-                result = selected
-            else:
-                result &= selected
+            result &= (df[flag].values == 0)
         for flag in self.selectWhenTrue:
-            selected = (df[flag].values == 1)
-            if result is None:
-                result = selected
-            else:
-                result &= selected
+            result &= (df[flag].values == 1)
         return result
 
 
