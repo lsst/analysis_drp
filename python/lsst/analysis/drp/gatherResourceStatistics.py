@@ -41,6 +41,7 @@ from lsst.pipe.base import (
     PipelineTaskConfig,
     PipelineTaskConnections,
     Struct,
+    TaskDef,
 )
 from lsst.pipe.base.pipelineIR import ConfigIR, LabeledSubset, PipelineIR, TaskIR
 from lsst.pipe.base import connectionTypes as ct
@@ -71,7 +72,7 @@ class GatherResourceStatisticsConnections(PipelineTaskConnections, dimensions=()
         # Inject one new input connection for each configured label.
         for label in config.labels:
             self.inputs.add(label)
-            dataset_type_name = f"{label}_metadata"
+            dataset_type_name = TaskDef.makeMetadataDatasetName(label)
             connection = ct.Input(
                 dataset_type_name,
                 storageClass="TaskMetadata",
