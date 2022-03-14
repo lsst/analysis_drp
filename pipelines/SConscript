@@ -1,0 +1,80 @@
+from lsst.sconsUtils.state import env, targets
+from lsst.sconsUtils.utils import libraryLoaderEnvironment
+
+# It is important to leave these in the order they are declared in, unless
+# intentionally chaning the build order
+targets.setdefault("pipelines", []).extend(
+    [
+        env.Command(
+            "generic_coadd_plots.yaml",
+            "generic_coadd_plots.in",
+            " ".join(
+                [
+                    libraryLoaderEnvironment(),
+                    "python",
+                    "-m",
+                    "lsst.analysis.drp.pipelineBuilder",
+                    "$SOURCE",
+                    "analysis_coadd_plots"
+                ]
+            ),
+        ),
+        env.Command(
+            "generic_visit_plots.yaml",
+            "generic_visit_plots.in",
+            " ".join(
+                [
+                    libraryLoaderEnvironment(),
+                    "python",
+                    "-m",
+                    "lsst.analysis.drp.pipelineBuilder",
+                    "$SOURCE",
+                    "analysis_visit_plots"
+                ]
+            ),
+        ),
+        env.Command(
+            "analysis_drp_plots.yaml",
+            "analysis_drp_plots.in",
+            " ".join(
+                [
+                    libraryLoaderEnvironment(),
+                    "python",
+                    "-m",
+                    "lsst.analysis.drp.pipelineBuilder",
+                    "$SOURCE",
+                ]
+            ),
+        ),
+        # LSST cam specific build
+        env.Command(
+            "LSSTCam-imSim/dc2_coadd_plots.yaml",
+            "LSSTCam-imSim/dc2_coadd_plots.in",
+            " ".join(
+                [
+                    libraryLoaderEnvironment(),
+                    "python",
+                    "-m",
+                    "lsst.analysis.drp.pipelineBuilder",
+                    "$SOURCE",
+                    "imsim_analysis_coadd_plots"
+                ]
+            ),
+        ),
+        env.Command(
+            "LSSTCam-imSim/analysis_drp_plots.yaml",
+            "LSSTCam-imSim/analysis_drp_plots.in",
+            " ".join(
+                [
+                    libraryLoaderEnvironment(),
+                    "python",
+                    "-m",
+                    "lsst.analysis.drp.pipelineBuilder",
+                    "$SOURCE",
+                ]
+            ),
+        ),
+    ],
+)
+
+env.AlwaysBuild(targets["pipelines"])

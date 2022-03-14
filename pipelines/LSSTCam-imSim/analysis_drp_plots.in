@@ -1,0 +1,6 @@
+imports:
+  - "$ANALYSIS_DRP_DIR/pipelines/LSSTCam-imSim/dc2_coadd_plots.yaml"
+  - "$ANALYSIS_DRP_DIR/pipelines/generic_visit_plots.yaml"
+
+description: |
+  analysis drp plot pipeline specialized for imsim
