@@ -260,9 +260,11 @@ class ColorDiffPull(ColorDiff):
     calibrated.
     """
     color1_flux1_err = Field(doc="Error column for flux1 for color1",
-                             dtype=str)
+                             dtype=str,
+                             default="")
     color1_flux2_err = Field(doc="Error column for flux2 for color1",
-                             dtype=str)
+                             dtype=str,
+                             default="")
     color2_flux1_err = Field(doc="Error column for flux1 for color2",
                              dtype=str,
                              default="")
@@ -270,31 +272,61 @@ class ColorDiffPull(ColorDiff):
                              dtype=str,
                              default="")
 
+    def validate(self):
+        super().validate()
+
+        color1_errors = False
+        color2_errors = False
+
+        if self.color1_flux1_err and self.color1_flux2_err:
+            color1_errors = True
+        elif ((self.color1_flux1_err and not self.color1_flux2_err)
+              or (not self.color1_flux1_err and self.color1_flux2_err)):
+            raise ValueError("Must set both color1_flux1_err and color1_flux2_err if either is set.")
+        if self.color2_flux1_err and self.color2_flux2_err:
+            color2_errors = True
+        elif ((self.color2_flux1_err and not self.color2_flux2_err)
+              or (not self.color2_flux1_err and self.color2_flux2_err)):
+            raise ValueError("Must set both color2_flux1_err and color2_flux2_err if either is set.")
+
+        if not color1_errors and not color2_errors:
+            raise ValueError("Must configure flux errors for at least color1 or color2.")
+
     @property
     def columns(self):
-        cols = (self.color1_flux1,
-                self.color1_flux2,
-                self.color2_flux1,
-                self.color2_flux2,
-                self.color1_flux1_err,
-                self.color1_flux2_err)
+        columns = (self.color1_flux1,
+                   self.color1_flux2,
+                   self.color2_flux1,
+                   self.color2_flux2)
 
-        if self.color2_flux1_err and self.color2_flux2_err:
-            cols = cols + (self.color2_flux1_err,
-                           self.color2_flux2_err)
+        if self.color1_flux1_err:
+            # Config validation ensures if one is set, both are set.
+            columns = columns + (self.color1_flux1_err,
+                                 self.color1_flux2_err)
 
-        return cols
+        if self.color2_flux1_err:
+            # Config validation ensures if one is set, both are set.
+            columns = columns + (self.color2_flux1_err,
+                                 self.color2_flux2_err)
+
+        return columns
 
     def __call__(self, df):
         k = 2.5/np.log(10.)
 
         color1_flux1 = df[self.color1_flux1].values*u.Unit(self.color1_flux1_units)
         color1_mag1 = color1_flux1.to(u.ABmag).value
-        color1_mag1_err = k*df[self.color1_flux1_err].values/df[self.color1_flux1].values
+        if self.color1_flux1_err:
+            color1_mag1_err = k*df[self.color1_flux1_err].values/df[self.color1_flux1].values
+        else:
+            color1_mag1_err = 0.0
 
         color1_flux2 = df[self.color1_flux2].values*u.Unit(self.color1_flux2_units)
         color1_mag2 = color1_flux2.to(u.ABmag).value
-        color1_mag2_err = k*df[self.color1_flux2_err].values/df[self.color1_flux2].values
+        if self.color1_flux2_err:
+            color1_mag2_err = k*df[self.color1_flux2_err].values/df[self.color1_flux2].values
+        else:
+            color1_mag2_err = 0.0
 
         color2_flux1 = df[self.color2_flux1].values*u.Unit(self.color2_flux1_units)
         color2_mag1 = color2_flux1.to(u.ABmag).value
