@@ -1,6 +1,7 @@
 __all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff"]
 
-from lsst.pipe.tasks.dataFrameActions import DivideColumns, MultiColumnAction
+from lsst.pipe.tasks.configurableActions import ConfigurableActionField
+from lsst.pipe.tasks.dataFrameActions import DataFrameAction, DivideColumns, MultiColumnAction
 from lsst.pex.config import Field
 from astropy import units as u
 import numpy as np
@@ -68,6 +69,99 @@ class MagDiff(MultiColumnAction):
         if self.returnMillimags:
             magDiff = magDiff*1000.0
         return magDiff
+
+
+class CalcE(MultiColumnAction):
+    """Calculate a complex value representation of the ellipticity
+
+    This is a shape measurement used for doing QA on the ellipticity
+    of the sources.
+
+    The complex ellipticity is typically defined as
+    E = ((ixx - iyy) + 1j*(2*ixy))/(ixx + iyy) = |E|exp(i*2*theta).
+
+    For plotting purposes we might want to plot |E|*exp(i*theta).
+    If `halvePhaseAngle` config parameter is set to `True`, then
+    the returned quantity therefore corresponds to |E|*exp(i*theta)
+    """
+
+    colXx = Field(doc="The column name to get the xx shape component from.",
+                  dtype=str,
+                  default="ixx")
+
+    colYy = Field(doc="The column name to get the yy shape component from.",
+                  dtype=str,
+                  default="iyy")
+
+    colXy = Field(doc="The column name to get the xy shape component from.",
+                  dtype=str,
+                  default="ixy")
+
+    halvePhaseAngle = Field(doc=("Divide the phase angle by 2? "
+                                 "Suitable for quiver plots."),
+                            dtype=bool,
+                            default=False)
+
+    @property
+    def columns(self):
+        return (self.colXx, self.colYy, self.colXy)
+
+    def __call__(self, df):
+        e = (df[self.colXx] - df[self.colYy]) + 1j*(2*df[self.colXy])
+        e /= (df[self.colXx] + df[self.colYy])
+        if self.halvePhaseAngle:
+            # Ellipiticity is |e|*exp(i*2*theta), but we want to return
+            # |e|*exp(i*theta). So we multiply by |e| and take its square root
+            # instead of the more expensive trig calls.
+            e *= np.abs(e)
+            return np.sqrt(e)
+        else:
+            return e
+
+
+class CalcEDiff(DataFrameAction):
+    """Calculate the difference of two ellipticities as a complex quantity.
+
+    This is a shape measurement used for doing QA on the ellipticity
+    of the sources.
+
+    The complex ellipticity difference between E_A and E_B is efined as
+    dE = |dE|exp(i*2*theta).
+
+    For plotting purposes we might want to plot |dE|*exp(i*theta).
+    If `halvePhaseAngle` config parameter is set to `True`, then
+    the returned quantity therefore corresponds to |E|*exp(i*theta)
+    """
+    colA = ConfigurableActionField(doc="Ellipticity to subtract from",
+                                   dtype=MultiColumnAction,
+                                   default=CalcE)
+
+    colB = ConfigurableActionField(doc="Ellipticity to subtract",
+                                   dtype=MultiColumnAction,
+                                   default=CalcE)
+
+    halvePhaseAngle = Field(doc=("Divide the phase angle by 2? "
+                                 "Suitable for quiver plots."),
+                            dtype=bool,
+                            default=False)
+
+    @property
+    def columns(self):
+        yield from self.colA.columns
+        yield from self.colB.columns
+
+    def __call__(self, df):
+        eMeas = self.colA(df)
+        ePSF = self.colB(df)
+        eDiff = eMeas - ePSF
+        if self.halvePhaseAngle:
+            # Ellipiticity is |e|*exp(i*2*theta), but we want to return
+            # |e|*exp(i*theta). So we multiply by |e| and take its square root
+            # instead of the more expensive trig calls.
+            eDiff *= np.abs(eDiff)
+            return np.sqrt(eDiff)
+        else:
+            return eDiff
 
 
 class CalcE1(MultiColumnAction):
