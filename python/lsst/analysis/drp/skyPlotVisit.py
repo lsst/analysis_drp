@@ -94,6 +94,10 @@ class SkyPlotVisitTask(SkyPlotTask):
             The skymap used to define the patch boundaries.
         tableName : `str`
             The type of table used to make the plot.
+        visitSummaryTable : `~lsst.afw.table.ExposureCatalog`
+            A summary table of the ccds in the visit.
+        plotName : `str`
+            The name of the plot that will be made.
 
         Returns
         -------
