@@ -409,7 +409,7 @@ tasks:
       axisActions.zAction.colB.colXx: "ixxPSF"
       axisActions.zAction.colB.colYy: "iyyPSF"
       axisActions.zAction.colB.colXy: "ixyPSF"
-      connections.plotName: ShapeSizeiff_ixxPSF
+      connections.plotName: ShapeSizeDiff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
