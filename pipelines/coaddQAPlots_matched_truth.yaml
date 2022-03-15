@@ -1,0 +1,208 @@
+description: Make coadd plots for QA
+parameters:
+  model: "cModelFlux"
+tasks:
+  plot_matched_diff_cModelFlux:
+    # Make a scatter plot showing the difference between reference and measured
+    # cModel fluxes in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: MagDiff
+      axisActions.yAction.col1: "i_cModelFlux"
+      axisActions.yAction.col2: "refcat_flux_i"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_cModelFlux
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "cModel - Reference Magnitude (mmag)"}
+      python: |
+        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        config.nonBandColumnPrefixes.append("refcat")
+
+  plot_matched_chi_cModelFlux_scatter:
+    # Make a scatter plot showing the scaled difference between reference and measured
+    # cModel fluxes [chi=(model-data)/sigma] in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: "i_cModelFlux"
+      axisActions.yAction.colA.colB.column: "refcat_flux_i"
+      axisActions.yAction.colB.column: "i_cModelFluxErr"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_cModelFlux
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "chi = (cModel - Reference Flux)/(cModel err)"}
+      python: |
+        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns, DivideColumns
+        config.nonBandColumnPrefixes.append("refcat")
+
+  plot_matched_diff_x:
+    # Make a scatter plot showing the difference between reference and measured
+    # cModel fluxes in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA.column: "x"
+      axisActions.yAction.colB.column: "refcat_x"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_x
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "x - Reference x (pix)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+
+  plot_matched_diff_y:
+    # Make a scatter plot showing the difference between reference and measured
+    # cModel fluxes in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA.column: "y"
+      axisActions.yAction.colB.column: "refcat_y"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_diff_y
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "x - Reference x (pix)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+
+  plot_matched_chi_x:
+    # Make a scatter plot showing the difference between reference and measured
+    # cModel fluxes in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: "x"
+      axisActions.yAction.colA.colB.column: "refcat_x"
+      axisActions.yAction.colB.column: "xErr"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_x
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "chi = (x - Reference x)/(x err)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
+
+  plot_matched_chi_y:
+    # Make a scatter plot showing the difference between reference and measured
+    # cModel fluxes in one band for galaxies and stars.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction.column: "refcat_flux_i"
+      axisActions.yAction: DivideColumns
+      axisActions.yAction.colA: SubtractColumns
+      axisActions.yAction.colA.colA.column: "y"
+      axisActions.yAction.colA.colB.column: "refcat_y"
+      axisActions.yAction.colB.column: "yErr"
+      axisActions.magAction.column: "refcat_flux_i"
+      connections.catPlot: matched_truth_summary_objectTable_tract
+      connections.plotName: matched_chi_y
+      highSnStatisticSelectorActions.statSelector.bands: ["i"]
+      highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      highSnStatisticSelectorActions.statSelector.threshold: 100
+      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
+      lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
+      lowSnStatisticSelectorActions.statSelector.threshold: 20
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: parameters.model
+      selectorActions.SnSelector.threshold: 0.
+      selectorActions.flagSelector: FlagSelector
+      sourceSelectorActions.sourceSelector.band: "ref"
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
+      sourceSelectorActions.galaxySelector.band: "ref"
+      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+                   "y": "chi = (y - Reference y)/(y err)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
+        config.nonBandColumnPrefixes.append("refcat")
