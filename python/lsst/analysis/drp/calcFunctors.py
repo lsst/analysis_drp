@@ -1,4 +1,4 @@
-__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff"]
+__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull"]
 
 from lsst.pipe.tasks.dataFrameActions import DivideColumns, MultiColumnAction
 from lsst.pex.config import Field
@@ -143,3 +143,212 @@ class CalcShapeSize(MultiColumnAction):
     def __call__(self, df):
         size = np.power(df[self.colXx]*df[self.colYy] - df[self.colXy]**2, 0.25)
         return size
+
+
+class ColorDiff(MultiColumnAction):
+    """Calculate the difference between two colors;
+    each color is derived from two flux columns.
+
+    The color difference is computed as (color1 - color2) with:
+
+    color1 = color1_mag1 - color1_mag2
+    color2 = color2_mag1 - color2_mag2
+
+    where color1_mag1 is the magnitude associated with color1_flux1, etc.
+
+    Parameters
+    ----------
+    df : `pandas.core.frame.DataFrame`
+        The catalog to calculate the color difference from.
+
+    Returns
+    -------
+    The color difference in millimags.
+
+    Notes
+    -----
+    The flux columns need to be in units that can be converted
+    to janskies. This action doesn't have any calibration
+    information and assumes that the fluxes are already
+    calibrated.
+    """
+    color1_flux1 = Field(doc="Column for flux1 to determine color1",
+                         dtype=str)
+    color1_flux1_units = Field(doc="Units for color1_flux1",
+                               dtype=str,
+                               default="nanojansky")
+    color1_flux2 = Field(doc="Column for flux2 to determine color1",
+                         dtype=str)
+    color1_flux2_units = Field(doc="Units for color1_flux2",
+                               dtype=str,
+                               default="nanojansky")
+    color2_flux1 = Field(doc="Column for flux1 to determine color2",
+                         dtype=str)
+    color2_flux1_units = Field(doc="Units for color2_flux1",
+                               dtype=str,
+                               default="nanojansky")
+    color2_flux2 = Field(doc="Column for flux2 to determine color2",
+                         dtype=str)
+    color2_flux2_units = Field(doc="Units for color2_flux2",
+                               dtype=str,
+                               default="nanojansky")
+    return_millimags = Field(doc="Use millimags or not?",
+                             dtype=bool,
+                             default=True)
+
+    @property
+    def columns(self):
+        return (self.color1_flux1,
+                self.color1_flux2,
+                self.color2_flux1,
+                self.color2_flux2)
+
+    def __call__(self, df):
+        color1_flux1 = df[self.color1_flux1].values*u.Unit(self.color1_flux1_units)
+        color1_mag1 = color1_flux1.to(u.ABmag).value
+
+        color1_flux2 = df[self.color1_flux2].values*u.Unit(self.color1_flux2_units)
+        color1_mag2 = color1_flux2.to(u.ABmag).value
+
+        color2_flux1 = df[self.color2_flux1].values*u.Unit(self.color2_flux1_units)
+        color2_mag1 = color2_flux1.to(u.ABmag).value
+
+        color2_flux2 = df[self.color2_flux2].values*u.Unit(self.color2_flux2_units)
+        color2_mag2 = color2_flux2.to(u.ABmag).value
+
+        color1 = color1_mag1 - color1_mag2
+        color2 = color2_mag1 - color2_mag2
+
+        color_diff = color1 - color2
+
+        if self.return_millimags:
+            color_diff *= 1000.0
+
+        return color_diff
+
+
+class ColorDiffPull(ColorDiff):
+    """Calculate the difference between two colors, scaled by the color error;
+    Each color is derived from two flux columns.
+
+    The color difference is computed as (color1 - color2) with:
+
+    color1 = color1_mag1 - color1_mag2
+    color2 = color2_mag1 - color2_mag2
+
+    where color1_mag1 is the magnitude associated with color1_flux1, etc.
+
+    The color difference (color1 - color2) is then scaled by the error on
+    the color as computed from color1_flux1_err, color1_flux2_err,
+    color2_flux1_err, color2_flux2_err.  The errors on color2 may be omitted
+    if the comparison is between an "observed" catalog and a "truth" catalog.
+
+    Parameters
+    ----------
+    df : `pandas.core.frame.DataFrame`
+        The catalog to calculate the color difference from.
+
+    Returns
+    -------
+    The color difference scaled by the error.
+
+    Notes
+    -----
+    The flux columns need to be in units that can be converted
+    to janskies. This action doesn't have any calibration
+    information and assumes that the fluxes are already
+    calibrated.
+    """
+    color1_flux1_err = Field(doc="Error column for flux1 for color1",
+                             dtype=str,
+                             default="")
+    color1_flux2_err = Field(doc="Error column for flux2 for color1",
+                             dtype=str,
+                             default="")
+    color2_flux1_err = Field(doc="Error column for flux1 for color2",
+                             dtype=str,
+                             default="")
+    color2_flux2_err = Field(doc="Error column for flux2 for color2",
+                             dtype=str,
+                             default="")
+
+    def validate(self):
+        super().validate()
+
+        color1_errors = False
+        color2_errors = False
+
+        if self.color1_flux1_err and self.color1_flux2_err:
+            color1_errors = True
+        elif ((self.color1_flux1_err and not self.color1_flux2_err)
+              or (not self.color1_flux1_err and self.color1_flux2_err)):
+            raise ValueError("Must set both color1_flux1_err and color1_flux2_err if either is set.")
+        if self.color2_flux1_err and self.color2_flux2_err:
+            color2_errors = True
+        elif ((self.color2_flux1_err and not self.color2_flux2_err)
+              or (not self.color2_flux1_err and self.color2_flux2_err)):
+            raise ValueError("Must set both color2_flux1_err and color2_flux2_err if either is set.")
+
+        if not color1_errors and not color2_errors:
+            raise ValueError("Must configure flux errors for at least color1 or color2.")
+
+    @property
+    def columns(self):
+        columns = (self.color1_flux1,
+                   self.color1_flux2,
+                   self.color2_flux1,
+                   self.color2_flux2)
+
+        if self.color1_flux1_err:
+            # Config validation ensures if one is set, both are set.
+            columns = columns + (self.color1_flux1_err,
+                                 self.color1_flux2_err)
+
+        if self.color2_flux1_err:
+            # Config validation ensures if one is set, both are set.
+            columns = columns + (self.color2_flux1_err,
+                                 self.color2_flux2_err)
+
+        return columns
+
+    def __call__(self, df):
+        k = 2.5/np.log(10.)
+
+        color1_flux1 = df[self.color1_flux1].values*u.Unit(self.color1_flux1_units)
+        color1_mag1 = color1_flux1.to(u.ABmag).value
+        if self.color1_flux1_err:
+            color1_mag1_err = k*df[self.color1_flux1_err].values/df[self.color1_flux1].values
+        else:
+            color1_mag1_err = 0.0
+
+        color1_flux2 = df[self.color1_flux2].values*u.Unit(self.color1_flux2_units)
+        color1_mag2 = color1_flux2.to(u.ABmag).value
+        if self.color1_flux2_err:
+            color1_mag2_err = k*df[self.color1_flux2_err].values/df[self.color1_flux2].values
+        else:
+            color1_mag2_err = 0.0
+
+        color2_flux1 = df[self.color2_flux1].values*u.Unit(self.color2_flux1_units)
+        color2_mag1 = color2_flux1.to(u.ABmag).value
+        if self.color2_flux1_err:
+            color2_mag1_err = k*df[self.color2_flux1_err].values/df[self.color2_flux1].values
+        else:
+            color2_mag1_err = 0.0
+
+        color2_flux2 = df[self.color2_flux2].values*u.Unit(self.color2_flux2_units)
+        color2_mag2 = color2_flux2.to(u.ABmag).value
+        if self.color2_flux2_err:
+            color2_mag2_err = k*df[self.color2_flux2_err].values/df[self.color2_flux2].values
+        else:
+            color2_mag2_err = 0.0
+
+        color1 = color1_mag1 - color1_mag2
+        err1_sq = color1_mag1_err**2. + color1_mag2_err**2.
+        color2 = color2_mag1 - color2_mag2
+        err2_sq = color2_mag1_err**2. + color2_mag2_err**2.
+
+        color_diff = color1 - color2
+
+        pull = color_diff/np.sqrt(err1_sq + err2_sq)
+
+        return pull
