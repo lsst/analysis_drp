@@ -18,7 +18,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "E1: (ixx - iyy)/(ixx + iyy)"}
+                   "y": "E1: (ixx - iyy)/(ixx + iyy)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
@@ -57,7 +57,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "E2: 2ixy/(ixx + iyy)"}
+                   "y": "E2: 2ixy/(ixx + iyy)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
@@ -97,7 +97,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
+                   "y": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
@@ -137,7 +137,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
+                   "y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
@@ -217,7 +217,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
+                   "y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
@@ -264,7 +264,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "Shape Difference (ixx - ixxPSF)"}
+                   "y": "Shape Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
@@ -314,7 +314,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "E1 Difference (ixx - ixxPSF)"}
+                   "y": "E1 Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
@@ -339,7 +339,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-      "y": "E1 Difference (ixx - ixxPSF)"}
+                   "y": "E1 Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
