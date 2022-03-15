@@ -412,3 +412,13 @@ tasks:
       selectorActions.SnSelector.bands: ["g", "r", "i"]
       python: >
        from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
+
+  plot_DIAObjects_focalPlane:
+    class: lsst.analysis.drp.focalPlanePlot.FocalPlanePlotTask
+    config:
+      selectorActions.flagSelector.selectWhenFalse: ["pixelFlags_edge", "pixelFlags_cr","pixelFlags_edge",
+                                                     "pixelFlags_saturated", "pixelFlags_interpolatedCenter",
+                                                     "pixelFlags_interpolated", "pixelFlags_crCenter",
+                                                     "pixelFlags_bad",]
+      python: >
+        from lsst.analysis.drp.dataSelectors import FlagSelector
