@@ -11,7 +11,7 @@ import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
-from .calcFunctors import MagDiff
+from .calcFunctors import ExtinctionCorrectedMagDiff
 from . import dataSelectors as dataSelectors
 from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
 
@@ -39,7 +39,8 @@ class ColorColorFitPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values on each axis.",
-        default={"xAction": MagDiff, "yAction": MagDiff, "magAction": MagColumnNanoJansky},
+        default={"xAction": ExtinctionCorrectedMagDiff, "yAction": ExtinctionCorrectedMagDiff,
+                 "magAction": MagColumnNanoJansky},
     )
 
     axisLabels = pexConfig.DictField(
@@ -88,7 +89,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
                         bands.append(band)
 
         bands = set(bands)

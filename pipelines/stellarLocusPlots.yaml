@@ -12,12 +12,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: wFit_PSF
-      axisActions.xAction.col1: "g_psfFlux"
-      axisActions.xAction.col2: "r_psfFlux"
-      axisActions.yAction.col1: "r_psfFlux"
-      axisActions.yAction.col2: "i_psfFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "g_psfFlux"
+      axisActions.xAction.magDiff.col2: "r_psfFlux"
+      axisActions.yAction.magDiff.col1: "r_psfFlux"
+      axisActions.yAction.magDiff.col2: "i_psfFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "r_psfFlux"
       axisLabels: {"x": "g - r PSF Magnitude (mag)",
                    "y": "r - i PSF Magnitude (mag)",
@@ -36,12 +36,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: wFit_CModel
-      axisActions.xAction.col1: "g_cModelFlux"
-      axisActions.xAction.col2: "r_cModelFlux"
-      axisActions.yAction.col1: "r_cModelFlux"
-      axisActions.yAction.col2: "i_cModelFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "g_cModelFlux"
+      axisActions.xAction.magDiff.col2: "r_cModelFlux"
+      axisActions.yAction.magDiff.col1: "r_cModelFlux"
+      axisActions.yAction.magDiff.col2: "i_cModelFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "r_cModelFlux"
       axisLabels: {"x": "g - r CModel Magnitude (mag)",
                    "y": "r - i CModel Magnitude (mag)",
@@ -61,12 +61,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: xFit_PSF
-      axisActions.xAction.col1: "g_psfFlux"
-      axisActions.xAction.col2: "r_psfFlux"
-      axisActions.yAction.col1: "r_psfFlux"
-      axisActions.yAction.col2: "i_psfFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "g_psfFlux"
+      axisActions.xAction.magDiff.col2: "r_psfFlux"
+      axisActions.yAction.magDiff.col1: "r_psfFlux"
+      axisActions.yAction.magDiff.col2: "i_psfFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "r_psfFlux"
       axisLabels: {"x": "g - r PSF Magnitude (mag)",
                    "y": "r - i PSF Magnitude (mag)",
@@ -85,12 +85,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: xFit_CModel
-      axisActions.xAction.col1: "g_cModelFlux"
-      axisActions.xAction.col2: "r_cModelFlux"
-      axisActions.yAction.col1: "r_cModelFlux"
-      axisActions.yAction.col2: "i_cModelFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "g_cModelFlux"
+      axisActions.xAction.magDiff.col2: "r_cModelFlux"
+      axisActions.yAction.magDiff.col1: "r_cModelFlux"
+      axisActions.yAction.magDiff.col2: "i_cModelFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "r_cModelFlux"
       axisLabels: {"x": "g - r CModel Magnitude (mag)",
                    "y": "r - i CModel Magnitude (mag)",
@@ -110,12 +110,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: yFit_PSF
-      axisActions.xAction.col1: "r_psfFlux"
-      axisActions.xAction.col2: "i_psfFlux"
-      axisActions.yAction.col1: "i_psfFlux"
-      axisActions.yAction.col2: "z_psfFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "r_psfFlux"
+      axisActions.xAction.magDiff.col2: "i_psfFlux"
+      axisActions.yAction.magDiff.col1: "i_psfFlux"
+      axisActions.yAction.magDiff.col2: "z_psfFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "i_psfFlux"
       axisLabels: {"x": "r - i PSF Magnitude (mag)",
                    "y": "i - z PSF Magnitude (mag)",
@@ -134,12 +134,12 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: yFit_CModel
-      axisActions.xAction.col1: "r_cModelFlux"
-      axisActions.xAction.col2: "i_cModelFlux"
-      axisActions.yAction.col1: "i_cModelFlux"
-      axisActions.yAction.col2: "z_cModelFlux"
-      axisActions.xAction.returnMillimags: False
-      axisActions.yAction.returnMillimags: False
+      axisActions.xAction.magDiff.col1: "r_cModelFlux"
+      axisActions.xAction.magDiff.col2: "i_cModelFlux"
+      axisActions.yAction.magDiff.col1: "i_cModelFlux"
+      axisActions.yAction.magDiff.col2: "z_cModelFlux"
+      axisActions.xAction.magDiff.returnMillimags: False
+      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "i_cModelFlux"
       axisLabels: {"x": "r - i CModel Magnitude (mag)",
                    "y": "i - z CModel Magnitude (mag)",

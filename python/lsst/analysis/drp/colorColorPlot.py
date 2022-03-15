@@ -7,7 +7,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
-from .calcFunctors import MagDiff
+from .calcFunctors import ExtinctionCorrectedMagDiff
 from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
 
@@ -33,7 +33,8 @@ class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values used on each axis.",
-        default={"xAction": MagDiff, "yAction": MagDiff, "zAction": MagColumnNanoJansky},
+        default={"xAction": ExtinctionCorrectedMagDiff, "yAction": ExtinctionCorrectedMagDiff,
+                 "zAction": MagColumnNanoJansky},
     )
 
     axisLabels = pexConfig.DictField(
@@ -70,7 +71,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
                         bands.append(band)
 
         bands = set(bands)
