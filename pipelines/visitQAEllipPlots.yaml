@@ -201,6 +201,33 @@ tasks:
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
 
+  plot_ellipResids_quiver_visit:
+    # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
+    class: lsst.analysis.drp.quiverPlotVisit.QuiverPlotVisitTask
+    config:
+      axisActions.zAction: CalcEDiff
+      axisActions.zAction.halvePhaseAngle: True
+      axisActions.zAction.colA: CalcE
+      axisActions.zAction.colA.colXx: "ixx"
+      axisActions.zAction.colA.colYy: "iyy"
+      axisActions.zAction.colA.colXy: "ixy"
+      axisActions.zAction.colA.halvePhaseAngle: False
+      axisActions.zAction.colB: CalcE
+      axisActions.zAction.colB.colXx: "ixxPSF"
+      axisActions.zAction.colB.colYy: "iyyPSF"
+      axisActions.zAction.colB.colXy: "ixyPSF"
+      axisActions.zAction.colB.halvePhaseAngle: False
+      connections.plotName: Ediff_ixxPSF_quiver
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: [""]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 10
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, SnSelector
+        from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+
   plot_shapeSizePSF_scatter_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
     # measurement defined by (ixx*ixy - ixy^2)^(1/4) for the PSF
