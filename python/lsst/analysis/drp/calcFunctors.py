@@ -1029,3 +1029,49 @@ class ColorDiffPull(ColorDiff):
         pull = color_diff/np.sqrt(err1_sq + err2_sq)
 
         return pull
+
+
+class AstromDiff(MultiColumnAction):
+    """Calculate the difference between two columns, assuming their units
+    are degrees, and convert the difference to arcseconds.
+
+    Parameters
+    ----------
+    df : `pandas.core.frame.DataFrame`
+        The catalog to calculate the position difference from.
+
+    Returns
+    -------
+    The difference.
+
+    Notes
+    -----
+    The columns need to be in units (specifiable in
+    the radecUnits1 and 2 config options) that can be converted
+    to arcseconds. This action doesn't have any calibration
+    information and assumes that the positions are already
+    calibrated.
+    """
+
+    col1 = Field(doc="Column to subtract from", dtype=str)
+    radecUnits1 = Field(doc="Units for col1", dtype=str, default="degree")
+    col2 = Field(doc="Column to subtract", dtype=str)
+    radecUnits2 = Field(doc="Units for col2", dtype=str, default="degree")
+    returnMilliArcsecs = Field(doc="Use marcseconds or not?", dtype=bool, default=True)
+
+    @property
+    def columns(self):
+        return (self.col1, self.col2)
+
+    def __call__(self, df):
+        angle1 = df[self.col1].values * u.Unit(self.radecUnits1)
+
+        angle2 = df[self.col2].values * u.Unit(self.radecUnits2)
+
+        angleDiff = angle1 - angle2
+
+        if self.returnMilliArcsecs:
+            angleDiffValue = angleDiff.to(u.arcsec) * 1000
+        else:
+            angleDiffValue = angleDiff.value
+        return angleDiffValue

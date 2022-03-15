@@ -83,11 +83,11 @@ class CatalogMatchConnections(pipeBase.PipelineTaskConnections, dimensions=("tra
         deferLoad=True
     )
 
-    refCat = pipeBase.connectionTypes.Input(
+    refCat = pipeBase.connectionTypes.PrerequisiteInput(
         doc="The reference catalog to match to loaded input catalog sources.",
         name="gaia_dr2_20200414",
         storageClass="SimpleCatalog",
-        dimensions=("htm7",),
+        dimensions=("skypix",),
         deferLoad=True,
         multiple=True
     )
@@ -135,9 +135,29 @@ class CatalogMatchConfig(pipeBase.PipelineTaskConfig, pipelineConnections=Catalo
         default={"sourceSelector": dataSelectors.StarIdentifier},
     )
 
+    extraColumnSelectors = ConfigurableActionStructField(
+        doc="Other selectors that are not used in this task, but whose columns"
+            "may be needed downstream",
+        default={"selector1": dataSelectors.SnSelector,
+                 "selector2": dataSelectors.GalaxyIdentifier}
+    )
+
+    extraColumns = pexConfig.ListField(
+        doc="Other catalog columns to persist to downstream tasks",
+        dtype=str,
+        default=['i_cModelFlux', 'x', 'y']
+    )
+
     def setDefaults(self):
         self.astrometryRefObjLoader.requireProperMotion = False
         self.astrometryRefObjLoader.anyFilterMapsToThis = 'phot_g_mean'
+        for selectorActions in [self.selectorActions, self.sourceSelectorActions,
+                                self.extraColumnSelectors]:
+            for selector in selectorActions:
+                if 'bands' in selector.names():
+                    selector.bands = ["g", "r", "i", "z", "y"]
+                elif 'band' in selector.names():
+                    selector.band = 'i'
 
 
 class CatalogMatchTask(pipeBase.PipelineTask):
@@ -156,17 +176,11 @@ class CatalogMatchTask(pipeBase.PipelineTask):
 
         inputs = butlerQC.get(inputRefs)
 
-        columns = ['coord_ra', 'coord_dec', 'patch', 'i_cModelFlux']
-        for selector in self.config.selectorActions:
-            columns += [c for c in selector.columns]
-
-        for selector in self.config.sourceSelectorActions:
-            columns += [c for c in selector.columns]
-
-        # Get some other columns in case they are needed downstream
-        snSelector = dataSelectors.SnSelector()
-        snSelector.bands = ["g", "r", "i", "z", "y"]
-        columns += snSelector.columns
+        columns = ['coord_ra', 'coord_dec', 'patch'] + self.config.extraColumns.list()
+        for selectorAction in [self.config.selectorActions, self.config.sourceSelectorActions,
+                               self.config.extraColumnSelectors]:
+            for selector in selectorAction:
+                columns += list(selector.columns)
 
         dataFrame = inputs["catalog"].get(parameters={"columns": columns})
         inputs['catalog'] = dataFrame
@@ -272,11 +286,11 @@ class CatalogMatchVisitConnections(pipeBase.PipelineTaskConnections, dimensions=
         deferLoad=True
     )
 
-    refCat = pipeBase.connectionTypes.Input(
+    refCat = pipeBase.connectionTypes.PrerequisiteInput(
         doc="The astrometry reference catalog to match to loaded input catalog sources.",
         name="gaia_dr2_20200414",
         storageClass="SimpleCatalog",
-        dimensions=("htm7",),
+        dimensions=("skypix",),
         deferLoad=True,
         multiple=True
     )
@@ -299,9 +313,22 @@ class CatalogMatchVisitConnections(pipeBase.PipelineTaskConnections, dimensions=
 class CatalogMatchVisitConfig(CatalogMatchTask.ConfigClass,
                               pipelineConnections=CatalogMatchVisitConnections):
 
+    extraColumns = pexConfig.ListField(
+        doc="Other catalog columns to persist to downstream tasks",
+        dtype=str,
+        default=["psfFlux", "psfFluxErr"]
+    )
+
     def setDefaults(self):
         self.astrometryRefObjLoader.requireProperMotion = False
         self.astrometryRefObjLoader.anyFilterMapsToThis = 'phot_g_mean'
+        for selectorActions in [self.selectorActions, self.sourceSelectorActions,
+                                self.extraColumnSelectors]:
+            for selector in selectorActions:
+                if 'bands' in selector.names():
+                    selector.bands = []
+                elif 'band' in selector.names():
+                    selector.band = ""
 
 
 class CatalogMatchVisitTask(CatalogMatchTask):
@@ -316,17 +343,11 @@ class CatalogMatchVisitTask(CatalogMatchTask):
 
         inputs = butlerQC.get(inputRefs)
 
-        columns = ['coord_ra', 'coord_dec', 'detector']
-        for selector in self.config.selectorActions:
-            columns += [c for c in selector.columns]
-
-        for selector in self.config.sourceSelectorActions:
-            columns += [c for c in selector.columns]
-
-        # Get some other columns in case they are needed downstream
-        snSelector = dataSelectors.SnSelector()
-        snSelector.bands = [""]
-        columns += snSelector.columns
+        columns = ['coord_ra', 'coord_dec', 'detector'] + self.config.extraColumns.list()
+        for selectorAction in [self.config.selectorActions, self.config.sourceSelectorActions,
+                               self.config.extraColumnSelectors]:
+            for selector in selectorAction:
+                columns += list(selector.columns)
 
         dataFrame = inputs["catalog"].get(parameters={"columns": columns})
         inputs['catalog'] = dataFrame

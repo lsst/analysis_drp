@@ -314,3 +314,74 @@ tasks:
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
       python: |
        from lsst.analysis.drp.dataSelectors import (FlagSelector)
+
+  plot_astromRefCat_sky_visit_dRA:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_sky_ra_visit
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: "coord_ra_target"
+      axisActions.zAction.col2: "coord_ra_ref"
+      axisActions.xAction.column: "coord_ra_ref"
+      axisActions.yAction.column: "coord_dec_ref"
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "$RA_{target} - RA_{ref}$ (marcsec)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+
+  plot_astromRefCat_sky_visit_dDec:
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
+    config:
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_sky_dec_visit
+      axisActions.zAction: AstromDiff
+      axisActions.zAction.col1: "coord_dec_target"
+      axisActions.zAction.col2: "coord_dec_ref"
+      axisActions.xAction.column: "coord_ra_ref"
+      axisActions.yAction.column: "coord_dec_ref"
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
+                   "z": "$Dec_{target} - Dec_{ref}$ (marcsec)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+
+  plot_astromRefCat_scatter_visit_dRA:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_scatter_ra_visit
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: "coord_ra_target"
+      axisActions.yAction.col2: "coord_ra_ref"
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "$RA_{target} - RA_{ref}$ (marcsec)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import AstromDiff
+
+  plot_astromRefCat_scatter_visit_dDec:
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
+      connections.plotName: astromRefCatResiduals_scatter_dec_visit
+      axisActions.yAction: AstromDiff
+      axisActions.yAction.col1: "coord_dec_target"
+      axisActions.yAction.col2: "coord_dec_ref"
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "$Dec_{target} - Dec_{ref}$ (marcsec)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import AstromDiff
