@@ -20,15 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __all__ = (
-    "GatherResourceStatisticsConfig",
-    "GatherResourceStatisticsConnections",
-    "GatherResourceStatisticsTask",
+    "GatherResourceUsageConfig",
+    "GatherResourceUsageConnections",
+    "GatherResourceUsageTask",
 )
 
 import argparse
 from collections import defaultdict
 import dataclasses
 import re
+import logging
 
 import numpy as np
 import pandas as pd
@@ -54,7 +55,10 @@ from lsst.utils.introspection import get_full_type_name
 from lsst.utils.usage import _RUSAGE_MEMORY_MULTIPLIER
 
 
-class GatherResourceStatisticsConnections(PipelineTaskConnections, dimensions=()):
+_LOG = logging.getLogger(__name__)
+
+
+class GatherResourceUsageConnections(PipelineTaskConnections, dimensions=()):
     output_table = ct.Output(
         "PLACEHOLDER_resource_statistics",  # Should always be overridden.
         storageClass="DataFrame",
@@ -83,8 +87,8 @@ class GatherResourceStatisticsConnections(PipelineTaskConnections, dimensions=()
         self.allConnections["input_metadata"] = self.input_metadata
 
 
-class GatherResourceStatisticsConfig(
-    PipelineTaskConfig, pipelineConnections=GatherResourceStatisticsConnections
+class GatherResourceUsageConfig(
+    PipelineTaskConfig, pipelineConnections=GatherResourceUsageConnections
 ):
     dimensions = ListField(
         doc=(
@@ -153,7 +157,7 @@ class GatherResourceStatisticsConfig(
     )
 
 
-class GatherResourceStatisticsTask(PipelineTask):
+class GatherResourceUsageTask(PipelineTask):
     """A `PipelineTask` that gathers resource usage statistics from task
     metadata.
 
@@ -183,16 +187,11 @@ class GatherResourceStatisticsTask(PipelineTask):
     most pipelines, often once for each other task in the pipeline.
     """
 
-    ConfigClass = GatherResourceStatisticsConfig
-    _DefaultName = "gatherResourceStatistics"
+    ConfigClass = GatherResourceUsageConfig
+    _DefaultName = "gatherResourceUsage"
 
     @classmethod
-    def build_quantum_graph(
-        cls,
-        metadata_refs,
-        config_prototype=None,
-        config_overrides=None,
-    ):
+    def build_quantum_graph(cls, metadata_refs):
         """Build a specialized `QuantumGraph` that configures and runs this
         task on existing metadata datasets.
 
@@ -227,21 +226,26 @@ class GatherResourceStatisticsTask(PipelineTask):
             if not input_metadata_dataset_type.name.endswith("_metadata"):
                 continue
             input_task_label = input_metadata_dataset_type.name[:-len("_metadata")]
+            _LOG.info(
+                "Creating GatherResourceUsage quantum for %s with %d input datasets.",
+                input_task_label,
+                len(metadata_refs),
+            )
             config = cls.ConfigClass()
             config.dimensions = input_metadata_dataset_type.dimensions.names
             config.connections.input_metadata = input_metadata_dataset_type.name
-            config.connections.output_table = f"{input_task_label}_resource_statistics"
+            config.connections.output_table = f"{input_task_label}_resource_usage"
             task_def = TaskDef(
                 taskName=get_full_type_name(cls),
                 taskClass=cls,
                 config=config,
-                label=f"{input_task_label}_gatherResourceStatistics",
+                label=f"{input_task_label}_gatherResourceUsage",
             )
             empty_dimensions = input_metadata_dataset_type.dimensions.universe.empty
             output_table_dataset_type = DatasetType(
                 config.connections.output_table,
                 dimensions=empty_dimensions,
-                storageClass=GatherResourceStatisticsConnections.output_table.storageClass,
+                storageClass=GatherResourceUsageConnections.output_table.storageClass,
             )
             data_id = DataCoordinate.makeEmpty(universe=input_metadata_dataset_type.dimensions.universe)
             outputs = {
@@ -285,7 +289,7 @@ class GatherResourceStatisticsTask(PipelineTask):
         """
         parser = argparse.ArgumentParser(
             description=(
-                "Build a QuantumGraph that runs GatherResourceStatisticsTask on existing metadata datasets."
+                "Build a QuantumGraph that runs GatherResourceUsageTask on existing metadata datasets."
             ),
         )
         parser.add_argument("repo", type=str, help="Path to data repository or butler configuration.")
@@ -341,7 +345,7 @@ class GatherResourceStatisticsTask(PipelineTask):
         ----------
         universe : `DimensionUniverse`
             Object managing all dimensions recognized by the butler; used to
-            standardize and expand `GatherResourceStatisticsConfig.dimensions`.
+            standardize and expand `GatherResourceUsageConfig.dimensions`.
         input_metadata : `list` [ `DeferredDatasetHandle` ]
             List of `lsst.daf.butler.DeferredDatasetHandle` that can be used to
             load all input metadata datasets.
