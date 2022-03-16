@@ -8,13 +8,10 @@ from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
-from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
 from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from . import dataSelectors
-from . import calcFunctors
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
 
 
@@ -40,96 +37,75 @@ class HistPlotTaskConnections(pipeBase.PipelineTaskConnections,
                                                dimensions=("tract", "skymap"))
 
 
-class HistPlotTaskConfig(pipeBase.PipelineTaskConfig,
-                         pipelineConnections=HistPlotTaskConnections):
+class HistPlotConfig(pexConfig.Config):
 
-    leftPanelActions = ConfigurableActionStructField(
-        doc="The actions used to calculate the values for each histogram in the left panel.",
-        default={"hist1": SingleColumnAction,
-                 "hist2": SingleColumnAction},
-    )
-
-    rightPanelActions = ConfigurableActionStructField(
-        doc="The actions used to calculate the values for each histogram in the right panel.",
-        default={"hist1": calcFunctors.SNCalculator,
-                 "hist2": calcFunctors.SNCalculator},
-    )
-
-    leftPanelLabels = pexConfig.DictField(
-        doc="The labels associated with each histogram in the left panel. These dict keys should match "
-        "those in leftPanelActions. If no match is found, a placeholder label will be assigned instead.",
-        keytype=str,
-        itemtype=str,
-        default={"hist1": "PSFlux", "hist2": "9ApFlux"},
-    )
-
-    rightPanelLabels = pexConfig.DictField(
-        doc="The labels associated with each histogram in the right panel. These dict keys should match "
-        "those in rightPanelActions. If no match is found, a placeholder label will be assigned instead.",
-        keytype=str,
-        itemtype=str,
-        default={"hist1": "PSFlux SN", "hist2": "9ApFlux SN"},
-    )
-
-    axisLabels = pexConfig.DictField(
-        doc="Axis labels for both x-axes, and one for the single unified y-axis.",
-        keytype=str,
-        itemtype=str,
-        default={"xLeft": "flux (nJy)", "xRight": "S/N", "yLeft": "frequency"},
-    )
-
-    summaryStatsLabel = pexConfig.Field(
-        doc="Name of the column used to generate the on-sky summary plot. Should be one of the keys in "
-        "leftPanelLabels/rightPanelLabels. If no match is found, set to the first key in leftPanelLabels.",
+    label = pexConfig.Field(
+        doc="The x-axis label for the panel.",
         dtype=str,
-        default="9ApFlux",
+        default="x axis",
     )
 
-    selectorActions = ConfigurableActionStructField(
-        doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.FlagSelector},
+    actions = ConfigurableActionStructField(
+        doc="A dict of configurable actions, with each key-value pair corresponding to each histogram. "
+        "Dict keys will be used to label each histogram in the panel.",
+        default={},
+    )
+
+    selectors = ConfigurableActionStructField(
+        doc="Panel data selectors used to further narrow down the data. This is in addition to any global "
+        "selectors specified in `selectorActions`. Selectors will be matched to their corresponding action "
+        "using their dict key.",
+        default={},
+    )
+
+    yscale = pexConfig.Field(
+        doc="The scaling on the panel y-axis.",
+        dtype=str,
+        default="linear",
     )
 
     pLower = pexConfig.Field(
         doc="Percentile used to determine the lower range of the histogram bins. If more than one histogram "
-        "is plotted per-panel, the percentile limit is the minimum value across all input data.",
+        "is plotted, the percentile limit is the minimum value across all input data.",
         dtype=float,
         default=2.0,
     )
 
     pUpper = pexConfig.Field(
         doc="Percentile used to determine the upper range of the histogram bins. If more than one histogram "
-        "is plotted per-panel, the percentile limit is the maximum value across all input data.",
+        "is plotted, the percentile limit is the maximum value across all input data.",
         dtype=float,
         default=98.0,
     )
 
     nBins = pexConfig.Field(
-        doc="Number of bins used to divide the x axes.",
-        default=40,
+        doc="Number of bins used to divide the x axis into.",
+        default=50,
         dtype=int,
     )
 
-    def setDefaults(self):
-        super().setDefaults()
-        self.leftPanelActions.hist1.column = "i_psfFlux"
-        self.leftPanelActions.hist2.column = "i_ap09Flux"
-        self.rightPanelActions.hist1.colA.column = "i_psfFlux"
-        self.rightPanelActions.hist1.colB.column = "i_psfFluxErr"
-        self.rightPanelActions.hist2.colA.column = "i_ap09Flux"
-        self.rightPanelActions.hist2.colB.column = "i_ap09FluxErr"
-        # assign dummy labels if any are missing
-        used_labels = []
-        for key in self.leftPanelActions.fieldNames:
-            if key not in self.leftPanelLabels.keys():
-                self.leftPanelLabels.update({key: f"left_{key}"})
-            used_labels.append(self.leftPanelLabels[key])
-        for key in self.rightPanelActions.fieldNames:
-            if key not in self.rightPanelLabels.keys():
-                self.rightPanelLabels.update({key: f"right_{key}"})
-            used_labels.append(self.rightPanelLabels[key])
-        if self.summaryStatsLabel not in used_labels:
-            self.summaryStatsLabel = used_labels[0]
+
+class HistPlotTaskConfig(pipeBase.PipelineTaskConfig,
+                         pipelineConnections=HistPlotTaskConnections):
+
+    panels = pexConfig.ConfigDictField(
+        doc="A configurable dict describing the panels to be plotted, and the histograms for each panel.",
+        keytype=str,
+        itemtype=HistPlotConfig,
+        default={},
+    )
+
+    selectorActions = ConfigurableActionStructField(
+        doc="Which selectors to use to narrow down the data. These selectors are applied globally to all "
+        "panels in the plot. Per-histogram selectors may also be applied within the 'panels' argument.",
+        default={},
+    )
+
+    summaryStatsColumn = pexConfig.Field(
+        doc="Name of the column used to generate the on-sky summary plot.",
+        dtype=str,
+        default="i_ap09Flux",
+    )
 
 
 class HistPlotTask(pipeBase.PipelineTask):
@@ -139,22 +115,26 @@ class HistPlotTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
-        columnNames = set(["patch"])
-        bands = []
-        for actionStruct in [self.config.leftPanelActions,
-                             self.config.rightPanelActions,
-                             self.config.selectorActions]:
-            for action in actionStruct:
-                for col in action.columns:
-                    columnNames.add(col)
-                    band = col.split("_")[0]
+        # Identify columns to extract from the butler
+        selectorColumns = [col for selector in self.config.selectorActions for col in selector.columns]
+        columnNames = set(["patch", self.config.summaryStatsColumn] + selectorColumns)
+        bands = set([])
+        for panel in self.config.panels:
+            for action in self.config.panels[panel].actions:
+                acols = [x for x in action.columns]
+                columnNames.update(acols)
+                for acol in acols:
+                    band = acol.split("_")[0]
                     if band not in ["coord", "extend", "detect", "xy", "merge"]:
-                        bands.append(band)
+                        bands.update(band)
+            for selector in self.config.panels[panel].selectors:
+                scols = [x for x in selector.columns]
+                columnNames.update(scols)
 
-        bands = set(bands)
+        # Get a reduced catalogue, generate inputs for the run method
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
-        inputs['catPlot'] = dataFrame
+        inputs["catPlot"] = dataFrame
         dataId = butlerQC.quantum.dataId
         inputs["dataId"] = dataId
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
@@ -162,6 +142,8 @@ class HistPlotTask(pipeBase.PipelineTask):
         inputs["tableName"] = localConnections.catPlot.name
         inputs["plotName"] = localConnections.histPlot.name
         inputs["bands"] = bands
+
+        # Run the task, put the results into repo using the butler
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
 
@@ -182,6 +164,10 @@ class HistPlotTask(pipeBase.PipelineTask):
             The skymap used to define the patch boundaries.
         tableName : `str`
             The type of table used to make the plot.
+        bands : `set`
+            The bands used to generate this figure.
+        plotName : `str`
+            The output plot name.
 
         Returns
         -------
@@ -192,7 +178,8 @@ class HistPlotTask(pipeBase.PipelineTask):
         Notes
         -----
         The catalogue is first narrowed down using the selectors specified in
-        `self.config.selectorActions`.
+        `self.config.selectorActions`. Further data selections are made on a
+        per-histogram basis with the `self.config.panels[].selectors`.
         If the column names are 'Functor' then the functors specified in
         `self.config.axisFunctors` are used to calculate the required values.
         After this the following functions are run:
@@ -204,40 +191,35 @@ class HistPlotTask(pipeBase.PipelineTask):
         the patches for later plotting and calculates some basic statistics
         in each patch for the column in self.zColName.
 
-        `scatterPlotWithTwoHists` which makes a scatter plot of the points with
-        a histogram of each axis.
+        `histPlot` which makes an N-panel figure containing a series of
+        histograms.
         """
 
-        # Apply the selectors to narrow down the sources to use
+        # Apply the global selectors to narrow down the objects to use
         mask = np.ones(len(catPlot), dtype=bool)
         for selector in self.config.selectorActions:
             mask &= selector(catPlot)
         catPlot = catPlot[mask]
 
-        columns = {"patch": catPlot["patch"]}
+        # Make a plot data dataframe
+        plotDf = pd.DataFrame(catPlot)
 
-        for key in self.config.leftPanelActions.fieldNames:
-            label = self.config.leftPanelLabels[key]
-            action = getattr(self.config.leftPanelActions, key)
-            columns[label] = action(catPlot)
+        # Process all actions to make results columns, ready for plotting
+        for i, panel in enumerate(self.config.panels):
+            hists = [x for x in self.config.panels[panel].toDict()["actions"].keys()]
+            actions = self.config.panels[panel].actions
+            for hist, action in zip(hists, actions):
+                plotDf[f"p{i}_{hist}"] = np.array(action(catPlot))
 
-        for key in self.config.rightPanelActions.fieldNames:
-            label = self.config.rightPanelLabels[key]
-            action = getattr(self.config.rightPanelActions, key)
-            columns[label] = action(catPlot)
-
-        plotDf = pd.DataFrame(columns)
-
-        # Get the S/N cut used
+        # Gather useful information about the plot
         try:
             SN = self.config.selectorActions.SnSelector.threshold
         except AttributeError:
             SN = "N/A"
-
-        # Get useful information about the plot
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
-        sumStats = generateSummaryStats(plotDf, self.config.summaryStatsLabel, skymap, plotInfo)
+        sumStats = generateSummaryStats(plotDf, self.config.summaryStatsColumn, skymap, plotInfo)
+
         # Make the plot
         fig = self.histPlot(plotDf, plotInfo, sumStats)
 
@@ -245,8 +227,8 @@ class HistPlotTask(pipeBase.PipelineTask):
 
     def histPlot(self, catPlot, plotInfo, sumStats):
 
-        """Makes a two-panel plot with histograms of data displayed in each
-        panel.
+        """Make an N-panel plot with a user-configurable number of histograms
+        displayed in each panel.
 
         Parameters
         ----------
@@ -255,13 +237,22 @@ class HistPlotTask(pipeBase.PipelineTask):
         plotInfo : `dict`
             A dictionary of information about the data being plotted with keys:
                 `"run"`
-                    The output run for the plots (`str`).
+                    Output run for the plots (`str`).
+                `"tractTableType"`
+                    Table from which results are taken (`str`).
+                `"plotName"`
+                    Output plot name (`str`)
+                `"SN"`
+                    The global signal-to-noise data threshold (`float`)
                 `"skymap"`
                     The type of skymap used for the data (`str`).
-                `"filter"`
-                    The filter used for this data (`str`).
                 `"tract"`
-                    The tract that the data comes from (`str`).
+                    The tract that the data comes from (`int`).
+                `"bands"`
+                    The bands used for this data (`str` or `list`).
+                `"visit"`
+                    The visit that the data comes from (`int`)
+
         sumStats : `dict`
             A dictionary where the patchIds are the keys which store the R.A.
             and dec of the corners of the patch, along with a summary
@@ -274,94 +265,98 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         Notes
         -----
-        A summary panel showing the median of the summaryStatsLabel in each
-        patch is shown in the upper right corner of the resultant plot. The
-        code uses the selectorActions to decide which points to plot and the
-        statisticSelector actions to determine which points to use for the
-        printed statistics.
+        A summary panel showing the median of the summaryStatsColumn in each
+        patch is shown in the upper right corner of the resultant plot.
         """
-        self.log.info(f"Plotting {self.config.connections.plotName} on a two-panel histogram plot: "
-                      f"panel 1 = {self.config.leftPanelLabels}; "
-                      f"panel 2 = {self.config.rightPanelLabels} ")
+        panels = dict(self.config.panels.items())
+        self.log.info(f"Generating a {len(panels)}-panel histogram plot.")
 
         fig = plt.figure(dpi=300)
-        gs = gridspec.GridSpec(100, 100)
+        gs = gridspec.GridSpec(240, 240)
 
-        # left panel limits
-        pLowers, pUppers = [], []
-        for key in self.config.leftPanelActions.fieldNames:
-            column = self.config.leftPanelLabels[key]
-            [pLower, pUpper] = np.nanpercentile(catPlot[column].values,
-                                                [self.config.pLower, self.config.pUpper])
-            pLowers.append(pLower)
-            pUppers.append(pUpper)
-        leftPanelLower = np.min(pLowers)
-        leftPanelUpper = np.max(pUppers)
+        # Determine gridspec figure divisions
+        summary_block = 40  # how much space should be reserved for the summary stats block?
+        panel_pad = 8  # how much padding should be added around each panel?
+        if len(panels) <= 1:
+            ncols = 1
+        else:
+            ncols = 2
+        nrows = int(np.ceil(len(panels) / ncols))
+        col_bounds = np.linspace(0 + summary_block + panel_pad, 240, ncols + 1, dtype=int)
+        row_bounds = np.linspace(0, 240, nrows + 1, dtype=int)
+        col_starts, col_stops, row_starts, row_stops = [], [], [], []
+        for i in range(len(panels)):
+            col_starts.append(col_bounds[i % ncols] + panel_pad)
+            if (i == (len(panels) - 1)) and (len(panels) % 2 == 1):
+                col_stops.append(np.max(col_bounds) - panel_pad)
+            else:
+                col_stops.append(col_bounds[(i % ncols) + 1] - panel_pad)
+            row_starts.append(row_bounds[i // ncols] + panel_pad)
+            row_stops.append(row_bounds[(i // ncols) + 1] - (2 * panel_pad))
 
-        # left panel plotting
-        leftPanelAx = fig.add_subplot(gs[:, 26:60])
-        for count, key in enumerate(self.config.leftPanelActions.fieldNames):
-            column = self.config.leftPanelLabels[key]
-            mask = np.isfinite(catPlot[column].values)
-            label = f"{column} ({np.sum(mask)})"
-            col = plt.cm.tab10(count)
-            leftPanelAx.hist(catPlot[column][mask], bins=self.config.nBins, alpha=0.7, color=col,
-                             range=(leftPanelLower, leftPanelUpper), histtype="bar", lw=2, label=label)
-            datMed = np.nanmedian(catPlot[column][mask])
-            datMad = sigmaMad(catPlot[column][mask])
-            leftPanelAx.text(x=0.03, y=0.985-(count*0.08), transform=leftPanelAx.transAxes,
-                             ha="left", va="top", fontsize=7, c=col,
-                             s=f"med = {datMed:0.2f}\n$σ_{{MAD}}$ = {datMad:0.2f}")
-            leftPanelAx.axvline(datMed, ls=':', lw=2, c=col)
-        leftPanelAx.set_xlim(leftPanelLower, leftPanelUpper)
-        leftPanelAx.set_xlabel(self.config.axisLabels["xLeft"])
-        leftPanelAx.set_ylabel(self.config.axisLabels["yLeft"])
-        leftPanelAx.tick_params(labelsize=7)
-        leftPanelAx.legend(loc="upper left", bbox_to_anchor=(0.00, 0.77),
-                           bbox_transform=fig.transFigure, fontsize=7, handleheight=1.5)
-        leftPanelAx.axvline(0, ls='--', lw=2, c='k')
+        # panel plotting
+        for i, (panel, col_start, col_stop, row_start, row_stop) in enumerate(zip(panels,
+                                                                                  col_starts, col_stops,
+                                                                                  row_starts, row_stops)):
+            hists = [hist for hist in panels[panel].toDict()["actions"].keys()]
 
-        # right panel limits
-        pLowers, pUppers = [], []
-        for key in self.config.rightPanelActions.fieldNames:
-            column = self.config.rightPanelLabels[key]
-            [pLower, pUpper] = np.nanpercentile(catPlot[column].values,
-                                                [self.config.pLower, self.config.pUpper])
-            pLowers.append(pLower)
-            pUppers.append(pUpper)
-        rightPanelLower = np.min(pLowers)
-        rightPanelUpper = np.max(pUppers)
+            # get per-histogram column data
+            hist_columns = dict()
+            vLowers, vUppers, meds, mads, nums = [], [], [], [], []
+            for hist in hists:
+                column = f"p{i}_{hist}"  # unique histogram column name
+                # apply per-histogram selector, if any requested
+                hist_mask = np.ones(len(catPlot), dtype=bool)
+                if hist in panels[panel].toDict()["selectors"].keys():
+                    selector = getattr(panels[panel].selectors, hist)
+                    hist_mask &= selector(catPlot) > 0
+                # trim catPlot dataframe to selector rows only
+                hist_data = catPlot[hist_mask][column]
+                hist_columns.update({column: hist_data})
+                # find histogram data lower/upper percentile limits
+                pvals = np.nanpercentile(hist_data,
+                                         [self.config.panels[panel].pLower, self.config.panels[panel].pUpper])
+                vLowers.append(pvals[0])
+                vUppers.append(pvals[1])
+                # generate additional per-histogram statistics
+                isfinite = np.isfinite(hist_data)
+                meds.append(np.median(hist_data[isfinite]))
+                mads.append(sigmaMad(hist_data[isfinite]))
+                nums.append(np.sum(isfinite))
+            vLower = np.min(vLowers)
+            vUpper = np.max(vUppers)
 
-        # right panel plotting
-        rightPanelAx = fig.add_subplot(gs[:, 66:])
-        plt.rcParams["hatch.color"] = "white"
-        for count, key in enumerate(self.config.rightPanelActions.fieldNames):
-            column = self.config.rightPanelLabels[key]
-            mask = np.isfinite(catPlot[column].values)
-            label = f"{column} ({np.sum(mask)})"
-            col = plt.cm.tab10(count)
-            rightPanelAx.hist(catPlot[column][mask], bins=self.config.nBins, alpha=0.7, color=col,
-                              range=(rightPanelLower, rightPanelUpper), histtype="bar", lw=2, label=label,
-                              hatch="//")
-            datMed = np.nanmedian(catPlot[column][mask])
-            datMad = sigmaMad(catPlot[column][mask])
-            rightPanelAx.text(x=0.03, y=0.985-(count*0.08), transform=rightPanelAx.transAxes,
-                              ha="left", va="top", fontsize=7, c=col,
-                              s=f"med = {datMed:0.2f}\n$σ_{{MAD}}$ = {datMad:0.2f}")
-            rightPanelAx.axvline(datMed, ls=':', lw=2, c=col)
-        rightPanelAx.set_xlim(rightPanelLower, rightPanelUpper)
-        rightPanelAx.set_xlabel(self.config.axisLabels["xRight"])
-        rightPanelAx.tick_params(labelsize=7)
-        yStep = 0.038*len(self.config.leftPanelActions.fieldNames) + 0.01
-        rightPanelAx.legend(loc="upper left", bbox_to_anchor=(0.00, 0.77-yStep),
-                            bbox_transform=fig.transFigure, fontsize=7, handleheight=1.5)
-        rightPanelAx.axvline(0, ls='--', lw=2, c='k')
+            # generate plot
+            ax = fig.add_subplot(gs[row_start:row_stop, col_start:col_stop])
+            for count, (hist, hist_data, med) in enumerate(zip(hists, hist_columns.values(), meds)):
+                col = plt.cm.tab10(count)
+                ax.hist(hist_data[np.isfinite(hist_data)], bins=self.config.panels[panel].nBins, alpha=0.7,
+                        color=col, range=(vLower, vUpper), histtype="step", lw=2)
+                ax.axvline(med, ls="--", lw=1, c=col)
+            ax.set_yscale(self.config.panels[panel].yscale)
+            ax.set_xlim(vLower, vUpper)
+            ax.set_xlabel(self.config.panels[panel].label, labelpad=1)
+            ax.tick_params(labelsize=7)
+            # add a buffer to the top of the plot to allow space for labels
+            ylims = list(ax.get_ylim())
+            if ax.get_yscale() == "log":
+                ylims[1] = 10**(np.log10(ylims[1]) * 1.1)
+            else:
+                ylims[1] *= 1.1
+            ax.set_ylim(ylims[0], ylims[1])
 
-        # Corner plot of patches showing summary stat in each
-        axCorner = plt.gcf().add_subplot(gs[70:96, 3:21])
+            # add histogram labels and data statistics
+            for count, (hist, med, mad, num) in enumerate(zip(hists, meds, mads, nums)):
+                stats = f"{med:0.1f}, {mad:0.1f}, {num}"
+                ax.text(0.01, 0.99, "\n"*count+hist, c=plt.cm.tab10(count), fontsize=7, ha="left",
+                        va="top", transform=ax.transAxes)
+                ax.text(0.99, 0.99, "\n"*count+stats, c=plt.cm.tab10(count), fontsize=7, ha="right",
+                        va="top", transform=ax.transAxes)
+
+        # summary stats plot
+        axCorner = fig.add_subplot(gs[-summary_block-59:, :summary_block])
         axCorner.set_aspect("equal")
         axCorner.invert_xaxis()
-
         patches = []
         colors = []
         for dataId in sumStats.keys():
@@ -380,7 +375,6 @@ class HistPlotTask(pipeBase.PipelineTask):
             cenY = dec + height / 2
             if dataId != "tract":
                 axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
-
         cmapUse = plt.cm.coolwarm
         # Set the bad color to transparent and make a masked array
         cmapUse.set_bad(color="none")
@@ -388,28 +382,28 @@ class HistPlotTask(pipeBase.PipelineTask):
         collection = PatchCollection(patches, cmap=cmapUse)
         collection.set_array(colors)
         axCorner.add_collection(collection)
-
-        axCorner.set_xlabel("R.A. (deg)", fontsize=7)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=7)
-        axCorner.tick_params(labelsize=5)
-
-        # Add a colorbar
+        axCorner.set_xlabel("R.A. (deg)", fontsize=7, labelpad=1)
+        axCorner.set_ylabel("Dec. (deg)", fontsize=7, labelpad=1)
+        axCorner.tick_params(labelsize=5, length=2, pad=1)
+        # add a colorbar
         divider = make_axes_locatable(axCorner)
-        cax = divider.append_axes("top", size="14%", pad=0)
+        cax = divider.append_axes("top", size="14%", pad=0.05)
         cbar = plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cbar.ax.tick_params(labelsize=5, labeltop=True, labelbottom=False, top=True, bottom=False)
-        cax.text(0.5, 0.42, "Median Value", color="k", rotation="horizontal", transform=cax.transAxes,
+        cbar.ax.tick_params(labelsize=5, labeltop=True, labelbottom=False, top=True, bottom=False, length=2,
+                            pad=0.5)
+        cax.text(0.5, 0.4, "Median Value", color="k", rotation="horizontal", transform=cax.transAxes,
                  horizontalalignment="center", verticalalignment="center", fontsize=7)
-        axCorner.text(0.5, 1.45, self.config.summaryStatsLabel, color="k", rotation="horizontal",
+        axCorner.text(0.5, 1.35, self.config.summaryStatsColumn, color="k", rotation="horizontal",
                       transform=axCorner.transAxes, horizontalalignment="center", verticalalignment="center",
                       fontsize=7)
 
+        # Wrap up: add global y-axis label, hist stats key, and adjust subplots
+        plt.text((summary_block + panel_pad / 2) / 240, 0.41, "Frequency", rotation=90,
+                 transform=fig.transFigure)
+        plt.text(0.955, 0.889, "Key: med, ${{\\sigma}}_{{MAD}}$, $n_{{points}}$",
+                 transform=fig.transFigure, ha="right", va="bottom", fontsize=7)
         plt.draw()
-
-        # Add useful information to the plot
-        plt.subplots_adjust(left=0.02, right=0.95)
-        fig = plt.gcf()
-
+        plt.subplots_adjust(left=0.05, right=0.99, bottom=0.02, top=0.91)
         fig = addPlotInfo(fig, plotInfo)
 
         return fig
