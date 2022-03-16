@@ -217,6 +217,9 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         ys = catPlot[self.config.axisLabels["y"]].values
         mags = catPlot[self.config.axisLabels["mag"]].values
 
+        if len(xs) == 0 or len(ys) == 0:
+            return fig
+
         # Points to use for the fit
         fitPoints = np.where((xs > fitParams["xMin"]) & (xs < fitParams["xMax"])
                              & (ys > fitParams["yMin"]) & (ys < fitParams["yMax"]))[0]

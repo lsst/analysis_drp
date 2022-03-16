@@ -44,7 +44,6 @@ class QuiverPlotTaskConfig(SkyPlotTaskConfig):
 
     def setDefaults(self):
         super().setDefaults()
-        self.plotOutlines = False
 
 
 class QuiverPlotTask(SkyPlotTask):

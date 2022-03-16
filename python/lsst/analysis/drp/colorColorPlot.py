@@ -191,12 +191,19 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         ysStars = catPlot.loc[stars, yCol]
         zsStars = catPlot.loc[stars, zCol]
 
-        [vminGals, vmaxGals] = np.nanpercentile(zsGalaxies, [1, 99])
-        [vminStars, vmaxStars] = np.nanpercentile(zsStars, [1, 99])
-        galPoints = ax.scatter(xsGalaxies, ysGalaxies, c=zsGalaxies, cmap=newReds, label="Galaxies",
-                               s=0.5, vmin=vminGals, vmax=vmaxGals)
-        starPoints = ax.scatter(xsStars, ysStars, c=zsStars, cmap=newBlues, label="Stars", s=0.5,
-                                vmin=vminStars, vmax=vmaxStars)
+        if len(zsGalaxies) > 0:
+            [vminGals, vmaxGals] = np.nanpercentile(zsGalaxies, [1, 99])
+            galPoints = ax.scatter(xsGalaxies, ysGalaxies, c=zsGalaxies, cmap=newReds, label="Galaxies",
+                                   s=0.5, vmin=vminGals, vmax=vmaxGals)
+        else:
+            galPoints = None
+
+        if len(zsStars) > 0:
+            [vminStars, vmaxStars] = np.nanpercentile(zsStars, [1, 99])
+            starPoints = ax.scatter(xsStars, ysStars, c=zsStars, cmap=newBlues, label="Stars", s=0.5,
+                                    vmin=vminStars, vmax=vmaxStars)
+        else:
+            starPoints = None
 
         # Add text details
         galBBox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
@@ -205,28 +212,31 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         fig.text(0.70, 0.96, "Num. Stars: {}".format(stars.sum()), bbox=starBBox, fontsize=8)
 
         # Add colorbars
-        galCbAx = fig.add_axes([0.85, 0.11, 0.04, 0.75])
-        plt.colorbar(galPoints, cax=galCbAx, extend="both")
-        galCbAx.yaxis.set_ticks_position("left")
-        starCbAx = fig.add_axes([0.89, 0.11, 0.04, 0.75])
-        plt.colorbar(starPoints, cax=starCbAx, extend="both")
         magLabel = self.config.axisLabels["z"]
-        galText = galCbAx.text(0.5, 0.5, magLabel + ": Galaxies", color="k", rotation="vertical",
-                               transform=galCbAx.transAxes, ha="center", va="center", fontsize=10)
-        galText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
-        starText = starCbAx.text(0.5, 0.5, magLabel + ": Stars", color="k", rotation="vertical",
-                                 transform=starCbAx.transAxes, ha="center", va="center", fontsize=10)
-        starText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
+        if galPoints:
+            galCbAx = fig.add_axes([0.85, 0.11, 0.04, 0.75])
+            plt.colorbar(galPoints, cax=galCbAx, extend="both")
+            galCbAx.yaxis.set_ticks_position("left")
+            galText = galCbAx.text(0.5, 0.5, magLabel + ": Galaxies", color="k", rotation="vertical",
+                                   transform=galCbAx.transAxes, ha="center", va="center", fontsize=10)
+            galText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
+        if starPoints:
+            starCbAx = fig.add_axes([0.89, 0.11, 0.04, 0.75])
+            plt.colorbar(starPoints, cax=starCbAx, extend="both")
+            starText = starCbAx.text(0.5, 0.5, magLabel + ": Stars", color="k", rotation="vertical",
+                                     transform=starCbAx.transAxes, ha="center", va="center", fontsize=10)
+            starText.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
 
         ax.set_xlabel(self.config.axisLabels["x"])
         ax.set_ylabel(self.config.axisLabels["y"])
 
         # Set useful axis limits
-        starPercsX = np.nanpercentile(xsStars, [1, 99.5])
-        starPercsY = np.nanpercentile(ysStars, [1, 99.5])
-        pad = (starPercsX[1] - starPercsX[0])/10
-        ax.set_xlim(starPercsX[0] - pad, starPercsX[1] + pad)
-        ax.set_ylim(starPercsY[0] - pad, starPercsY[1] + pad)
+        if len(xsStars) > 0:
+            starPercsX = np.nanpercentile(xsStars, [1, 99.5])
+            starPercsY = np.nanpercentile(ysStars, [1, 99.5])
+            pad = (starPercsX[1] - starPercsX[0])/10
+            ax.set_xlim(starPercsX[0] - pad, starPercsX[1] + pad)
+            ax.set_ylim(starPercsY[0] - pad, starPercsY[1] + pad)
 
         fig = addPlotInfo(plt.gcf(), plotInfo)
 
