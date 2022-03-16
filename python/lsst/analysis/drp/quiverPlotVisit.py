@@ -2,15 +2,15 @@ import numpy as np
 import lsst.pipe.base as pipeBase
 
 from .plotUtils import generateSummaryStatsVisit, parsePlotInfo
-from .skyPlot import SkyPlotTask
+from .quiverPlot import QuiverPlotTask
 import pandas as pd
 import matplotlib.pyplot as plt
 
-__all__ = ["SkyPlotVisitTaskConfig", "SkyPlotVisitTask"]
+__all__ = ["QuiverPlotVisitTaskConfig", "QuiverPlotVisitTask"]
 
 
-class SkyPlotVisitTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("visit", "skymap"),
-                                  defaultTemplates={"plotName": "deltaCoords"}):
+class QuiverPlotVisitTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("visit", "skymap"),
+                                     defaultTemplates={"plotName": "deltaCoords"}):
 
     catPlot = pipeBase.connectionTypes.Input(doc="The visit-wide catalog to make plots from.",
                                              storageClass="DataFrame",
@@ -23,13 +23,14 @@ class SkyPlotVisitTaskConnections(pipeBase.PipelineTaskConnections, dimensions=(
                                                        name="visitSummary",
                                                        dimensions=("visit",))
 
-    skyPlot = pipeBase.connectionTypes.Output(doc="A plot showing the on-sky distribution of a value.",
-                                              storageClass="Plot",
-                                              name="skyPlotVisit_{plotName}",
-                                              dimensions=("visit",))
+    quiverPlot = pipeBase.connectionTypes.Output(doc="A plot showing the on-sky distribution of a value.",
+                                                 storageClass="Plot",
+                                                 name="quiverPlotVisit_{plotName}",
+                                                 dimensions=("visit",))
 
 
-class SkyPlotVisitTaskConfig(SkyPlotTask.ConfigClass, pipelineConnections=SkyPlotVisitTaskConnections):
+class QuiverPlotVisitTaskConfig(QuiverPlotTask.ConfigClass,
+                                pipelineConnections=QuiverPlotVisitTaskConnections):
 
     def setDefaults(self):
         super().setDefaults()
@@ -42,18 +43,16 @@ class SkyPlotVisitTaskConfig(SkyPlotTask.ConfigClass, pipelineConnections=SkyPlo
         self.statisticSelectorActions.statSelector.threshold = 100
 
 
-class SkyPlotVisitTask(SkyPlotTask):
-    """A task to make a plot that shows the on sky distribution of a
-    given column. Stars are plotted using a blue color map, galaxies
-    with a red one and when all sources are shown it is plotted
-    using a purple colormap. These plots are useful to study whether
-    or not there is a spatial distribution to the plotted variable.
+class QuiverPlotVisitTask(QuiverPlotTask):
+    """A task to make a plot that shows the on sky distribution of spin-2
+    quantities, usually ellipticities. These plots are useful to visualize
+    the spatial pattern to the plotted variable.
     Either in terms of RA/Dec or corresponding to the overplotted
     ccd outlines.
     """
 
-    ConfigClass = SkyPlotVisitTaskConfig
-    _DefaultName = "skyPlotVisitTask"
+    ConfigClass = QuiverPlotVisitTaskConfig
+    _DefaultName = "quiverPlotVisitTask"
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
@@ -73,13 +72,13 @@ class SkyPlotVisitTask(SkyPlotTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
-        inputs["plotName"] = localConnections.skyPlot.name
+        inputs["plotName"] = localConnections.quiverPlot.name
         outputs = self.run(**inputs)
         butlerQC.put(outputs, outputRefs)
         plt.close()
 
     def run(self, catPlot, dataId, runName, tableName, visitSummaryTable, plotName):
-        """Prep the catalogue and then make a skyPlot of the given column.
+        """Prep the catalogue and then make a quiverPlot of the given columns.
 
         Parameters
         ----------
@@ -102,7 +101,7 @@ class SkyPlotVisitTask(SkyPlotTask):
         Returns
         -------
         `pipeBase.Struct` containing:
-            skyPlot : `matplotlib.figure.Figure`
+            quiverPlot : `matplotlib.figure.Figure`
                 The resulting figure.
 
         Notes
@@ -120,7 +119,7 @@ class SkyPlotVisitTask(SkyPlotTask):
         the patches for later plotting and calculates some basic statistics
         in each patch for the column in self.config.axisActions['zAction'].
 
-        `SkyPlot` which makes the plot of the sky distribution of
+        `QuiverPlot` which makes the plot of the sky distribution of
         `self.config.axisActions['zAction']`.
 
         """
@@ -170,4 +169,4 @@ class SkyPlotVisitTask(SkyPlotTask):
         # Make the plot
         fig = self.skyPlot(plotDf, plotInfo, sumStats)
 
-        return pipeBase.Struct(skyPlot=fig)
+        return pipeBase.Struct(quiverPlot=fig)
