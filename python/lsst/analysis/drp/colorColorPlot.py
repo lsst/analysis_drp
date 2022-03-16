@@ -197,6 +197,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                                    s=0.5, vmin=vminGals, vmax=vmaxGals)
         else:
             galPoints = None
+
         if len(zsStars) > 0:
             [vminStars, vmaxStars] = np.nanpercentile(zsStars, [1, 99])
             starPoints = ax.scatter(xsStars, ysStars, c=zsStars, cmap=newBlues, label="Stars", s=0.5,
