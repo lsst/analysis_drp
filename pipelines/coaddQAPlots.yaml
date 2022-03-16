@@ -363,7 +363,6 @@ tasks:
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       axisLabels: {"x": "R.A. (Degrees)",
