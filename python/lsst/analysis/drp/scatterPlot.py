@@ -492,6 +492,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                                       label=r"$\sigma_{MAD}$: " + f"{sigMads[0]:0.2f}")
                 ax.plot(xs, meds - 1.0*sigMads, color, alpha=0.8)
                 linesForLegend.append(sigMadLine)
+                histIm = None
 
         # Set the scatter plot limits
         if len(ysStars) > 0:
@@ -502,9 +503,12 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             ax.set_ylim(yLims[0], yLims[1])
         else:
             if len(ysStars) > 0:
-                [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])
+                [ys1, ys99] = np.nanpercentile(ysStars, [1, 99])  # noqa: F841
+            elif len(ysGalaxies) > 0:
+                [ys1, ys99] = np.nanpercentile(ysGalaxies, [1, 99])  # noqa: F841
             else:
-                [ys1, ys99] = np.nanpercentile(ysGalaxies, [1, 99])
+                ys1, ys99 = np.nan, np.nan  # noqa: F841
+
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs
@@ -576,7 +580,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         sideHist.axes.get_yaxis().set_visible(False)
         sideHist.set_xlabel("Number", fontsize=8)
-        if self.config.plot2DHist:
+        if self.config.plot2DHist and histIm is not None:
             divider = make_axes_locatable(sideHist)
             cax = divider.append_axes("right", size="8%", pad=0)
             plt.colorbar(histIm, cax=cax, orientation="vertical", label="Number of Points Per Bin")
