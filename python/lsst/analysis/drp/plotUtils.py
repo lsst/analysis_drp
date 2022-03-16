@@ -56,6 +56,9 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     tractInfo = skymap.generateTract(plotInfo["tract"])
     tractWcs = tractInfo.getWcs()
 
+    if "sourceType" in cat.columns:
+        cat = cat.loc[cat["sourceType"] != 0]
+
     # For now also convert the gen 2 patchIds to gen 3
 
     patchInfoDict = {}
