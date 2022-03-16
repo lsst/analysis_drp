@@ -1,6 +1,7 @@
 __all__ = ("FlagSelector", "PsfFlagSelector", "StarIdentifier", "GalaxyIdentifier", "UnknownIdentifier",
            "CoaddPlotFlagSelector", "BaseSNRSelector", "SnSelector")
 
+from abc import abstractmethod
 from lsst.pex.config import ListField, Field
 from lsst.pipe.tasks.dataFrameActions import DataFrameAction
 import numpy as np
@@ -43,19 +44,11 @@ class FlagSelector(DataFrameAction):
         selectWhenTrue to decide which columns to
         select on in each circumstance.
         """
-        result = None
+        result = np.ones(len(df), dtype=bool)
         for flag in self.selectWhenFalse:
-            selected = (df[flag].values == 0)
-            if result is None:
-                result = selected
-            else:
-                result &= selected
+            result &= (df[flag].values == 0)
         for flag in self.selectWhenTrue:
-            selected = (df[flag].values == 1)
-            if result is None:
-                result = selected
-            else:
-                result &= selected
+            result &= (df[flag].values == 1)
         return result
 
 
@@ -181,21 +174,33 @@ class SnSelector(DataFrameAction):
         return mask
 
 
-class StarIdentifier(DataFrameAction):
-    """Identifies stars from the dataFrame and marks them as a 1
-       in the added sourceType column"""
+def format_extendedness(prefix):
+    return "refExtendedness" if prefix == "ref" else (
+        f"{prefix}{'_' if len(prefix) > 0 else ''}extendedness")
 
+
+class ExtendedIdentifier(DataFrameAction):
     band = Field(doc="The band the object is to be classified as a star in.",
                  default="i",
                  dtype=str)
 
     @property
     def columns(self):
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        return [band + "extendedness"]
+        return [self.extendedness]
+
+    @property
+    def extendedness(self):
+        return format_extendedness(self.band)
+
+    # TODO: Add classmethod in py3.9
+    @property
+    @abstractmethod
+    def sourceType(self):
+        raise NotImplementedError("This method should be overloaded in subclasses")
+
+    @abstractmethod
+    def identified(self, df):
+        raise NotImplementedError("This method should be overloaded in subclasses")
 
     def __call__(self, df, **kwargs):
         """Identifies sources classified as stars
@@ -210,92 +215,59 @@ class StarIdentifier(DataFrameAction):
             An array with the objects that are classified as
             stars marked with a 1.
         """
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        stars = (df[band + "extendedness"] == 0.0)
         sourceType = np.zeros(len(df))
-        sourceType[stars] = 1
+        sourceType[self.identified(df)] = self.sourceType
         return sourceType
 
 
-class GalaxyIdentifier(DataFrameAction):
-    """Identifies galaxies from the dataFrame and marks them as a 2
+class StarIdentifier(ExtendedIdentifier):
+    """Identifies stars from the dataFrame and marks them as a 1
        in the added sourceType column"""
-
-    band = Field(doc="The band the object is to be classified as a galaxy in.",
-                 default="i",
-                 dtype=str)
+    extendedness_maximum = Field(doc="Maximum extendedness to qualify as unresolved, inclusive.",
+                                 default=0.5,
+                                 dtype=float)
 
     @property
-    def columns(self):
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        return [band + "extendedness"]
+    @abstractmethod
+    def sourceType(self):
+        return 1
 
-    def __call__(self, df, **kwargs):
-        """Identifies sources classified as galaxies
-
-        Parameters
-        ----------
-        df : `pandas.core.frame.DataFrame`
-
-        Returns
-        -------
-        result : `numpy.ndarray`
-            An array with the objects that are classified as
-            galaxies marked with a 2.
-        """
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        gals = (df[band + "extendedness"] == 1.0)
-        sourceType = np.zeros(len(df))
-        sourceType[gals] = 2
-        return sourceType
+    @abstractmethod
+    def identified(self, df):
+        extendedness = df[self.extendedness]
+        return (extendedness >= 0) & (extendedness < self.extendedness_maximum)
 
 
-class UnknownIdentifier(DataFrameAction):
+class GalaxyIdentifier(ExtendedIdentifier):
+    """Identifies galaxies from the dataFrame and marks them as a 2
+       in the added sourceType column"""
+    extendedness_minimum = Field(doc="Minimum extendedness to qualify as resolved, not inclusive.",
+                                 default=0.5,
+                                 dtype=float)
+
+    @property
+    @abstractmethod
+    def sourceType(self):
+        return 2
+
+    @abstractmethod
+    def identified(self, df):
+        extendedness = df[self.extendedness]
+        return (extendedness > self.extendedness_minimum) & (extendedness <= 1)
+
+
+class UnknownIdentifier(ExtendedIdentifier):
     """Identifies un classified objects from the dataFrame and marks them as a
        9 in the added sourceType column"""
 
-    band = Field(doc="The band the object is to be classified as an unknown in.",
-                 default="i",
-                 dtype=str)
-
     @property
-    def columns(self):
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        return [band + "extendedness"]
+    @abstractmethod
+    def sourceType(self):
+        return 9
 
-    def __call__(self, df, **kwargs):
-        """Identifies sources classed as unknowns
-
-        Parameters
-        ----------
-        df : `pandas.core.frame.DataFrame`
-
-        Returns
-        -------
-        result : `numpy.ndarray`
-            An array with the objects that are classified as
-            unknown marked with a 9.
-        """
-        if len(self.band) > 0:
-            band = self.band + "_"
-        else:
-            band = self.band
-        unknowns = (df[band + "extendedness"] == 9.0)
-        sourceType = np.zeros(len(df))
-        sourceType[unknowns] = 9
-        return sourceType
+    @abstractmethod
+    def identified(self, df):
+        return df[self.extendedness] == 9
 
 
 class VisitPlotFlagSelector(DataFrameAction):
