@@ -25,19 +25,27 @@ __all__ = (
     "GatherResourceStatisticsTask",
 )
 
+import argparse
+from collections import defaultdict
 import dataclasses
+import re
 
 import numpy as np
 import pandas as pd
 
+from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum
+from lsst.daf.butler.core.utils import globToRegex
 from lsst.pex.config import Field, ListField
 from lsst.pipe.base import (
     PipelineTask,
     PipelineTaskConfig,
     PipelineTaskConnections,
+    QuantumGraph,
     Struct,
+    TaskDef,
 )
 from lsst.pipe.base import connectionTypes as ct
+from lsst.utils.introspection import get_full_type_name
 
 # It's not great to be importing a private symbol, but this is a temporary
 # workaround for the fact that prior to w.2022.10, the units for memory values
@@ -172,19 +180,153 @@ class GatherResourceStatisticsTask(PipelineTask):
     zero.
 
     It is expected that this task will be configured to run multiple times in
-    most pipelines, with different output labels and output dataset type names,
-    for each tasks.
+    most pipelines, often once for each other task in the pipeline.
     """
 
     ConfigClass = GatherResourceStatisticsConfig
     _DefaultName = "gatherResourceStatistics"
+
+    @classmethod
+    def build_quantum_graph(
+        cls,
+        metadata_refs,
+        config_prototype=None,
+        config_overrides=None,
+    ):
+        """Build a specialized `QuantumGraph` that configures and runs this
+        task on existing metadata datasets.
+
+        Parameters
+        ----------
+        metadata_refs : `Iterable` [ `DatasetRef` ]
+            References to metadata datasets.  Non-metadata datasets are
+            silently ignored, in order to make it easier to pass in more
+            general dataset query results.
+
+        Notes
+        -----
+        This task cannot easily be added to a regular pipeline, as it's much
+        more natural to have it run automatically on all *other* tasks.
+        But even machine-generating a pipeline is problematic, because our
+        current `QuantumGraph` generation algorithm isn't smart enough to
+        recognize that those pipelines are usually disconnected subgraphs, and
+        that generating a graph for each of those separately is many orders of
+        magnitude faster (and *not* doing is disastrously slow).  As a
+        short-term workaround, this method can be used to generate a
+        `QuantumGraph` for just this task much more efficiently from the
+        metadata datasets already present in a set of collections.
+        """
+        # Group input metadata datasets by dataset type.
+        metadata_refs_by_dataset_type = defaultdict(set)
+        for ref in metadata_refs:
+            metadata_refs_by_dataset_type[ref.datasetType].add(ref)
+        # Iterate over those groups, creating a configuration of
+        # this task and quanta for each one.
+        quanta_by_task_def = {}
+        for input_metadata_dataset_type, metadata_refs in metadata_refs_by_dataset_type.items():
+            if not input_metadata_dataset_type.name.endswith("_metadata"):
+                continue
+            input_task_label = input_metadata_dataset_type.name[:-len("_metadata")]
+            config = cls.ConfigClass()
+            config.dimensions = input_metadata_dataset_type.dimensions.names
+            config.connections.input_metadata = input_metadata_dataset_type.name
+            config.connections.output_table = f"{input_task_label}_resource_statistics"
+            task_def = TaskDef(
+                taskName=get_full_type_name(cls),
+                taskClass=cls,
+                config=config,
+                label=f"{input_task_label}_gatherResourceStatistics",
+            )
+            empty_dimensions = input_metadata_dataset_type.dimensions.universe.empty
+            output_table_dataset_type = DatasetType(
+                config.connections.output_table,
+                dimensions=empty_dimensions,
+                storageClass=GatherResourceStatisticsConnections.output_table.storageClass,
+            )
+            data_id = DataCoordinate.makeEmpty(universe=input_metadata_dataset_type.dimensions.universe)
+            outputs = {
+                output_table_dataset_type: [DatasetRef(output_table_dataset_type, data_id)],
+            }
+            if task_def.metadataDatasetName is not None:
+                output_metadata_dataset_type = DatasetType(
+                    task_def.metadataDatasetName,
+                    dimensions=empty_dimensions,
+                    storageClass="TaskMetadata",
+                )
+                outputs[output_metadata_dataset_type] = [DatasetRef(output_metadata_dataset_type, data_id)]
+            if task_def.logOutputDatasetName is not None:
+                log_dataset_type = DatasetType(
+                    task_def.logOutputDatasetName,
+                    dimensions=empty_dimensions,
+                    storageClass="ButlerLogRecords",
+                )
+                outputs[log_dataset_type] = [DatasetRef(log_dataset_type, data_id)]
+            quantum = Quantum(
+                taskName=task_def.taskName,
+                taskClass=task_def.taskClass,
+                dataId=data_id,
+                inputs={input_metadata_dataset_type: list(metadata_refs)},
+                outputs=outputs,
+            )
+            quanta_by_task_def[task_def] = {quantum}
+        return QuantumGraph(quanta_by_task_def)
+
+    @classmethod
+    def build_quantum_graph_cli(cls, argv):
+        """A command-line interface entry point to `build_quantum_graph`.
+
+        This method provides the implementation for the
+        ``build-gather-resource-usage-qg`` script.
+
+        Parameters
+        ----------
+        argv : `Sequence` [ `str` ]
+            Command-line arguments (e.g. ``sys.argv[1:]``).
+        """
+        parser = argparse.ArgumentParser(
+            description=(
+                "Build a QuantumGraph that runs GatherResourceStatisticsTask on existing metadata datasets."
+            ),
+        )
+        parser.add_argument("repo", type=str, help="Path to data repository or butler configuration.")
+        parser.add_argument("filename", type=str, help="Output filename for QuantumGraph.")
+        parser.add_argument(
+            "collections",
+            type=str, nargs="+",
+            help="Collection(s)s to search for input metadata.",
+        )
+        parser.add_argument(
+            "--dataset-types",
+            type=str,
+            action="extend",
+            help=(
+                "Glob-style patterns for input metadata dataset types.  If a pattern matches a "
+                "non-metadata dataset type, non-metadata matches will be ignored."
+            ),
+        )
+        parser.add_argument(
+            "--where",
+            type=str,
+            default=None,
+            help="Data ID expression used when querying for input metadata datasets.",
+        )
+        args = parser.parse_args(argv)
+        base_dataset_type_filter = re.compile(r"\w+_metadata")
+        if not args.dataset_types:
+            input_dataset_types = base_dataset_type_filter
+        else:
+            input_dataset_types = [globToRegex(expr) for expr in args.dataset_types]
+        butler = Butler(args.repo, collections=args.collections)
+        metadata_refs = butler.registry.queryDatasets(input_dataset_types, where=args.where, findFirst=True)
+        qg = cls.build_quantum_graph(metadata_refs)
+        qg.saveUri(args.filename)
 
     def runQuantum(
         self,
         butlerQC,
         inputRefs,
         outputRefs,
-    ) -> None:
+    ):
         # Docstring inherited.
         # This override exists just so we can pass the butler registry's
         # DimensionUniverse to run in order to standardize the dimensions.
