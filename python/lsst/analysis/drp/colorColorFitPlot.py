@@ -379,7 +379,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         plotPoints = ((dists < maxXs) & (dists > minXs))
         xs = np.array(dists)[plotPoints]
         ys = mags[fitPoints][plotPoints]
-        H, xEdges, yEdges = np.histogram2d(xs, ys, bins=(25, 25))
+        H, xEdges, yEdges = np.histogram2d(xs, ys, bins=(11, 11))
         xBinWidth = xEdges[1] - xEdges[0]
         yBinWidth = yEdges[1] - yEdges[0]
         axContour.contour(xEdges[:-1] + xBinWidth/2, yEdges[:-1] + yBinWidth/2, H.T, levels=7,
