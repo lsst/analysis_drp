@@ -12,9 +12,9 @@ from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
 
 
-class ColorColorPlotTaskConnections(pipeBase.PipelineTaskConnections,
-                                    dimensions=("tract", "skymap"),
-                                    defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords"}):
+class ColorColorPlotConnections(pipeBase.PipelineTaskConnections,
+                                dimensions=("tract", "skymap"),
+                                defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords"}):
 
     catPlot = pipeBase.connectionTypes.Input(doc="The tract wide catalog to make plots from.",
                                              storageClass="DataFrame",
@@ -28,8 +28,8 @@ class ColorColorPlotTaskConnections(pipeBase.PipelineTaskConnections,
                                                      dimensions=("tract", "skymap"))
 
 
-class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
-                               pipelineConnections=ColorColorPlotTaskConnections):
+class ColorColorPlotConfig(pipeBase.PipelineTaskConfig,
+                           pipelineConnections=ColorColorPlotConnections):
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values used on each axis.",
@@ -57,8 +57,8 @@ class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
 class ColorColorPlotTask(pipeBase.PipelineTask):
 
-    ConfigClass = ColorColorPlotTaskConfig
-    _DefaultName = "ColorColorPlotTask"
+    ConfigClass = ColorColorPlotConfig
+    _DefaultName = "colorColorPlot"
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class

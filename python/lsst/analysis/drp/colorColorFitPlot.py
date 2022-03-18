@@ -16,9 +16,9 @@ from . import dataSelectors as dataSelectors
 from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
 
 
-class ColorColorFitPlotTaskConnections(pipeBase.PipelineTaskConnections,
-                                       dimensions=("tract", "skymap"),
-                                       defaultTemplates={"plotName": "wFit"}):
+class ColorColorFitPlotConnections(pipeBase.PipelineTaskConnections,
+                                   dimensions=("tract", "skymap"),
+                                   defaultTemplates={"plotName": "wFit"}):
 
     catPlot = pipeBase.connectionTypes.Input(
         doc="The tract wide catalog to make plots from.",
@@ -34,8 +34,8 @@ class ColorColorFitPlotTaskConnections(pipeBase.PipelineTaskConnections,
         dimensions=("tract", "skymap"))
 
 
-class ColorColorFitPlotTaskConfig(pipeBase.PipelineTaskConfig,
-                                  pipelineConnections=ColorColorFitPlotTaskConnections):
+class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
+                              pipelineConnections=ColorColorFitPlotConnections):
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values on each axis.",
@@ -75,8 +75,8 @@ class ColorColorFitPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
 class ColorColorFitPlotTask(pipeBase.PipelineTask):
 
-    ConfigClass = ColorColorFitPlotTaskConfig
-    _DefaultName = "ColorColorFitPlotTask"
+    ConfigClass = ColorColorFitPlotConfig
+    _DefaultName = "colorColorFitPlot"
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
