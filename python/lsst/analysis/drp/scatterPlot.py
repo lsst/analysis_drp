@@ -501,7 +501,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             plotMed = np.nanmedian(ysGalaxies)
         if yLims:
             ax.set_ylim(yLims[0], yLims[1])
-
+        else:
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs
