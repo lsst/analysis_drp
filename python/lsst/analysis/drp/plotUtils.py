@@ -250,7 +250,7 @@ def addPlotInfo(fig, plotInfo):
     photocalibDataset = "None"
     astroDataset = "None"
 
-    plt.text(0.01, 0.99, plotInfo["plotName"], fontsize=8, transform=fig.transFigure, ha="left", va="top")
+    fig.text(0.01, 0.99, plotInfo["plotName"], fontsize=8, transform=fig.transFigure, ha="left", va="top")
 
     run = plotInfo["run"]
     datasetsUsed = f"\nPhotoCalib: {photocalibDataset}, Astrometry: {astroDataset}"
@@ -265,7 +265,7 @@ def addPlotInfo(fig, plotInfo):
     bandsText = f", Bands: {''.join(plotInfo['bands'].split(' '))}"
     SNText = f", S/N: {plotInfo['SN']}"
     infoText = f"\n{run}{datasetsUsed}{tableType}{dataIdText}{bandsText}{SNText}"
-    plt.text(0.01, 0.98, infoText, fontsize=7, transform=fig.transFigure, alpha=0.6, ha="left", va="top")
+    fig.text(0.01, 0.98, infoText, fontsize=7, transform=fig.transFigure, alpha=0.6, ha="left", va="top")
 
     return fig
 
