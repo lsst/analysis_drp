@@ -71,7 +71,8 @@ class MagDiff(MultiColumnAction):
         magDiff = mag1 - mag2
 
         if self.returnMillimags:
-            magDiff = magDiff*1000.0
+            magDiff = magDiff.to(u.mmag)
+
         return magDiff
 
 
@@ -122,12 +123,12 @@ class ExtinctionCorrectedMagDiff(DataFrameAction):
         av2 = self.extinctionCoeffs[col2Band]
 
         ebv = df[self.ebvCol].values
-        correction = (av1 - av2) * ebv
+        correction = (av1 - av2) * ebv * u.mag
 
         if self.magDiff.returnMillimags:
-            correction = correction*1000.0
+            correction = correction.to(u.mmag)
 
-        return diff - correction*u.mag
+        return diff - correction
 
 
 class CalcE(MultiColumnAction):
@@ -375,7 +376,7 @@ class ColorDiff(MultiColumnAction):
         color_diff = color1 - color2
 
         if self.return_millimags:
-            color_diff *= 1000.0
+            color_diff = color_diff*1000
 
         return color_diff
 
