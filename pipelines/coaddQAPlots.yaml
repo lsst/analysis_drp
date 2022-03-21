@@ -341,18 +341,26 @@ tasks:
         config.panels["panel1"] = HistPlotConfig
         config.panels["panel1"].label = "Flux (nJy)"
         config.panels["panel1"].actions.update = {
-          "psfFlux": SingleColumnAction(column="i_psfFlux"),
-          "ap09Flux": SingleColumnAction(column="i_ap09Flux"),
+          "hist1": SingleColumnAction(column="i_psfFlux"),
+          "hist2": SingleColumnAction(column="i_ap09Flux"),
+        }
+        config.panels["panel1"].histLabels = {
+          "hist1": "psfFlux",
+          "hist2": "ap09Flux",
         }
         config.panels["panel2"] = HistPlotConfig
         config.panels["panel2"].label = "S/N"
         config.panels["panel2"].actions.update = {
-          "psfFlux SN": calcFunctors.SNCalculator(
+          "hist1": calcFunctors.SNCalculator(
             colA=SingleColumnAction(column="i_psfFlux"),
             colB=SingleColumnAction(column="i_psfFluxErr"),),
-          "ap09Flux SN": calcFunctors.SNCalculator(
+          "hist2": calcFunctors.SNCalculator(
             colA=SingleColumnAction(column="i_ap09Flux"),
             colB=SingleColumnAction(column="i_ap09FluxErr"),),
+        }
+        config.panels["panel2"].histLabels = {
+          "hist1": "psfFlux SN",
+          "hist2": "ap09Flux SN",
         }
 
   plot_ri_gr_cmodel:

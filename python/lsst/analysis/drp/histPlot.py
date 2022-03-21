@@ -46,8 +46,16 @@ class HistPlotConfig(pexConfig.Config):
     )
 
     actions = ConfigurableActionStructField(
-        doc="A dict of configurable actions, with each key-value pair corresponding to each histogram. "
-        "Dict keys will be used to label each histogram in the panel.",
+        doc="A Struct-like object, with each item corresponding to a single histogram action.",
+        default={},
+    )
+
+    histLabels = pexConfig.DictField(
+        doc="A dict specifying the histogram labels to be printed in the upper corner of each panel. If the "
+        "key matches an attribute of the `actions` field, then the corresponding value will be printed on "
+        "the plot. If no match is found, the key used in `actions` will be printed instead.",
+        keytype=str,
+        itemtype=str,
         default={},
     )
 
@@ -206,9 +214,7 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         # Process all actions to make results columns, ready for plotting
         for i, panel in enumerate(self.config.panels):
-            hists = [x for x in self.config.panels[panel].toDict()["actions"].keys()]
-            actions = self.config.panels[panel].actions
-            for hist, action in zip(hists, actions):
+            for hist, action in self.config.panels[panel].actions.items():
                 plotDf[f"p{i}_{hist}"] = np.array(action(catPlot))
 
         # Gather useful information about the plot
@@ -268,8 +274,8 @@ class HistPlotTask(pipeBase.PipelineTask):
         A summary panel showing the median of the summaryStatsColumn in each
         patch is shown in the upper right corner of the resultant plot.
         """
-        panels = dict(self.config.panels.items())
-        self.log.info(f"Generating a {len(panels)}-panel histogram plot.")
+        num_panels = len(self.config.panels)
+        self.log.info(f"Generating a {num_panels}-panel histogram plot.")
 
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(240, 240)
@@ -277,17 +283,17 @@ class HistPlotTask(pipeBase.PipelineTask):
         # Determine gridspec figure divisions
         summary_block = 40  # how much space should be reserved for the summary stats block?
         panel_pad = 8  # how much padding should be added around each panel?
-        if len(panels) <= 1:
+        if num_panels <= 1:
             ncols = 1
         else:
             ncols = 2
-        nrows = int(np.ceil(len(panels) / ncols))
+        nrows = int(np.ceil(num_panels / ncols))
         col_bounds = np.linspace(0 + summary_block + panel_pad, 240, ncols + 1, dtype=int)
         row_bounds = np.linspace(0, 240, nrows + 1, dtype=int)
         col_starts, col_stops, row_starts, row_stops = [], [], [], []
-        for i in range(len(panels)):
+        for i in range(num_panels):
             col_starts.append(col_bounds[i % ncols] + panel_pad)
-            if (i == (len(panels) - 1)) and (len(panels) % 2 == 1):
+            if (i == (num_panels - 1)) and (num_panels % 2 == 1):
                 col_stops.append(np.max(col_bounds) - panel_pad)
             else:
                 col_stops.append(col_bounds[(i % ncols) + 1] - panel_pad)
@@ -295,24 +301,24 @@ class HistPlotTask(pipeBase.PipelineTask):
             row_stops.append(row_bounds[(i // ncols) + 1] - (2 * panel_pad))
 
         # panel plotting
-        for i, (panel, col_start, col_stop, row_start, row_stop) in enumerate(zip(panels,
+        for i, (panel, col_start, col_stop, row_start, row_stop) in enumerate(zip(self.config.panels,
                                                                                   col_starts, col_stops,
                                                                                   row_starts, row_stops)):
-            hists = [hist for hist in panels[panel].toDict()["actions"].keys()]
-
             # get per-histogram column data
-            hist_columns = dict()
+            hists_data = dict()
             vLowers, vUppers, meds, mads, nums = [], [], [], [], []
-            for hist in hists:
-                column = f"p{i}_{hist}"  # unique histogram column name
+            for hist, action in self.config.panels[panel].actions.items():
                 # apply per-histogram selector, if any requested
                 hist_mask = np.ones(len(catPlot), dtype=bool)
-                if hist in panels[panel].toDict()["selectors"].keys():
-                    selector = getattr(panels[panel].selectors, hist)
+                try:
+                    selector = getattr(self.config.panels[panel].selectors, hist)
+                except AttributeError:
+                    pass
+                else:
                     hist_mask &= selector(catPlot) > 0
                 # trim catPlot dataframe to selector rows only
-                hist_data = catPlot[hist_mask][column]
-                hist_columns.update({column: hist_data})
+                hist_data = catPlot[hist_mask][f"p{i}_{hist}"]
+                hists_data.update({hist: hist_data})
                 # find histogram data lower/upper percentile limits
                 pvals = np.nanpercentile(hist_data,
                                          [self.config.panels[panel].pLower, self.config.panels[panel].pUpper])
@@ -328,7 +334,7 @@ class HistPlotTask(pipeBase.PipelineTask):
 
             # generate plot
             ax = fig.add_subplot(gs[row_start:row_stop, col_start:col_stop])
-            for count, (hist, hist_data, med) in enumerate(zip(hists, hist_columns.values(), meds)):
+            for count, (hist, hist_data, med) in enumerate(zip(hists_data.keys(), hists_data.values(), meds)):
                 col = plt.cm.tab10(count)
                 ax.hist(hist_data[np.isfinite(hist_data)], bins=self.config.panels[panel].nBins, alpha=0.7,
                         color=col, range=(vLower, vUpper), histtype="step", lw=2)
@@ -346,12 +352,16 @@ class HistPlotTask(pipeBase.PipelineTask):
             ax.set_ylim(ylims[0], ylims[1])
 
             # add histogram labels and data statistics
-            for count, (hist, med, mad, num) in enumerate(zip(hists, meds, mads, nums)):
+            for count, (hist, med, mad, num) in enumerate(zip(hists_data.keys(), meds, mads, nums)):
                 stats = f"{med:0.1f}, {mad:0.1f}, {num}"
-                ax.text(0.01, 0.99, "\n"*count+hist, c=plt.cm.tab10(count), fontsize=7, ha="left",
-                        va="top", transform=ax.transAxes)
-                ax.text(0.99, 0.99, "\n"*count+stats, c=plt.cm.tab10(count), fontsize=7, ha="right",
-                        va="top", transform=ax.transAxes)
+                try:
+                    hist_label = self.config.panels[panel].histLabels[hist]
+                except KeyError:
+                    hist_label = hist
+                label_props = dict(xycoords="axes fraction", fontsize=7, va="top", textcoords="offset points",
+                                   c=plt.cm.tab10(count))
+                ax.annotate("\n" * count + hist_label, xy=(0, 1), ha="left", xytext=(2, -2), **label_props)
+                ax.annotate("\n" * count + stats, xy=(1, 1), ha="right", xytext=(-2, -2), **label_props)
 
         # summary stats plot
         axCorner = fig.add_subplot(gs[-summary_block-59:, :summary_block])
