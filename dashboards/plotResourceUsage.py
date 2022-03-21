@@ -76,12 +76,15 @@ class ResourceUsageData:
 
     _OBSERVATION_DIMENSIONS = frozenset({"visit", "exposure"})
 
-    def __init__(self, tables):
+    def __init__(self, tables, palette=bokeh.palettes.Category10[10]):
         self.all_tasks = pd.Index(sorted(tables.keys()), name="task")
+        self.palette = palette
         self._full_tables = {task: self._with_resource_columns(tables[task]) for task in self.all_tasks}
         self.summary = pd.DataFrame(
             {
                 NaiveComputeCost.__name__: np.zeros(len(self.all_tasks), dtype=float),
+                MaxMemory.__name__: np.zeros(len(self.all_tasks), dtype=float),
+                Runtime.__name__: np.zeros(len(self.all_tasks), dtype=float),
                 "quanta": np.zeros(len(self.all_tasks), dtype=int),
                 "per_observation": np.array(
                     [
@@ -101,7 +104,7 @@ class ResourceUsageData:
             index=self.all_tasks,
         )
         self._rebuild_summary()
-        self._task_mask = np.ones(len(self.all_tasks), dtype=bool)
+        self._task_indices = np.arange(len(self.all_tasks), dtype=int)
 
     @classmethod
     def _with_resource_columns(cls, table):
@@ -111,29 +114,37 @@ class ResourceUsageData:
         return result
 
     def _rebuild_summary(self):
-        self.summary["quanta"] = [len(table) for _, table in self]
+        self.summary["quanta"] = [len(table) for _, table in self.iter_tables(mask_tasks=False)]
         self.summary[NaiveComputeCost.__name__] = [
-            table[NaiveComputeCost.__name__].sum() for _, table in self
+            table[NaiveComputeCost.__name__].sum() for _, table in self.iter_tables(mask_tasks=False)
         ]
-        self.cost_sorter = np.argsort(self.summary[NaiveComputeCost.__name__])[::-1]
+        self.summary[MaxMemory.__name__] = [
+            table[MaxMemory.__name__].max() for _, table in self.iter_tables(mask_tasks=False)
+        ]
+        self.summary[Runtime.__name__] = [
+            table[Runtime.__name__].max() for _, table in self.iter_tables(mask_tasks=False)
+        ]
 
     def get_filtered_table(self, task):
         return self._full_tables[task]
 
-    def __iter__(self):
-        for task in self.all_tasks:
+    def iter_tables(self, mask_tasks=True, sort_by=None):
+        if not mask_tasks:
+            task_mask = slice(None)
+        else:
+            task_mask = self.task_mask
+        if sort_by is None:
+            tasks = self.all_tasks[task_mask]
+        else:
+            tasks = self.summary[sort_by][task_mask].sort_values().index
+        for task in tasks:
             yield task, self.get_filtered_table(task)
 
-    @property
-    def task_mask(self):
-        return self._task_mask
-
-    @task_mask.setter
-    def task_mask(self, mask):
+    def set_tasks(self, mask, sort_by, ):
         self._task_mask[:] = mask
 
-    def plot_costs(self):
-        data = self.summary[self.task_mask].sort_values(NaiveComputeCost.__name__)
+    def plot_costs(self, sort_by):
+        data = self.summary[self.task_mask].sort_values(sort_by)
         data["fraction"] = data[NaiveComputeCost.__name__] / data[NaiveComputeCost.__name__].sum()
         data["angle"] = 2.0*np.pi*data["fraction"]
         data["annotation"] = [
@@ -143,7 +154,7 @@ class ResourceUsageData:
         colors = np.empty(len(data), dtype=(str, 8))
         for n, color in zip(
             range(0, len(data)),
-            itertools.cycle(bokeh.palettes.Category20[20])
+            itertools.cycle(self.palette)
         ):
             colors[n] = color
         data["color"] = colors
@@ -152,7 +163,7 @@ class ResourceUsageData:
             y_range=(-0.5, 0.5),
             x_range=(-0.5, 0.5),
             toolbar_location=None,
-            tools="hover",
+            tools=("hover", "tap"),
             tooltips="@annotation",
         )
         figure.wedge(
@@ -162,12 +173,37 @@ class ResourceUsageData:
             start_angle=bokeh.transform.cumsum('angle', include_zero=True),
             end_angle=bokeh.transform.cumsum('angle'),
             line_width=0.0,
+            alpha=0.5,
+            nonselection_line_width=0.0,
+            selection_line_width=3.0,
+            nonselection_alpha=0.5,
+            selection_alpha=1.0,
+            line_color="black",
             fill_color="color",
             source=data,
+            legend_group="task",
         )
         figure.axis.axis_label = None
         figure.axis.visible = False
         figure.grid.grid_line_color = None
+        return figure
+
+    def plot_hist(self, sort_by, ResourceClass):
+        figure = bokeh.plotting.figure()
+        for (task, table), color in zip(self.iter_tables(sort_by=sort_by), itertools.cycle(self.palette)):
+            if len(table) == 1:
+                continue
+            values = table[ResourceClass.__name__]
+            hist, edges = np.histogram(values, density=True, bins=int(np.ceil(np.sqrt(len(table)))))
+            figure.quad(
+                left=edges[:-1],
+                right=edges[1:],
+                top=hist,
+                bottom=0,
+                line_color=color,
+                fill_color=None,
+                # legend_label=task,
+            )
         return figure
 
 
@@ -183,7 +219,18 @@ class Dashboard(param.Parameterized):
         objects={"Unconstrained": None, "Yes": True, "No": False},
         default=None,
     )
+    sorter = param.Selector(
+        label="Sort tasks by",
+        objects={
+            "Task Label": "task",
+            "Total Compute Cost": NaiveComputeCost.__name__,
+            "Maximum Memory": MaxMemory.__name__,
+            "Maximum CPU Time": Runtime.__name__,
+        },
+        default=NaiveComputeCost.__name__,
+    )
 
+    @param.depends("observation", "tract", on_init=True, watch=True)
     def set_task_mask(self):
         criteria = [np.ones(len(self.data.summary), dtype=bool)]
         if self.observation:
@@ -196,9 +243,8 @@ class Dashboard(param.Parameterized):
             criteria.append(np.logical_not(self.data.summary["per_tract"]))
         self.data.task_mask = np.logical_and.reduce(criteria)
 
-    @param.depends("observation", "tract", on_init=True)
+    @param.depends("set_task_mask", on_init=True)
     def info(self):
-        self.set_task_mask()
         quanta = self.data.summary["quanta"]
         cost = self.data.summary[NaiveComputeCost.__name__]
         return panel.pane.Markdown(
@@ -208,10 +254,13 @@ class Dashboard(param.Parameterized):
             sizing_mode="stretch_width",
         )
 
-    @param.depends("observation", "tract", on_init=True)
-    def plot_costs(self):
-        self.set_task_mask()
-        return self.data.plot_costs()
+    @param.depends("set_task_mask", "sorter", on_init=True)
+    def plot_costs_pie(self):
+        return self.data.plot_costs(self.sorter)
+
+    @param.depends("set_task_mask", "sorter", on_init=True)
+    def plot_costs_hist(self):
+        return self.data.plot_hist(self.sorter, NaiveComputeCost)
 
     def panel(self):
         return panel.Column(
@@ -220,7 +269,10 @@ class Dashboard(param.Parameterized):
                 self.param.tract,
                 self.info,
             ),
-            self.plot_costs,
+            panel.Row(
+                self.param.sorter,
+                self.plot_costs_pie,
+            )
         )
 
 
