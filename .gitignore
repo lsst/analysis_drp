@@ -19,3 +19,6 @@ pytest_session.txt
 .cache/
 .pytest_cache
 .coverage
+
+# Pytest outputs
+tests/data/test_*-failed-diff.png
