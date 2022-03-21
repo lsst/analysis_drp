@@ -393,74 +393,137 @@ class GatherResourceUsageTask(PipelineTask):
                     handle.dataId,
                 )
             else:
-                # If the `quantum` metadata key exists, the `prep` and
-                # `end` prefix entries should always be present, so we
-                # don't do any extra exception handling for those.  The
-                # `init` and `start` prefix entries will only exist if the
-                # `prep` step determined that there was work to do, so
-                # those fall back to the end time to make the related
-                # durations zero.
                 if self.config.memory:
-                    # Attempt to work around memory units being
-                    # platform-dependent for metadata written prior to
-                    # w.2022.10.
-                    memory_multiplier = 1
-                    if quantum_metadata.get("__version__", 0) < 1:
-                        memory_multiplier = _RUSAGE_MEMORY_MULTIPLIER
-                        msg = (
-                            "Metadata dataset %s @ %s is too old; guessing memory units by "
-                            "assuming the platform has not changed"
-                        )
-                        if not warned_about_metadata_version:
-                            self.log.warning(msg, handle.ref.datasetType.name, handle.dataId)
-                            self.log.warning(
-                                "Warnings about memory units for other inputs "
-                                "will be emitted only at DEBUG level."
-                            )
-                            warned_about_metadata_version = True
-                        else:
-                            self.log.debug(msg, handle.ref.datasetType.name, handle.dataId)
-                    columns["memory"][index] = (
-                        quantum_metadata["endMaxResidentSetSize"]
-                        * memory_multiplier
+                    columns["memory"][index], warned_about_metadata_version = self._extract_memory(
+                        quantum_metadata,
+                        handle,
+                        warned_about_metadata_version,
                     )
-                end_time = quantum_metadata["endCpuTime"]
-                times = [
-                    quantum_metadata["prepCpuTime"],
-                    quantum_metadata.get("initCpuTime", end_time),
-                    quantum_metadata.get("startCpuTime", end_time),
-                    end_time,
-                ]
-                for attr_name, begin, end in zip(
-                    ["prep_time", "init_time", "run_time"],
-                    times[:-1],
-                    times[1:],
-                ):
-                    if getattr(self.config, attr_name):
-                        columns[attr_name][index] = end - begin
-            if self.config.input_task_label is not None:
-                task_label = self.config.input_task_label
-            else:
-                task_label = handle.ref.datasetType.name[:-len("_metadata")]
-            for method_name in self.config.method_times:
-                terms = [task_label] + list(method_name.split("."))
-                metadata_method_name = ":".join(terms[:-1]) + "." + terms[-1]
-                try:
-                    method_start_time = metadata[
-                        f"{metadata_method_name}StartCpuTime"
-                    ]
-                    method_end_time = metadata[f"{metadata_method_name}EndCpuTime"]
-                except KeyError:
-                    # A method missing from the metadata is not a problem;
-                    # it's reasonable for configuration or even runtime
-                    # logic to result in a method not being called.  When
-                    # that happens, we just let the times stay zero.
-                    pass
-                else:
-                    columns[f"{task_label}.{method_name}"] = (
-                        method_end_time - method_start_time
-                    )
+                for key, value in self._extract_quantum_timing(quantum_metadata).items():
+                    columns[key][index] = value
+            for key, value in self._extract_method_timing(metadata, handle).items():
+                columns[key][index] = value
         return Struct(output_table=pd.DataFrame(columns, copy=False))
+
+    def _extract_memory(self, quantum_metadata, handle, warned_about_metadata_version):
+        """Extract maximum memory usage from quantum metadata.
+
+        Parameters
+        ----------
+        quantum_metadata : `lsst.pipe.base.TaskMetadata`
+            The nested metadata associated with the label "quantum" inside a
+            PipelineTask's metadata.
+        handle : `lsst.daf.butler.DeferredDatasetHandle`
+            Butler handle for the metadata dataset; used to identify the
+            metadata in diagnostic messages only.
+        warned_about_metadata_version : `bool`
+            Whether we have already emitted at least one warning about old
+            metadata versions.
+
+        Returns
+        -------
+        memory : `float`
+            Maximum memory usage in bytes.
+        warned_about_metadata_version : `bool`
+            Whether we have now emitted at least one warning about old
+            metadata versions.
+        """
+        # Attempt to work around memory units being
+        # platform-dependent for metadata written prior to
+        # w.2022.10.
+        memory_multiplier = 1
+        if quantum_metadata.get("__version__", 0) < 1:
+            memory_multiplier = _RUSAGE_MEMORY_MULTIPLIER
+            msg = (
+                "Metadata dataset %s @ %s is too old; guessing memory units by "
+                "assuming the platform has not changed"
+            )
+            if not warned_about_metadata_version:
+                self.log.warning(msg, handle.ref.datasetType.name, handle.dataId)
+                self.log.warning(
+                    "Warnings about memory units for other inputs "
+                    "will be emitted only at DEBUG level."
+                )
+                warned_about_metadata_version = True
+            else:
+                self.log.debug(msg, handle.ref.datasetType.name, handle.dataId)
+        return (
+            quantum_metadata["endMaxResidentSetSize"] * memory_multiplier,
+            warned_about_metadata_version,
+        )
+
+    def _extract_quantum_timing(self, quantum_metadata):
+        """Extract timing for standard PipelineTask quantum-execution steps
+        from metadata.
+
+        Parameters
+        ----------
+        quantum_metadata : `lsst.pipe.base.TaskMetadata`
+            The nested metadata associated with the label "quantum" inside a
+            PipelineTask's metadata.
+
+        Returns
+        -------
+        timing : `dict` [ `str`, `float` ]
+            CPU times in bytes, for all stages enabled in configuration.
+        """
+        end_time = quantum_metadata["endCpuTime"]
+        times = [
+            quantum_metadata["prepCpuTime"],
+            quantum_metadata.get("initCpuTime", end_time),
+            quantum_metadata.get("startCpuTime", end_time),
+            end_time,
+        ]
+        return {
+            attr_name: end - begin
+            for attr_name, begin, end in zip(
+                ["prep_time", "init_time", "run_time"],
+                times[:-1],
+                times[1:],
+            )
+            if getattr(self.config, attr_name)
+        }
+
+    def _extract_method_timing(self, metadata, handle):
+        """Extract timing for standard PipelineTask quantum-execution steps
+        from metadata.
+
+        Parameters
+        ----------
+        quantum_metadata : `lsst.pipe.base.TaskMetadata`
+            The nested metadata associated with the label "quantum" inside a
+            PipelineTask's metadata.
+        handle : `lsst.daf.butler.DeferredDatasetHandle`
+            Butler handle for the metadata dataset; used infer the prefix used
+            for method names within the metadata.
+
+        Returns
+        -------
+        timing : `dict` [ `str`, `float` ]
+            CPU times in bytes, for all methods enabled in configuration.
+        """
+        if self.config.input_task_label is not None:
+            task_label = self.config.input_task_label
+        else:
+            task_label = handle.ref.datasetType.name[:-len("_metadata")]
+        result = {}
+        for method_name in self.config.method_times:
+            terms = [task_label] + list(method_name.split("."))
+            metadata_method_name = ":".join(terms[:-1]) + "." + terms[-1]
+            try:
+                method_start_time = metadata[
+                    f"{metadata_method_name}StartCpuTime"
+                ]
+                method_end_time = metadata[f"{metadata_method_name}EndCpuTime"]
+            except KeyError:
+                # A method missing from the metadata is not a problem;
+                # it's reasonable for configuration or even runtime
+                # logic to result in a method not being called.  When
+                # that happens, we just let the times stay zero.
+                pass
+            else:
+                result[f"{task_label}.{method_name}"] = method_end_time - method_start_time
+        return result
 
 
 def _dtype_from_field_spec(field_spec):
