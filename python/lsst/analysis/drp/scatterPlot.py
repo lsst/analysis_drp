@@ -247,7 +247,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         # Get useful information about the plot
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
-        sumStats = generateSummaryStats(plotDf, self.config.axisLabels["y"], skymap, plotInfo)
+        sumStats = {} if skymap is None else generateSummaryStats(
+            plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot
         fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
 
