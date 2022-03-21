@@ -57,6 +57,35 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         itemtype=str
     )
 
+    def get_requirements(self):
+        """Return inputs required for a Task to run with this config.
+
+        Returns
+        -------
+        bands : `set`
+            The required bands.
+        columns : `set`
+            The required column names.
+        """
+        columnNames = {"patch"}
+        bands = set()
+        for actionStruct in [self.axisActions,
+                             self.selectorActions,
+                             self.highSnStatisticSelectorActions,
+                             self.lowSnStatisticSelectorActions,
+                             self.sourceSelectorActions]:
+            for action in actionStruct:
+                for col in action.columns:
+                    if col is not None:
+                        columnNames.add(col)
+                        column_split = col.split("_")
+                        # If there's no underscore, it has no band prefix
+                        if len(column_split) > 1:
+                            band = column_split[0]
+                            if band not in self.nonBandColumnPrefixes:
+                                bands.add(band)
+        return bands, columnNames
+
     nonBandColumnPrefixes = pexConfig.ListField(
         doc="Column prefixes that are not bands and which should not be added to the set of bands",
         dtype=str,
@@ -111,22 +140,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
-        columnNames = {"patch"}
-        bands = set()
-        for actionStruct in [self.config.axisActions, self.config.selectorActions,
-                             self.config.highSnStatisticSelectorActions,
-                             self.config.lowSnStatisticSelectorActions,
-                             self.config.sourceSelectorActions]:
-            for action in actionStruct:
-                for col in action.columns:
-                    columnNames.add(col)
-                    column_split = col.split("_")
-                    # If there's no underscore, it doesn't have a band prefix
-                    if len(column_split) > 1:
-                        band = column_split[0]
-                        if band not in self.config.nonBandColumnPrefixes:
-                            bands.add(band)
-
+        bands, columnNames = self.config.get_requirements()
         inputs = butlerQC.get(inputRefs)
         dataFrame = inputs["catPlot"].get(parameters={"columns": columnNames})
         inputs['catPlot'] = dataFrame
