@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
 import enum
-from typing import Callable, Iterable
+import itertools
+from typing import Callable, Iterable, Mapping
 
 import panel
 import param
@@ -33,7 +34,8 @@ class DimensionValueInSet:
 
     @classmethod
     def build(cls, dimension: str, values: Iterable | None) -> Callable[[pd.DataFrame], np.ndarray]:
-        if values is None:
+        print(dimension, values)
+        if not values:
             return accept_everything
         else:
             return cls(dimension, values)
@@ -96,9 +98,9 @@ class ResourceDefinition(ABC):
     def labels(self) -> tuple[str, str]:
         raise NotImplementedError()
 
-    @abstractmethod
-    def summarize(self, values: pd.Series) -> float:
-        raise NotImplementedError()
+    @property
+    def aggregators(self) -> tuple[str, ...]:
+        return ("mean", "max")
 
 
 class MaxMemory(ResourceDefinition):
@@ -109,9 +111,6 @@ class MaxMemory(ResourceDefinition):
     def labels(self):
         return "peak memory (MB)", "maximum resident set size (MB)"
 
-    def summarize(self, values):
-        return values.max()
-
 
 class Runtime(ResourceDefinition):
     def __call__(self, table):
@@ -120,9 +119,6 @@ class Runtime(ResourceDefinition):
     @property
     def labels(self) -> tuple[str, str]:
         return "peak time (s)", "CPU time in runQuantum (s)"
-
-    def summarize(self, values: pd.Series) -> float:
-        return values.max()
 
 
 class NaiveComputeCost(ResourceDefinition):
@@ -133,8 +129,9 @@ class NaiveComputeCost(ResourceDefinition):
     def labels(self) -> tuple[str, str]:
         return "total cost (core × hr)", "[CPU time (s)] × [# of required (4GB) cores, assuming no retries]"
 
-    def summarize(self, values: pd.Series) -> float:
-        return values.sum() / 3600.0
+    @property
+    def aggregators(self) -> tuple[str, ...]:
+        return ("mean", "max", "sum")
 
 
 RESOURCE_TYPES: tuple[type[ResourceDefinition], ...] = [MaxMemory, Runtime, NaiveComputeCost]
@@ -265,20 +262,66 @@ class DimensionFilteredResourceUsageData:
     def independent_columns(self) -> frozenset[str]:
         return self.upstream.independent_columns
 
-    def group_by(self, columns: Iterable[str] = frozenset()) -> pd.DataFrame:
-        columns = frozenset(columns)
-        if not columns:
-            return self.table
-        if not self.independent_columns.issuperset(columns):
+    def group_by(
+        self,
+        by_columns: Iterable[str] = ("task",),
+        resources: Iterable[ResourceDefinition] = RESOURCE_TYPES,
+    ) -> pd.DataFrame:
+        by_columns = frozenset(by_columns)
+        if not isinstance(resources, Mapping):
+            resources = {rs: rs().aggregators for rs in resources}
+        if not by_columns:
+            raise RuntimeError("No columns to group by.")
+        if not self.independent_columns.issuperset(by_columns):
             raise ValueError(
-                f"Cannot sort by column(s) {columns - self.independent_columns}."
+                f"Cannot sort by column(s) {by_columns - self.independent_columns}."
             )
-        AGGREGATORS = {
-            NaiveComputeCost.__name__: ("mean", "max", "sum"),
-            MaxMemory.__name__: ("mean", "max"),
-            Runtime.__name__: ("mean", "max"),
-        }
-        return self.table.groupby(list(columns)).agg(AGGREGATORS)
+        return self.table.groupby(list(by_columns)).agg({rs.__name__: agg for rs, agg in resources.items()})
+
+    def cost_breakdown_chart(self, by_columns: Iterable[str]):
+        return CostBreakdownChart(self.group_by(by_columns, resources={NaiveComputeCost: "sum"}))
+
+
+class CostBreakdownChart:
+
+    def __init__(self, table: pd.DataFrame, palette: tuple[str, ...] = DEFAULT_PALETTE):
+        self.table = table
+        print(len(table))
+        self.table["color"] = np.array(
+            [color for _, color in zip(range(len(self.table)), itertools.cycle(palette))]
+        )
+        self.table["fraction"] = (
+            self.table[NaiveComputeCost.__name__] / self.table[NaiveComputeCost.__name__].sum()
+        )
+        self.table["angle"] = 2.0 * np.pi * self.table["fraction"]
+
+    def plot(self):
+        figure = bokeh.plotting.figure(
+            y_range=(-0.5, 0.5),
+            x_range=(-0.5, 0.5),
+            toolbar_location=None,
+            tools=("tap",),
+        )
+        figure.wedge(
+            x=0,
+            y=0,
+            radius=0.4,
+            start_angle=bokeh.transform.cumsum('angle', include_zero=True),
+            end_angle=bokeh.transform.cumsum('angle'),
+            line_width=0.0,
+            fill_alpha=0.5,
+            nonselection_line_width=0.0,
+            selection_line_width=3.0,
+            nonselection_alpha=0.5,
+            selection_alpha=1.0,
+            line_color="black",
+            fill_color="color",
+            source=self.table,
+        )
+        figure.axis.axis_label = None
+        figure.axis.visible = False
+        figure.grid.grid_line_color = None
+        return figure
 
 
 class Dashboard(param.Parameterized):
@@ -307,25 +350,26 @@ class Dashboard(param.Parameterized):
     )
     allowed_bands = param.ListSelector(
         label="values",
-        objects=[],
+        default=[],
     )
     allowed_tracts = param.ListSelector(
         label="values",
-        objects=[],
+        default=[],
     )
     allowed_visits = param.ListSelector(
         label="values",
-        objects=[],
+        default=[],
     )
 
     def _update_allowed_dimension(self, dimension, field, sort_key=None):
+        getattr(self, field).clear()
         if dimension in self.task_filtered_data.dimensions:
             values = sorted(
                 set(self.task_filtered_data.table[dimension]),
                 key=sort_key
             )
             getattr(self.param, field).objects = values
-            setattr(self, field, values)
+            getattr(self, field)[:] = values
         else:
             getattr(self.param, field).objects = []
 
@@ -338,7 +382,7 @@ class Dashboard(param.Parameterized):
         )
         old_group_by = set(self.group_by)
         self.param.group_by.objects = [
-            column for column in ["task"] + list(GROUPING_DIMENSIONS.keys())
+            column for column in list(GROUPING_DIMENSIONS.keys())
             if column in self.task_filtered_data.independent_columns
         ]
         self.group_by = list(old_group_by & self.task_filtered_data.independent_columns)
@@ -347,7 +391,7 @@ class Dashboard(param.Parameterized):
         self._update_allowed_dimension("visit", "allowed_visits")
 
     @param.depends(
-        "task_filtered_data",
+        "_update_task_filters",
         "allowed_bands",
         "allowed_tracts",
         "allowed_visits",
@@ -365,12 +409,12 @@ class Dashboard(param.Parameterized):
 
     @param.depends("dimension_filtered_data", "group_by", on_init=True)
     def table(self) -> pd.DataFrame:
-        df = self.dimension_filtered_data.group_by(self.group_by)
-        # TODO: come up with a better way to deal with too-large-for-browser
-        # results.
-        if len(df) > 1000:
-            df = df[:1000]
+        df = self.dimension_filtered_data.group_by(["task"] + self.group_by)
         return panel.pane.DataFrame(df, sizing_mode="stretch_both")
+
+    @param.depends("dimension_filtered_data", on_init=True)
+    def cost_breakdown_chart(self) -> bokeh.plotting.Figure:
+        return self.dimension_filtered_data.cost_breakdown_chart(["task"] + self.group_by).plot()
 
     def panel(self):
         layout = panel.Column(
@@ -389,9 +433,8 @@ class Dashboard(param.Parameterized):
                 ),
                 customized(self.param.group_by, sizing_mode="stretch_height"),
             ),
-            panel.Row(
-                self.table
-            )
+            self.cost_breakdown_chart,
+            self.table,
         )
         return layout
 
