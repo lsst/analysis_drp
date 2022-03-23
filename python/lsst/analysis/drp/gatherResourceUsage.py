@@ -83,7 +83,10 @@ class GatherResourceUsageConnections(PipelineTaskConnections, dimensions=()):
         super().__init__(config=config)
         # Override the empty dimension set the connection was defined with with
         # those the task was configured with.
-        self.input_metadata = dataclasses.replace(self.input_metadata, dimensions=self.config.dimensions)
+        self.input_metadata = dataclasses.replace(
+            self.input_metadata,
+            dimensions=list(self.config.dimensions),
+        )
         self.allConnections["input_metadata"] = self.input_metadata
 
 
