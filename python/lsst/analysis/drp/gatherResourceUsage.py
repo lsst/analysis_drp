@@ -230,6 +230,7 @@ class GatherResourceUsageTask(PipelineTask):
         metadata_refs_by_dataset_type = defaultdict(set)
         for ref in metadata_refs:
             metadata_refs_by_dataset_type[ref.datasetType].add(ref)
+        metadata_refs_by_dataset_type = dict(metadata_refs_by_dataset_type)
         # Iterate over those groups, creating a configuration of
         # this task and quanta for each one.
         quanta_by_task_def = {}
