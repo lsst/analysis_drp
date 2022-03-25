@@ -235,9 +235,10 @@ class GatherResourceUsageTask(PipelineTask):
         # this task and quanta for each one.
         quanta_by_task_def = {}
         for input_metadata_dataset_type, metadata_refs in metadata_refs_by_dataset_type.items():
-            if not input_metadata_dataset_type.name.endswith("_metadata"):
+            if (m := re.fullmatch(r"^(\w+)_metadata$", input_metadata_dataset_type.name)) is None:
                 continue
-            input_task_label = input_metadata_dataset_type.name[:-len("_metadata")]
+            else:
+                input_task_label = m.group(1)
             _LOG.info(
                 "Creating GatherResourceUsage quantum for %s with %d input datasets.",
                 input_task_label,
