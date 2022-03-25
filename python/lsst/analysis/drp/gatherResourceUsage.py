@@ -58,9 +58,13 @@ from lsst.utils.usage import _RUSAGE_MEMORY_MULTIPLIER
 _LOG = logging.getLogger(__name__)
 
 
-class GatherResourceUsageConnections(PipelineTaskConnections, dimensions=()):
+class GatherResourceUsageConnections(
+    PipelineTaskConnections,
+    dimensions=(),
+    defaultTemplates={"input_task_label": "PLACEHOLDER"}
+):
     output_table = ct.Output(
-        "PLACEHOLDER_resource_statistics",  # Should always be overridden.
+        "{input_task_label}_resource_statistics",  # Should always be overridden.
         storageClass="DataFrame",
         dimensions=(),
         doc=(
@@ -71,7 +75,7 @@ class GatherResourceUsageConnections(PipelineTaskConnections, dimensions=()):
         ),
     )
     input_metadata = ct.Input(
-        "PLACEHOLDER_metadata",  # Should always be overridden.
+        "{input_task_label}_metadata",  # Should always be overridden.
         storageClass="TaskMetadata",
         dimensions=(),  # Actually set in __init__, according to configuration.
         doc="Metadata dataset for another task to gather resource usage from.",
@@ -81,6 +85,10 @@ class GatherResourceUsageConnections(PipelineTaskConnections, dimensions=()):
 
     def __init__(self, *, config):
         super().__init__(config=config)
+        if "PLACEHOLDER" in self.output_table.name:
+            raise ValueError("Connection configuration for output_table must be overridden.")
+        if "PLACEHOLDER" in self.input_metadata.name:
+            raise ValueError("Connection configuration for input_metadata must be overridden.")
         # Override the empty dimension set the connection was defined with with
         # those the task was configured with.
         self.input_metadata = dataclasses.replace(
