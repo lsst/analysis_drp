@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from cProfile import label
 from collections import defaultdict
 from dataclasses import dataclass
 import enum
@@ -10,7 +11,6 @@ import itertools
 from typing import Callable, Iterable, Mapping
 
 import panel
-import param
 import numpy as np
 import pandas as pd
 import bokeh.plotting
@@ -34,7 +34,6 @@ class DimensionValueInSet:
 
     @classmethod
     def build(cls, dimension: str, values: Iterable | None) -> Callable[[pd.DataFrame], np.ndarray]:
-        print(dimension, values)
         if not values:
             return accept_everything
         else:
@@ -95,7 +94,7 @@ class ResourceDefinition(ABC):
 
     @property
     @abstractmethod
-    def labels(self) -> tuple[str, str]:
+    def labels(self) -> str:
         raise NotImplementedError()
 
     @property
@@ -108,8 +107,8 @@ class MaxMemory(ResourceDefinition):
         return table["memory"] / 1E6
 
     @property
-    def labels(self):
-        return "peak memory (MB)", "maximum resident set size (MB)"
+    def labels(self) -> str:
+        return "maximum resident set size (MB)"
 
 
 class Runtime(ResourceDefinition):
@@ -117,8 +116,8 @@ class Runtime(ResourceDefinition):
         return table["run_time"]
 
     @property
-    def labels(self) -> tuple[str, str]:
-        return "peak time (s)", "CPU time in runQuantum (s)"
+    def labels(self) -> str:
+        return "CPU time in runQuantum (s)"
 
 
 class NaiveComputeCost(ResourceDefinition):
@@ -126,8 +125,8 @@ class NaiveComputeCost(ResourceDefinition):
         return naive_compute_cost(table["run_time"], table["memory"])
 
     @property
-    def labels(self) -> tuple[str, str]:
-        return "total cost (core × hr)", "[CPU time (s)] × [# of required (4GB) cores, assuming no retries]"
+    def labels(self) -> str:
+        return "[CPU time (s)] × [# of required (4GB) cores, assuming no retries]"
 
     @property
     def aggregators(self) -> tuple[str, ...]:
@@ -136,7 +135,7 @@ class NaiveComputeCost(ResourceDefinition):
 
 RESOURCE_TYPES: tuple[type[ResourceDefinition], ...] = [MaxMemory, Runtime, NaiveComputeCost]
 
-DEFAULT_PALETTE: tuple[str, ...] = bokeh.palettes.Category10[10]
+DEFAULT_PALETTE: tuple[str, ...] = bokeh.palettes.Category20[20]
 
 # Keys are dimensions we might want to group by in plots.
 # Values are sets of other dimensions we should "roll up" into these,
@@ -217,7 +216,7 @@ class RawResourceUsageData:
         else:
             rollup_dimensions = GROUPING_DIMENSIONS[dimension]
             if dimension == "visit" and rollup_dimensions == {"exposure"}:
-                if not all(table["visit_system"] == 0):
+                if "visit_system" in table.columns and not all(table["visit_system"] == 0):
                     raise NotImplementedError(
                         "Cannot yet roll-up exposures into visits unless visit system is one-to-one."
                     )
@@ -279,28 +278,48 @@ class DimensionFilteredResourceUsageData:
         return self.table.groupby(list(by_columns)).agg({rs.__name__: agg for rs, agg in resources.items()})
 
     def cost_breakdown_chart(self, by_columns: Iterable[str]):
-        return CostBreakdownChart(self.group_by(by_columns, resources={NaiveComputeCost: "sum"}))
+        table = self.group_by(by_columns, resources={NaiveComputeCost: "sum"})
+        table.sort_values(NaiveComputeCost.__name__, inplace=True, ascending=False)
+        table.reset_index(inplace=True)
+        return CostBreakdownChart(table)
 
 
 class CostBreakdownChart:
 
     def __init__(self, table: pd.DataFrame, palette: tuple[str, ...] = DEFAULT_PALETTE):
+        n_showable = len(palette) - 1
         self.table = table
-        print(len(table))
-        self.table["color"] = np.array(
-            [color for _, color in zip(range(len(self.table)), itertools.cycle(palette))]
-        )
         self.table["fraction"] = (
             self.table[NaiveComputeCost.__name__] / self.table[NaiveComputeCost.__name__].sum()
         )
         self.table["angle"] = 2.0 * np.pi * self.table["fraction"]
+        label_template_terms = []
+        self.tooltips = []
+        if "task" in self.table.columns:
+            label_template_terms.append("{row[task]}")
+            self.tooltips.append(("task", "@task"))
+        for dimension in GROUPING_DIMENSIONS.keys():
+            if dimension in self.table.columns:
+                label_template_terms.append(f"{dimension}={{row[{dimension}]}}")
+                self.tooltips.append((dimension, f"@{dimension}"))
+        self.tooltips.append(("cost", f"@{NaiveComputeCost.__name__} cores × s"))
+        self.tooltips.append(("fraction", "@fraction"))
+        label_template = " ".join(label_template_terms)
+        self.table["label"] = np.array(["(others)"] * len(self.table), dtype=object)
+        self.table["label"][:n_showable] = [
+            label_template.format(row=row) for _, row in self.table[:n_showable].iterrows()
+        ]
+        self.table["color"] = np.array([palette[-1]] * len(self.table), dtype=object)
+        self.table["color"][:n_showable] = palette[:-1]
+
 
     def plot(self):
         figure = bokeh.plotting.figure(
             y_range=(-0.5, 0.5),
-            x_range=(-0.5, 0.5),
+            x_range=(-0.5, 1.5),
             toolbar_location=None,
-            tools=("tap",),
+            tools=("tap", "hover"),
+            tooltips=self.tooltips,
         )
         figure.wedge(
             x=0,
@@ -309,14 +328,15 @@ class CostBreakdownChart:
             start_angle=bokeh.transform.cumsum('angle', include_zero=True),
             end_angle=bokeh.transform.cumsum('angle'),
             line_width=0.0,
-            fill_alpha=0.5,
+            fill_alpha=0.8,
             nonselection_line_width=0.0,
             selection_line_width=3.0,
-            nonselection_alpha=0.5,
+            nonselection_alpha=0.8,
             selection_alpha=1.0,
-            line_color="black",
+            line_color="white",
             fill_color="color",
             source=self.table,
+            legend_group="label",
         )
         figure.axis.axis_label = None
         figure.axis.visible = False
@@ -324,119 +344,136 @@ class CostBreakdownChart:
         return figure
 
 
-class Dashboard(param.Parameterized):
-    raw_data = param.Parameter()
-    task_filtered_data = param.Parameter()
-    dimension_filtered_data = param.Parameter()
-    per_band = param.Selector(
-        label="band",
-        objects={c.value: c for c in TaskDimensionConstraint},
-        default=TaskDimensionConstraint.EITHER,
-    )
-    per_tract = param.Selector(
-        label="tract",
-        objects={c.value: c for c in TaskDimensionConstraint},
-        default=TaskDimensionConstraint.EITHER,
-    )
-    per_visit = param.Selector(
-        label="visit",
-        objects={c.value: c for c in TaskDimensionConstraint},
-        default=TaskDimensionConstraint.NO,
-    )
-    group_by = param.ListSelector(
-        label="group by",
-        objects=["task"],
-        default=[],
-    )
-    allowed_bands = param.ListSelector(
-        label="values",
-        default=[],
-    )
-    allowed_tracts = param.ListSelector(
-        label="values",
-        default=[],
-    )
-    allowed_visits = param.ListSelector(
-        label="values",
-        default=[],
-    )
+class Dashboard:
 
-    def _update_allowed_dimension(self, dimension, field, sort_key=None):
-        getattr(self, field).clear()
-        if dimension in self.task_filtered_data.dimensions:
-            values = sorted(
-                set(self.task_filtered_data.table[dimension]),
-                key=sort_key
-            )
-            getattr(self.param, field).objects = values
-            getattr(self, field)[:] = values
-        else:
-            getattr(self.param, field).objects = []
-
-    @param.depends("per_band", "per_tract", "per_visit", on_init=True, watch=True)
-    def _update_task_filters(self) -> None:
-        self.task_filtered_data = self.raw_data.filter_tasks(
-            band=self.per_band,
-            tract=self.per_tract,
-            visit=self.per_visit,
+    def __init__(self, raw_data: RawResourceUsageData):
+        self.raw_data = raw_data
+        self.task_filtered_data = self.raw_data.filter_tasks()
+        self.dimension_filtered_data = self.task_filtered_data.filter_dimensions()
+        self.per_band = panel.widgets.Select(
+            name="band",
+            options={c.value: c for c in TaskDimensionConstraint},
+            value=TaskDimensionConstraint.EITHER,
         )
-        old_group_by = set(self.group_by)
-        self.param.group_by.objects = [
-            column for column in list(GROUPING_DIMENSIONS.keys())
-            if column in self.task_filtered_data.independent_columns
-        ]
-        self.group_by = list(old_group_by & self.task_filtered_data.independent_columns)
-        self._update_allowed_dimension("band", "allowed_bands", sort_key=band_sorter)
-        self._update_allowed_dimension("tract", "allowed_tracts")
-        self._update_allowed_dimension("visit", "allowed_visits")
-
-    @param.depends(
-        "_update_task_filters",
-        "allowed_bands",
-        "allowed_tracts",
-        "allowed_visits",
-        on_init=True,
-        watch=True,
-    )
-    def _update_dimension_filters(self) -> None:
-        self.dimension_filtered_data = self.task_filtered_data.filter_dimensions(
-            predicate=PredicateIntersection.build(
-                DimensionValueInSet.build("band", self.allowed_bands),
-                DimensionValueInSet.build("tract", self.allowed_tracts),
-                DimensionValueInSet.build("visit", self.allowed_visits),
-            )
+        self.per_tract = panel.widgets.Select(
+            name="tract",
+            options={c.value: c for c in TaskDimensionConstraint},
+            value=TaskDimensionConstraint.EITHER,
         )
-
-    @param.depends("dimension_filtered_data", "group_by", on_init=True)
-    def table(self) -> pd.DataFrame:
-        df = self.dimension_filtered_data.group_by(["task"] + self.group_by)
-        return panel.pane.DataFrame(df, sizing_mode="stretch_both")
-
-    @param.depends("dimension_filtered_data", on_init=True)
-    def cost_breakdown_chart(self) -> bokeh.plotting.Figure:
-        return self.dimension_filtered_data.cost_breakdown_chart(["task"] + self.group_by).plot()
+        self.per_visit = panel.widgets.Select(
+            name="visit",
+            options={c.value: c for c in TaskDimensionConstraint},
+            value=TaskDimensionConstraint.NO,
+        )
+        self.group_by = panel.widgets.MultiSelect(
+            name="group by",
+            options=["task"],
+            value=["task"],
+        )
+        self.allowed_bands = panel.widgets.MultiSelect(
+            name="values",
+            options=[],
+            value=[]
+        )
+        self.allowed_tracts = panel.widgets.MultiSelect(
+            name="values",
+            options=[],
+            value=[]
+        )
+        self.allowed_visits = panel.widgets.MultiSelect(
+            name="values",
+            options=[],
+            value=[]
+        )
+        self.cost_breakdown_chart = panel.pane.Bokeh(
+            self.dimension_filtered_data.cost_breakdown_chart(self.group_by.value).plot()
+        )
+        self.table = panel.pane.DataFrame(
+            self.dimension_filtered_data.group_by(self.group_by.value),
+            sizing_mode="stretch_both",
+        )
 
     def panel(self):
         layout = panel.Column(
             panel.Row(
                 panel.Column(
-                    self.param.per_band,
-                    customized(self.param.allowed_bands, size=8),
+                    self.per_band,
+                    self.allowed_bands,
                 ),
                 panel.Column(
-                    self.param.per_tract,
-                    customized(self.param.allowed_tracts, size=8),
+                    self.per_tract,
+                    self.allowed_tracts,
                 ),
                 panel.Column(
-                    self.param.per_visit,
-                    customized(self.param.allowed_visits, size=8),
+                    self.per_visit,
+                    self.allowed_visits,
                 ),
-                customized(self.param.group_by, sizing_mode="stretch_height"),
+                self.group_by,
             ),
             self.cost_breakdown_chart,
             self.table,
         )
+        self.link()
         return layout
+
+    def link(self):
+        self.per_band.param.watch(self._update_task_filters, ["value"], onlychanged=True)
+        self.per_tract.param.watch(self._update_task_filters, ["value"], onlychanged=True)
+        self.per_visit.param.watch(self._update_task_filters, ["value"], onlychanged=True)
+        self.allowed_bands.param.watch(self._update_dimension_filters, ["value"], onlychanged=True)
+        self.allowed_tracts.param.watch(self._update_dimension_filters, ["value"], onlychanged=True)
+        self.allowed_visits.param.watch(self._update_dimension_filters, ["value"], onlychanged=True)
+        self.group_by.param.watch(self._update_group_by, ["value"], onlychanged=True)
+
+    def _update_task_filters(self, *args) -> None:
+        self.task_filtered_data = self.raw_data.filter_tasks(
+            band=self.per_band.value,
+            tract=self.per_tract.value,
+            visit=self.per_visit.value,
+        )
+        old_group_by = set(self.group_by.value)
+        self.group_by.options = ["task"] + [
+            column for column in list(GROUPING_DIMENSIONS.keys())
+            if column in self.task_filtered_data.independent_columns
+        ]
+        self.group_by.value = list(old_group_by & self.task_filtered_data.independent_columns)
+        self._update_allowed_dimension("band", self.allowed_bands, sort_key=band_sorter)
+        self._update_allowed_dimension("tract", self.allowed_tracts)
+        self._update_allowed_dimension("visit", self.allowed_visits)
+        self._update_dimension_filters()
+
+    def _update_dimension_filters(self, *args) -> None:
+        self.dimension_filtered_data = self.task_filtered_data.filter_dimensions(
+            predicate=PredicateIntersection.build(
+                DimensionValueInSet.build("band", self.allowed_bands.value),
+                DimensionValueInSet.build("tract", self.allowed_tracts.value),
+                DimensionValueInSet.build("visit", self.allowed_visits.value),
+            )
+        )
+        self._update_panes()
+
+    def _update_group_by(self, *args) -> None:
+        if not self.group_by.value:
+            self.group_by.value = ["task"]
+        self._update_panes()
+
+    def _update_panes(self, *args) -> None:
+        self.cost_breakdown_chart.object = self.dimension_filtered_data.cost_breakdown_chart(
+            self.group_by.value
+        ).plot()
+        self.table.object = self.dimension_filtered_data.group_by(self.group_by.value)
+
+    def _update_allowed_dimension(self, dimension, widget, sort_key=None):
+        widget.value.clear()
+        if dimension in self.task_filtered_data.dimensions:
+            options = sorted(
+                set(self.task_filtered_data.table[dimension]),
+                key=sort_key
+            )
+            widget.options = options
+            widget.value[:] = options
+        else:
+            widget.options = []
 
 
 def main():
