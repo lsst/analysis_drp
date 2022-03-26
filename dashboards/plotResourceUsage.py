@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from cProfile import label
 from collections import defaultdict
 from dataclasses import dataclass
 import enum
-import itertools
 from typing import Callable, Iterable, Mapping
 
 import panel
@@ -94,7 +92,7 @@ class ResourceDefinition(ABC):
 
     @property
     @abstractmethod
-    def labels(self) -> str:
+    def labels(self) -> tuple[str, str, str]:
         raise NotImplementedError()
 
     @property
@@ -107,8 +105,8 @@ class MaxMemory(ResourceDefinition):
         return table["memory"] / 1E6
 
     @property
-    def labels(self) -> str:
-        return "maximum resident set size (MB)"
+    def labels(self) -> tuple[str, str, str]:
+        return "memory", "MB", "maximum resident set size"
 
 
 class Runtime(ResourceDefinition):
@@ -116,17 +114,17 @@ class Runtime(ResourceDefinition):
         return table["run_time"]
 
     @property
-    def labels(self) -> str:
-        return "CPU time in runQuantum (s)"
+    def labels(self) -> tuple[str, str, str]:
+        return "time", "s", "CPU time in runQuantum"
 
 
 class NaiveComputeCost(ResourceDefinition):
     def __call__(self, table: pd.DataFrame) -> pd.Series:
-        return naive_compute_cost(table["run_time"], table["memory"])
+        return naive_compute_cost(table["run_time"], table["memory"]) / 3600.0
 
     @property
-    def labels(self) -> str:
-        return "[CPU time (s)] × [# of required (4GB) cores, assuming no retries]"
+    def labels(self) -> tuple[str, str, str]:
+        return "cost", "core×hr", "[CPU time] × [# of required (4GB) cores, assuming no retries]"
 
     @property
     def aggregators(self) -> tuple[str, ...]:
@@ -136,6 +134,27 @@ class NaiveComputeCost(ResourceDefinition):
 RESOURCE_TYPES: tuple[type[ResourceDefinition], ...] = [MaxMemory, Runtime, NaiveComputeCost]
 
 DEFAULT_PALETTE: tuple[str, ...] = bokeh.palettes.Category20[20]
+
+
+def invisible_figure(x_range=None, y_range=None):
+    """Make an invisible Bokeh figure.
+
+    This is a part of a workaround for the fact that Bokeh legends can only
+    be added to figures, not layouts, lifted largely from
+
+    https://stackoverflow.com/questions/56825350/how-to-add-one-legend-for-that-controlls-multiple-bokeh-figures
+    """
+    figure = bokeh.plotting.figure(toolbar_location=None, outline_line_alpha=0)
+    for fig_component in [figure.grid[0], figure.ygrid[0], figure.xaxis[0], figure.yaxis[0]]:
+        fig_component.visible = False
+    if x_range is not None:
+        figure.x_range.start = x_range[0]
+        figure.x_range.end = x_range[1]
+    if y_range is not None:
+        figure.y_range.start = y_range[0]
+        figure.y_range.end = y_range[1]
+    return figure
+
 
 # Keys are dimensions we might want to group by in plots.
 # Values are sets of other dimensions we should "roll up" into these,
@@ -147,6 +166,9 @@ GROUPING_DIMENSIONS: dict[str, frozenset[str]] = {
     "tract": set(),
     "visit": {"exposure"},
 }
+
+
+GROUPING_COLUMNS = ("task",) + tuple(GROUPING_DIMENSIONS.keys())
 
 
 class TaskDimensionConstraint(enum.Enum):
@@ -287,7 +309,7 @@ class DimensionFilteredResourceUsageData:
 class CostBreakdownChart:
 
     def __init__(self, table: pd.DataFrame, palette: tuple[str, ...] = DEFAULT_PALETTE):
-        n_showable = len(palette) - 1
+        self.n_showable = min(len(palette) - 1, len(table))
         self.table = table
         self.table["fraction"] = (
             self.table[NaiveComputeCost.__name__] / self.table[NaiveComputeCost.__name__].sum()
@@ -302,26 +324,26 @@ class CostBreakdownChart:
             if dimension in self.table.columns:
                 label_template_terms.append(f"{dimension}={{row[{dimension}]}}")
                 self.tooltips.append((dimension, f"@{dimension}"))
-        self.tooltips.append(("cost", f"@{NaiveComputeCost.__name__} cores × s"))
-        self.tooltips.append(("fraction", "@fraction"))
-        label_template = " ".join(label_template_terms)
-        self.table["label"] = np.array(["(others)"] * len(self.table), dtype=object)
-        self.table["label"][:n_showable] = [
-            label_template.format(row=row) for _, row in self.table[:n_showable].iterrows()
-        ]
-        self.table["color"] = np.array([palette[-1]] * len(self.table), dtype=object)
-        self.table["color"][:n_showable] = palette[:-1]
-
+        self.label_template = ", ".join(label_template_terms)
+        _, units, _ = NaiveComputeCost().labels
+        self.tooltips.append(("cost", f"@{NaiveComputeCost.__name__}{{0.00}} {units}"))
+        self.tooltips.append(("fraction", "@fraction{0.000}"))
+        color = np.empty(len(table), dtype=object)
+        color[:self.n_showable] = palette[:self.n_showable]
+        color[self.n_showable:] = palette[-1]
+        self.table["color"] = color
 
     def plot(self):
+        _, _, long_title = NaiveComputeCost().labels
         figure = bokeh.plotting.figure(
+            title=f"Naive compute cost breakdown {long_title}",
             y_range=(-0.5, 0.5),
-            x_range=(-0.5, 1.5),
+            x_range=(-0.5, 0.5),
             toolbar_location=None,
             tools=("tap", "hover"),
             tooltips=self.tooltips,
         )
-        figure.wedge(
+        renderer = figure.wedge(
             x=0,
             y=0,
             radius=0.4,
@@ -336,20 +358,34 @@ class CostBreakdownChart:
             line_color="white",
             fill_color="color",
             source=self.table,
-            legend_group="label",
         )
+        items = [
+            bokeh.models.LegendItem(
+                label=self.label_template.format(row=row),
+                renderers=[renderer],
+                index=n,
+            )
+            for n, (_, row) in enumerate(self.table[:self.n_showable].iterrows())
+        ]
+        items.append(
+            bokeh.models.LegendItem(label="(all others)", renderers=[renderer], index=self.n_showable)
+        )
+        legend = bokeh.models.Legend(items=items)
         figure.axis.axis_label = None
         figure.axis.visible = False
         figure.grid.grid_line_color = None
-        return figure
+        legend_figure = invisible_figure(x_range=(1.0, 1.1))
+        # The glyphs referred by the legend need to be present in the figure
+        # that holds the legend, so we must add them to the figure renderers,
+        # but also set the figure range so they don't appear.
+        legend_figure.renderers.append(renderer)
+        legend_figure.add_layout(legend, place="left")
+        return figure, legend_figure
 
 
 class Dashboard:
 
     def __init__(self, raw_data: RawResourceUsageData):
-        self.raw_data = raw_data
-        self.task_filtered_data = self.raw_data.filter_tasks()
-        self.dimension_filtered_data = self.task_filtered_data.filter_dimensions()
         self.per_band = panel.widgets.Select(
             name="band",
             options={c.value: c for c in TaskDimensionConstraint},
@@ -363,7 +399,7 @@ class Dashboard:
         self.per_visit = panel.widgets.Select(
             name="visit",
             options={c.value: c for c in TaskDimensionConstraint},
-            value=TaskDimensionConstraint.NO,
+            value=TaskDimensionConstraint.EITHER,
         )
         self.group_by = panel.widgets.MultiSelect(
             name="group by",
@@ -385,13 +421,15 @@ class Dashboard:
             options=[],
             value=[]
         )
-        self.cost_breakdown_chart = panel.pane.Bokeh(
-            self.dimension_filtered_data.cost_breakdown_chart(self.group_by.value).plot()
-        )
+        self.raw_data = raw_data
+        self.pie_chart = panel.pane.Bokeh(sizing_mode="stretch_width")
+        self.legend = panel.pane.Bokeh(sizing_mode="fixed")
         self.table = panel.pane.DataFrame(
-            self.dimension_filtered_data.group_by(self.group_by.value),
             sizing_mode="stretch_both",
+            float_format=lambda v: f"{v:0.02f}",
+            justify="center",
         )
+        self._update_task_filters()
 
     def panel(self):
         layout = panel.Column(
@@ -410,7 +448,7 @@ class Dashboard:
                 ),
                 self.group_by,
             ),
-            self.cost_breakdown_chart,
+            panel.Row(self.pie_chart, self.legend),
             self.table,
         )
         self.link()
@@ -455,13 +493,19 @@ class Dashboard:
     def _update_group_by(self, *args) -> None:
         if not self.group_by.value:
             self.group_by.value = ["task"]
+        else:
+            self.group_by.value.sort(key=GROUPING_COLUMNS.index)
         self._update_panes()
 
     def _update_panes(self, *args) -> None:
-        self.cost_breakdown_chart.object = self.dimension_filtered_data.cost_breakdown_chart(
+        self.pie_chart.object, self.legend.object = self.dimension_filtered_data.cost_breakdown_chart(
             self.group_by.value
         ).plot()
-        self.table.object = self.dimension_filtered_data.group_by(self.group_by.value)
+        self.table.object = self.dimension_filtered_data.group_by(self.group_by.value).rename(
+            {rs.__name__: f"{rs().labels[0]} ({rs().labels[1]})" for rs in RESOURCE_TYPES},
+            axis=1,
+            level=0,
+        )
 
     def _update_allowed_dimension(self, dimension, widget, sort_key=None):
         widget.value.clear()
