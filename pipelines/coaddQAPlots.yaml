@@ -1,6 +1,6 @@
 description: Make coadd plots for QA
 parameters:
-  ApFluxName: "i_ap09Flux"
+  CoaddApFluxName: "i_ap09Flux"
   band: i
 tasks:
   # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
@@ -9,7 +9,7 @@ tasks:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: parameters.ApFluxName
+      axisActions.zAction.col1: parameters.CoaddApFluxName
       axisActions.zAction.col2: "i_psfFlux"
       connections.plotName: CircAp12_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
