@@ -1,7 +1,9 @@
 imports:
   - "$ANALYSIS_DRP_DIR/pipelines/LSSTCam-imSim/redgal_truth_plot_pipeline.yaml"
-  - "$ANALYSIS_DRP_DIR/pipelines/LSSTCam-imSim/coaddQAPlots_matched_truth.yaml"
   - "$ANALYSIS_DRP_DIR/pipelines/generic_coadd_plots.yaml"
+
+  # This is commented out pending DM-34247
+  #- "$ANALYSIS_DRP_DIR/pipelines/LSSTCam-imSim/coaddQAPlots_matched_truth.yaml"
 
 description: |
   Coadd analysis drp plots specialized for LSSTCam
