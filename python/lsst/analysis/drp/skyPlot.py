@@ -377,6 +377,11 @@ class SkyPlotTask(pipeBase.PipelineTask):
                 maxRa = np.max(xs)
                 minDec = np.min(ys)
                 maxDec = np.max(ys)
+                # Avoid identical end points which causes problems in binning
+                if minRa == maxRa:
+                    maxRa += 1e-5  # There is no reason to pick this number in particular
+                if minDec == maxDec:
+                    maxDec += 1e-5  # There is no reason to pick this number in particular
             med = np.median(colorVals)
             mad = sigmaMad(colorVals)
             vmin = med - 2*mad
