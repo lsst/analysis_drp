@@ -13,6 +13,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from . import calcFunctors  # noqa
 
 
 class HistPlotTaskConnections(pipeBase.PipelineTaskConnections,

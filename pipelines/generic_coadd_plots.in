@@ -1,0 +1,6 @@
+imports:
+  - "$ANALYSIS_DRP_DIR/pipelines/coaddQAPlots.yaml"
+  - "$ANALYSIS_DRP_DIR/pipelines/stellarLocusPlots.yaml"
+
+description: |
+  Coadd level analysis drp plots

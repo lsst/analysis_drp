@@ -250,7 +250,11 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         sumStats = {} if skymap is None else generateSummaryStats(
             plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot
-        fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
+        try:
+            fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
+        except Exception:
+            # This is a workaround until scatterPlotWithTwoHists works properly
+            fig = plt.figure(dpi=300)
 
         return pipeBase.Struct(scatterPlot=fig)
 
@@ -385,12 +389,15 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                            sourceTypeMapper["galaxies"]),
                           (xsStars.values, ysStars.values, "midnightblue", newBlues,
                            sourceTypeMapper["stars"])]
-        if np.any(catPlot["sourceType"] == sourceTypeMapper["unknowns"]):
+        elif np.any(catPlot["sourceType"] == sourceTypeMapper["unknowns"]):
             unknowns = (catPlot["sourceType"] == sourceTypeMapper["unknowns"])
             toPlotList = [(catPlot.loc[unknowns, xCol].values, catPlot.loc[unknowns, yCol].values,
-                           "green", sourceTypeMapper["unknowns"])]
-        if np.any(catPlot["sourceType"] == sourceTypeMapper["all"]):
-            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", sourceTypeMapper["all"])]
+                           "green", None, sourceTypeMapper["unknowns"])]
+        elif np.any(catPlot["sourceType"] == sourceTypeMapper["all"]):
+            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", None,
+                           sourceTypeMapper["all"])]
+        else:
+            toPlotList = []
 
         for (j, (xs, ys, color, cmap, sourceType)) in enumerate(toPlotList):
             if len(xs) < 2:

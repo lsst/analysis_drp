@@ -1,0 +1,7 @@
+imports:
+  - "$ANALYSIS_DRP_DIR/pipelines/generic_visit_plots.yaml"
+  - "$ANALYSIS_DRP_DIR/pipelines/generic_coadd_plots.yaml"
+
+description: |
+  Collection of Analysis DRP plots that are suitable to run on collections
+  produced by a generic DRP processing pipeline

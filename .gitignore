@@ -12,6 +12,11 @@ config.log
 # Built by sconsUtils
 version.py
 bin/
+pipelines/generic_coadd_plots.yaml
+pipelines/generic_visit_plots.yaml
+pipelines/analysis_drp_plots.yaml
+pipelines/LSSTCam-imSim/dc2_coadd_plots.yaml
+pipelines/LSSTCam-imSim/analysis_drp_plots.yaml
 
 # Pytest
 tests/.tests
