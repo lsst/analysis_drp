@@ -11,14 +11,14 @@ import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
-from .calcFunctors import MagDiff
+from .calcFunctors import ExtinctionCorrectedMagDiff
 from . import dataSelectors as dataSelectors
 from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
 
 
-class ColorColorFitPlotTaskConnections(pipeBase.PipelineTaskConnections,
-                                       dimensions=("tract", "skymap"),
-                                       defaultTemplates={"plotName": "wFit"}):
+class ColorColorFitPlotConnections(pipeBase.PipelineTaskConnections,
+                                   dimensions=("tract", "skymap"),
+                                   defaultTemplates={"plotName": "wFit"}):
 
     catPlot = pipeBase.connectionTypes.Input(
         doc="The tract wide catalog to make plots from.",
@@ -34,12 +34,13 @@ class ColorColorFitPlotTaskConnections(pipeBase.PipelineTaskConnections,
         dimensions=("tract", "skymap"))
 
 
-class ColorColorFitPlotTaskConfig(pipeBase.PipelineTaskConfig,
-                                  pipelineConnections=ColorColorFitPlotTaskConnections):
+class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
+                              pipelineConnections=ColorColorFitPlotConnections):
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values on each axis.",
-        default={"xAction": MagDiff, "yAction": MagDiff, "magAction": MagColumnNanoJansky},
+        default={"xAction": ExtinctionCorrectedMagDiff, "yAction": ExtinctionCorrectedMagDiff,
+                 "magAction": MagColumnNanoJansky},
     )
 
     axisLabels = pexConfig.DictField(
@@ -74,8 +75,8 @@ class ColorColorFitPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
 class ColorColorFitPlotTask(pipeBase.PipelineTask):
 
-    ConfigClass = ColorColorFitPlotTaskConfig
-    _DefaultName = "ColorColorFitPlotTask"
+    ConfigClass = ColorColorFitPlotConfig
+    _DefaultName = "colorColorFitPlot"
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
@@ -88,7 +89,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
                         bands.append(band)
 
         bands = set(bands)
@@ -378,7 +379,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         plotPoints = ((dists < maxXs) & (dists > minXs))
         xs = np.array(dists)[plotPoints]
         ys = mags[fitPoints][plotPoints]
-        H, xEdges, yEdges = np.histogram2d(xs, ys, bins=(25, 25))
+        H, xEdges, yEdges = np.histogram2d(xs, ys, bins=(11, 11))
         xBinWidth = xEdges[1] - xEdges[0]
         yBinWidth = yEdges[1] - yEdges[0]
         axContour.contour(xEdges[:-1] + xBinWidth/2, yEdges[:-1] + yBinWidth/2, H.T, levels=7,

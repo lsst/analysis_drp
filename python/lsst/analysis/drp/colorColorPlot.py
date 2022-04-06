@@ -7,14 +7,14 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
-from .calcFunctors import MagDiff
+from .calcFunctors import ExtinctionCorrectedMagDiff
 from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
 
 
-class ColorColorPlotTaskConnections(pipeBase.PipelineTaskConnections,
-                                    dimensions=("tract", "skymap"),
-                                    defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords"}):
+class ColorColorPlotConnections(pipeBase.PipelineTaskConnections,
+                                dimensions=("tract", "skymap"),
+                                defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords"}):
 
     catPlot = pipeBase.connectionTypes.Input(doc="The tract wide catalog to make plots from.",
                                              storageClass="DataFrame",
@@ -28,12 +28,13 @@ class ColorColorPlotTaskConnections(pipeBase.PipelineTaskConnections,
                                                      dimensions=("tract", "skymap"))
 
 
-class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
-                               pipelineConnections=ColorColorPlotTaskConnections):
+class ColorColorPlotConfig(pipeBase.PipelineTaskConfig,
+                           pipelineConnections=ColorColorPlotConnections):
 
     axisActions = ConfigurableActionStructField(
         doc="The actions to use to calculate the values used on each axis.",
-        default={"xAction": MagDiff, "yAction": MagDiff, "zAction": MagColumnNanoJansky},
+        default={"xAction": ExtinctionCorrectedMagDiff, "yAction": ExtinctionCorrectedMagDiff,
+                 "zAction": MagColumnNanoJansky},
     )
 
     axisLabels = pexConfig.DictField(
@@ -56,8 +57,8 @@ class ColorColorPlotTaskConfig(pipeBase.PipelineTaskConfig,
 
 class ColorColorPlotTask(pipeBase.PipelineTask):
 
-    ConfigClass = ColorColorPlotTaskConfig
-    _DefaultName = "ColorColorPlotTask"
+    ConfigClass = ColorColorPlotConfig
+    _DefaultName = "colorColorPlot"
 
     def runQuantum(self, butlerQC, inputRefs, outputRefs):
         # Docs inherited from base class
@@ -70,7 +71,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
                         bands.append(band)
 
         bands = set(bands)
