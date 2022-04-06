@@ -85,3 +85,5 @@ targets.setdefault("pipelines", []).extend(
 )
 
 env.AlwaysBuild(targets["pipelines"])
+env.Requires(targets['pipelines'], targets["version"])
+env.Requires(targets['tests'], targets["pipelines"])
