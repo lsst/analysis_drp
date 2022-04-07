@@ -22,9 +22,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.odr as scipyODR
+import matplotlib
 from matplotlib import colors
+from typing import List, Tuple
 
 from lsst.geom import Box2D, SpherePoint, degrees
+
+null_formatter = matplotlib.ticker.NullFormatter()
 
 
 def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
@@ -147,6 +151,86 @@ def generateSummaryStatsVisit(cat, colName, visitSummaryTable, plotInfo):
         visitInfoDict[ccd] = (cornersOut, stat)
 
     return visitInfoDict
+
+
+# Inspired by matplotlib.testing.remove_ticks_and_titles
+def get_and_remove_axis_text(ax) -> Tuple[List[str], List[np.ndarray]]:
+    """Remove text from an Axis and its children and return with line points.
+
+    Parameters
+    ----------
+    ax : `plt.Axis`
+        A matplotlib figure axis.
+
+    Returns
+    -------
+    texts : `List[str]`
+        A list of all text strings (title and axis/legend/tick labels).
+    line_xys : `List[np.ndarray]`
+        A list of all line _xy attributes.
+    """
+    line_xys = [line._xy for line in ax.lines]
+    texts = [text.get_text() for text in (ax.title, ax.xaxis.label, ax.yaxis.label)]
+    ax.set_title("")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+
+    try:
+        texts_legend = ax.get_legend().texts
+        texts.extend(text.get_text() for text in texts_legend)
+        for text in texts_legend:
+            text.set_alpha(0)
+    except AttributeError:
+        pass
+
+    for idx in range(len(ax.texts)):
+        texts.append(ax.texts[idx].get_text())
+        ax.texts[idx].set_text('')
+
+    ax.xaxis.set_major_formatter(null_formatter)
+    ax.xaxis.set_minor_formatter(null_formatter)
+    ax.yaxis.set_major_formatter(null_formatter)
+    ax.yaxis.set_minor_formatter(null_formatter)
+    try:
+        ax.zaxis.set_major_formatter(null_formatter)
+        ax.zaxis.set_minor_formatter(null_formatter)
+    except AttributeError:
+        pass
+    for child in ax.child_axes:
+        texts_child, lines_child = get_and_remove_axis_text(child)
+        texts.extend(texts_child)
+
+    return texts, line_xys
+
+
+def get_and_remove_figure_text(figure):
+    """Remove text from a Figure and its Axes and return with line points.
+
+    Parameters
+    ----------
+    figure : `plt.Figure`
+        A matplotlib figure.
+
+    Returns
+    -------
+    texts : `List[str]`
+        A list of all text strings (title and axis/legend/tick labels).
+    line_xys : `List[np.ndarray]`
+        A list of all line _xy attributes.
+    """
+    texts = [str(figure._suptitle)]
+    lines = []
+    figure.suptitle("")
+
+    texts.extend(text.get_text() for text in figure.texts)
+    figure.texts = []
+
+    for ax in figure.get_axes():
+        texts_ax, lines_ax = get_and_remove_axis_text(ax)
+        texts.extend(texts_ax)
+        lines.extend(lines_ax)
+
+    return texts, lines
 
 
 def addPlotInfo(fig, plotInfo):
