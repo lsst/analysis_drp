@@ -38,6 +38,9 @@ from . import dataSelectors as dataSelectors
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
 from .statistics import sigmaMad
 
+cmapPatch = plt.cm.coolwarm.copy()
+cmapPatch.set_bad(color="none")
+
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
                                              dimensions=("tract", "skymap"),
@@ -646,11 +649,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             if dataId != "tract":
                 axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
 
-        cmapUse = plt.cm.coolwarm
         # Set the bad color to transparent and make a masked array
-        cmapUse.set_bad(color="none")
         colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapUse)
+        collection = PatchCollection(patches, cmap=cmapPatch)
         collection.set_array(colors)
         axCorner.add_collection(collection)
 
