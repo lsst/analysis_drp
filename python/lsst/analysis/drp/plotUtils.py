@@ -166,8 +166,8 @@ def get_and_remove_axis_text(ax) -> Tuple[List[str], List[np.ndarray]]:
     -------
     texts : `List[str]`
         A list of all text strings (title and axis/legend/tick labels).
-    line_xys : `List[np.ndarray]`
-        A list of all line _xy attributes.
+    line_xys : `List[numpy.ndarray]`
+        A list of all line ``_xy`` attributes (arrays of shape ``(N, 2)``).
     """
     line_xys = [line._xy for line in ax.lines]
     texts = [text.get_text() for text in (ax.title, ax.xaxis.label, ax.yaxis.label)]
@@ -203,20 +203,20 @@ def get_and_remove_axis_text(ax) -> Tuple[List[str], List[np.ndarray]]:
     return texts, line_xys
 
 
-def get_and_remove_figure_text(figure):
+def get_and_remove_figure_text(figure: plt.Figure):
     """Remove text from a Figure and its Axes and return with line points.
 
     Parameters
     ----------
-    figure : `plt.Figure`
+    figure : `matplotlib.pyplot.Figure`
         A matplotlib figure.
 
     Returns
     -------
     texts : `List[str]`
         A list of all text strings (title and axis/legend/tick labels).
-    line_xys : `List[np.ndarray]`
-        A list of all line _xy attributes.
+    line_xys : `List[numpy.ndarray]`, (N, 2)
+        A list of all line ``_xy`` attributes (arrays of shape ``(N, 2)``).
     """
     texts = [str(figure._suptitle)]
     lines = []
