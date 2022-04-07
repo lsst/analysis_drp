@@ -501,8 +501,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # Check which points are outside 3 sigma MAD of the median
                 # and plot these as points.
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
-                points, = ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color,
-                                  zorder=-1)
+                ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color, zorder=-1)
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
@@ -526,7 +525,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
 
             else:
-                points, = ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
                 medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.2f}", lw=0.8)
                 linesForLegend.append(medLine)
