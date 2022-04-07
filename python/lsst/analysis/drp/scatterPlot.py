@@ -22,7 +22,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import median_absolute_deviation as sigmaMad
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.path import Path
@@ -37,6 +36,7 @@ import lsst.pex.config as pexConfig
 
 from . import dataSelectors as dataSelectors
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
+from .statistics import sigmaMad
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
