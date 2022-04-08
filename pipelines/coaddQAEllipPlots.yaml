@@ -344,6 +344,34 @@ tasks:
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
 
+  plot_ellipResids_quiver:
+    # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
+    class: lsst.analysis.drp.quiverPlot.QuiverPlotTask
+    config:
+      axisActions.zAction: CalcEDiff
+      axisActions.zAction.halvePhaseAngle: True
+      axisActions.zAction.colA: CalcE
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colA.halvePhaseAngle: False
+      axisActions.zAction.colB: CalcE
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      axisActions.zAction.colB.halvePhaseAngle: False
+      connections.plotName: Ediff_quiver_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+
   # Tier 3 plots
   plot_e1_scatter:
     # Make a scatter plot with collapsed histograms for the axes showing E1 for
