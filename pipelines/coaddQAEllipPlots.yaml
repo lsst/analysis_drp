@@ -99,6 +99,7 @@ tasks:
       axisActions.zAction.colB.colXx: "i_ixxPSF"
       axisActions.zAction.colB.colYy: "i_iyyPSF"
       connections.plotName: E1Diff_sky_i
+      fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: ["i"]
@@ -126,6 +127,7 @@ tasks:
       axisActions.zAction.colB.colYy: "i_iyyPSF"
       axisActions.zAction.colB.colXy: "i_ixyPSF"
       connections.plotName: E2Diff_sky_i
+      fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: ["i"]
@@ -153,6 +155,7 @@ tasks:
       axisActions.zAction.colB.colYy: "i_iyyPSF"
       axisActions.zAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeFractionDiff_sky_i
+      fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: ["i"]
@@ -332,6 +335,7 @@ tasks:
       axisActions.zAction.colB.colYy: "i_iyyPSF"
       axisActions.zAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeDiff_sky_i
+      fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: ["i"]
@@ -361,6 +365,7 @@ tasks:
       axisActions.zAction.colB.colXy: "i_ixyPSF"
       axisActions.zAction.colB.halvePhaseAngle: False
       connections.plotName: Ediff_quiver_i
+      fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: ["i"]
