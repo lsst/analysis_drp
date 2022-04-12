@@ -1,0 +1,509 @@
+description: |
+    Make coadd level ellipticity plots for QA, makes plots of the e1, e2 and size measurements
+    for the PSF shape measurements and the shape measurements in the shape slot, typically
+    CModel. Makes 18 plots that get saved as pngs.
+tasks:
+  # Tier 1 plots
+  plot_E1Diff_scatter:
+    # Plots the difference between the calculated E1 for stars and PSF E1
+    # against PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE1
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colB: CalcE1
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      connections.plotName: E1Diff_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E1 Difference (e1 - e1_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_E2Diff_scatter:
+    # Plots the difference between the calculated E2 for stars and PSF E2
+    # against PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE2
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcE2
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: E2Diff_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E2 Difference (e2 - e2_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_shapeSizeFractionalDiff_scatter:
+    # Plots the fractional difference between the calculated determinant size
+    # for stars relative to that of the PSF model against PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeFractionDiff_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Fractional size residuals (S/S_PSF - 1)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+
+  plot_E1Diff_sky:
+    # Plots the on-sky distribution of the differences between E1 calculated
+    # for the stars and for the PSF model
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE1
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colB: CalcE1
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      connections.plotName: E1Diff_sky_i
+      fixAroundZero: True
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1 Difference (e1 - e1_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_E2Diff_sky:
+    # Plots the on-sky distribution of the differences between E2 calculated
+    # for the stars and for the PSF model
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotTask
+    config:
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcE2
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colB: CalcE2
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: E2Diff_sky_i
+      fixAroundZero: True
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2 Difference (e2 - e2_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_shapeSizeFractionalDiff_sky:
+    # Plots the on-sky distribution of the fractional differences between
+    # determinant size calculated for the stars and for the PSF model
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      axisActions.zAction: FractionalDifferenceColumns
+      axisActions.zAction.colA: CalcShapeSize
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colB: CalcShapeSize
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeFractionDiff_sky_i
+      fixAroundZero: True
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Fractional Size Residual (S/S_PSF - 1)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+
+  plot_E1Diff_magDiff_scatter:
+    # Plots the E1 residuals against CModel - PSF magnitudes for stars
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction: MagDiff
+      axisActions.xAction.col1: "i_cModelFlux"
+      axisActions.xAction.col2: "i_psfFlux"
+      axisActions.xAction.returnMillimags: True
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE1
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colB: CalcE1
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      connections.plotName: E1Diff_magDiff_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E1 Difference (e1 - e1_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE1, ExtinctionCorrectedMagDiff, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_E2Diff_magDiff_scatter:
+    # Plots the E2 residuals against CModel - PSF magnitudes for stars
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction: MagDiff
+      axisActions.xAction.col1: "i_cModelFlux"
+      axisActions.xAction.col2: "i_psfFlux"
+      axisActions.xAction.returnMillimags: True
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcE2
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcE2
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: E2Diff_magDiff_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E2 Difference (e2 - e2_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE2, ExtinctionCorrectedMagDiff, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_shapeSizeFractionalDiff_magDiff_scatter:
+    # Plots the fractional size residuals against CModel - PSF magnitudes for stars
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction: MagDiff
+      axisActions.xAction.col1: "i_cModelFlux"
+      axisActions.xAction.col2: "i_psfFlux"
+      axisActions.xAction.returnMillimags: True
+      axisActions.yAction: FractionalDifferenceColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeFractionDiff_magDiff_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Fractional size residuals (S/S_PSF - 1)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize, ExtinctionCorrectedMagDiff, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+
+  # Tier 2 plots
+  plot_shapeSizeDiff_scatter:
+    # Plots the difference between the calculated determinant size
+    # for stars and that of the PSF model against PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeDiff_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Size Residuals (S - S_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_shapeSizeDiff_magDiff_scatter:
+    # Plots the fractional difference between the calculated determinant size
+    # for stars relative to that of the PSF model against CModel - PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.xAction: MagDiff
+      axisActions.xAction.col1: "i_cModelFlux"
+      axisActions.xAction.col2: "i_psfFlux"
+      axisActions.xAction.returnMillimags: True
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeDiff_magDiff_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Size Residuals (S - S_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize, ExtinctionCorrectedMagDiff, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_shapeSizeDiff_sky:
+    # Plots the on-sky distribution of the difference between the determinant
+    # sizes for stars and PSF models
+    class: lsst.analysis.drp.skyPlotVisit.SkyPlotTask
+    config:
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcShapeSize
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colB: CalcShapeSize
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeDiff_sky_i
+      fixAroundZero: True
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Size Residuals (S - S_PSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+
+  plot_ellipResids_quiver:
+    # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
+    class: lsst.analysis.drp.quiverPlot.QuiverPlotTask
+    config:
+      axisActions.zAction: CalcEDiff
+      axisActions.zAction.halvePhaseAngle: True
+      axisActions.zAction.colA: CalcE
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colA.halvePhaseAngle: False
+      axisActions.zAction.colB: CalcE
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      axisActions.zAction.colB.halvePhaseAngle: False
+      connections.plotName: Ediff_quiver_i
+      fixAroundZero: True
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, StarIdentifier
+        from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+
+  # Tier 3 plots
+  plot_e1_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E1 for
+    # all the points in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      connections.plotName: e1_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E1: (ixx - iyy)/(ixx + iyy)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE1
+
+  plot_e2_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for
+    # all the points in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      axisActions.yAction.colXy: "i_ixy"
+      connections.plotName: e2_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E2: 2ixy/(ixx + iyy)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE2
+
+  plot_shapeSize_scatter:
+    # Plot a scatter plot of the values of (ixx*iyy - ixy^2)^(1/4) a measurement of
+    # the size of the objects.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      axisActions.yAction.colXy: "i_ixy"
+      connections.plotName: ShapeSize_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "Size S: (ixx*iyy - ixy^2)^(1/4)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+
+  plot_e1PSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E1 for the PSF model
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      connections.plotName: e1PSF_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E1_PSF: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE1
+
+  plot_e2PSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for the PSF model
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      axisActions.yAction.colXy: "i_ixyPSF"
+      connections.plotName: e2PSF_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "E2_PSF: 2ixyPSF/(ixxPSF + iyyPSF)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcE2
+
+  plot_shapeSizePSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing the PSF model size
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      axisActions.yAction.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizePSF_scatter_i
+      selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.SnSelector: SnSelector
+      selectorActions.SnSelector.bands: ["i"]
+      selectorActions.SnSelector.fluxType: "psfFlux"
+      selectorActions.SnSelector.threshold: 100
+      sourceSelectorActions.sourceSelector: StarIdentifier
+      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
+                   "y": "PSF Size S_PSF: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
+      python: |
+        from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
