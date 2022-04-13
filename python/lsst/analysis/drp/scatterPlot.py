@@ -538,8 +538,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         if xLims:
             ax.set_xlim(xLims[0], xLims[1])
         else:
-            ax.set_xlim(xs1 - xScale, xs97)
-            ax.set_xlim(np.nanmin(xs), np.nanmax(xs))
+            ax.set_xlim(xs1 - xScale, xs97 + xScale)
 
         # Add a line legend
         ax.legend(handles=linesForLegend, ncol=4, fontsize=6, loc="upper left", framealpha=0.9,
