@@ -25,12 +25,11 @@ import lsst.utils.tests
 
 from lsst.analysis.drp.calcFunctors import MagDiff
 from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+from lsst.analysis.drp.plotUtils import get_and_remove_figure_text
 from lsst.analysis.drp.scatterPlot import ScatterPlotWithTwoHistsTask, ScatterPlotWithTwoHistsTaskConfig
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.testing.compare import compare_images, ImageComparisonFailure
-
 import numpy as np
 from numpy.random import default_rng
 import os
@@ -41,7 +40,8 @@ import tempfile
 matplotlib.use("Agg")
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-filename_figure_ref = os.path.join(ROOT, "data", "test_scatterPlot.png")
+filename_texts_ref = os.path.join(ROOT, "data", "test_scatterPlot_texts.txt")
+path_lines_ref = os.path.join(ROOT, "data", "test_scatterPlot_lines")
 
 
 class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
@@ -117,11 +117,45 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
                                bands=self.bands,
                                plotName="test")
 
-        filename_figure_tmp = os.path.join(self.testDir, "test_scatterPlot.png")
-        result.scatterPlot.savefig(filename_figure_tmp)
-        diff = compare_images(filename_figure_tmp, filename_figure_ref, 0)
-        if diff is not None:
-            raise ImageComparisonFailure(diff)
+        self.assertTrue(isinstance(result.scatterPlot, plt.Figure))
+
+        # Set to true to save plots as PNGs
+        # Use matplotlib.testing.compare.compare_images if needed
+        save_images = False
+        if save_images:
+            result.scatterPlot.savefig(os.path.join(ROOT, "data", "test_scatterPlot.png"))
+
+        texts, lines = get_and_remove_figure_text(result.scatterPlot)
+        if save_images:
+            result.scatterPlot.savefig(os.path.join(ROOT, "data", "test_scatterPlot_unlabeled.png"))
+
+        # Set to true to re-generate reference data
+        resave = False
+
+        # Compare line values
+        for idx, line in enumerate(lines):
+            filename = os.path.join(path_lines_ref, f"line_{idx}.txt")
+            if resave:
+                np.savetxt(filename, line)
+            arr = np.loadtxt(filename)
+            # Differences of order 1e-12 possible between MacOS and Linux
+            # Plots are generally not expected to be that precise
+            # Differences to 1e-3 should not be visible with this test data
+            self.assertFloatsAlmostEqual(arr, line, atol=1e-3, rtol=1e-4)
+
+        # Ensure that newlines within labels are replaced by a sentinel
+        newline = '\n'
+        newline_replace = "[newline]"
+        # Compare text labels
+        if resave:
+            with open(filename_texts_ref, 'w') as f:
+                f.writelines(f'{text.strip().replace(newline, newline_replace)}\n' for text in texts)
+
+        with open(filename_texts_ref, 'r') as f:
+            texts_ref = set(x.strip() for x in f.readlines())
+        texts_set = set(x.strip().replace(newline, newline_replace) for x in texts)
+
+        self.assertTrue(texts_set.issuperset(texts_ref))
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

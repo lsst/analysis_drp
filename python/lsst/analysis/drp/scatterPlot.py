@@ -1,7 +1,27 @@
+# This file is part of analysis_drp.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import median_absolute_deviation as sigmaMad
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.path import Path
@@ -16,6 +36,10 @@ import lsst.pex.config as pexConfig
 
 from . import dataSelectors as dataSelectors
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
+from .statistics import sigmaMad
+
+cmapPatch = plt.cm.coolwarm.copy()
+cmapPatch.set_bad(color="none")
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
@@ -480,8 +504,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # Check which points are outside 3 sigma MAD of the median
                 # and plot these as points.
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
-                points, = ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color,
-                                  zorder=-1)
+                ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color, zorder=-1)
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
@@ -505,7 +528,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
 
             else:
-                points, = ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
                 medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.2f}", lw=0.8)
                 linesForLegend.append(medLine)
@@ -626,11 +649,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             if dataId != "tract":
                 axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
 
-        cmapUse = plt.cm.coolwarm
         # Set the bad color to transparent and make a masked array
-        cmapUse.set_bad(color="none")
         colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapUse)
+        collection = PatchCollection(patches, cmap=cmapPatch)
         collection.set_array(colors)
         axCorner.add_collection(collection)
 
