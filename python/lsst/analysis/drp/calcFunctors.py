@@ -29,7 +29,7 @@ import numpy as np
 import treecorr
 from astropy import units as u
 
-from lsst.pex.config import ChoiceField, ConfigField, DictField, Field
+from lsst.pex.config import ChoiceField, ConfigField, DictField, Field, FieldValidationError
 from lsst.pipe.tasks.configurableActions import ConfigurableActionField
 from lsst.pipe.tasks.dataFrameActions import (CoordColumn, DataFrameAction, DivideColumns,
                                               FractionalDifferenceColumns, MultiColumnAction,
@@ -948,15 +948,18 @@ class ColorDiffPull(ColorDiff):
             color1_errors = True
         elif ((self.color1_flux1_err and not self.color1_flux2_err)
               or (not self.color1_flux1_err and self.color1_flux2_err)):
-            raise ValueError("Must set both color1_flux1_err and color1_flux2_err if either is set.")
+            msg = "Must set both color1_flux1_err and color1_flux2_err if either is set."
+            raise FieldValidationError(self.__class__.color1_flux1_err, self, msg)
         if self.color2_flux1_err and self.color2_flux2_err:
             color2_errors = True
         elif ((self.color2_flux1_err and not self.color2_flux2_err)
               or (not self.color2_flux1_err and self.color2_flux2_err)):
-            raise ValueError("Must set both color2_flux1_err and color2_flux2_err if either is set.")
+            msg = "Must set both color2_flux1_err and color2_flux2_err if either is set."
+            raise FieldValidationError(self.__class__.color2_flux1_err, self, msg)
 
         if not color1_errors and not color2_errors:
-            raise ValueError("Must configure flux errors for at least color1 or color2.")
+            msg = "Must configure flux errors for at least color1 or color2."
+            raise FieldValidationError(self.__class__.color1_flux1_err, self, msg)
 
     @property
     def columns(self):
