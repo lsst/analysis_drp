@@ -2,6 +2,7 @@ imports:
   - "$ANALYSIS_DRP_DIR/pipelines/coaddQAPlots.yaml"
   - "$ANALYSIS_DRP_DIR/pipelines/coaddQAEllipPlots.yaml"
   - "$ANALYSIS_DRP_DIR/pipelines/stellarLocusPlots.yaml"
+  - "$ANALYSIS_DRP_DIR/pipelines/matchCoaddCatalogs.yaml"
 
 description: |
   Coadd level analysis drp plots

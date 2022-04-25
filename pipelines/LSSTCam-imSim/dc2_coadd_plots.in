@@ -5,3 +5,5 @@ imports:
 
 description: |
   Coadd analysis drp plots specialized for LSSTCam
+
+instrument: lsst.obs.lsst.LsstCamImSim
