@@ -408,15 +408,35 @@ class CalcShapeSize(MultiColumnAction):
 
     colXy = Field(doc="The column name to get the xy shape component from.",
                   dtype=str,
-                  default="ixy")
+                  default="ixy",
+                  optional=True)
+
+    sizeType = ChoiceField(doc="The type of size to calculate",
+                           dtype=str,
+                           default="determinant",
+                           allowed={"trace": "trace radius",
+                                    "determinant": "determinant radius",
+                                    })
 
     @property
     def columns(self):
-        return (self.colXx, self.colYy, self.colXy)
+        if self.sizeType == "trace":
+            return (self.colXx, self.colYy,)
+        else:
+            return (self.colXx, self.colYy, self.colXy)
 
     def __call__(self, df):
-        size = np.power(df[self.colXx]*df[self.colYy] - df[self.colXy]**2, 0.25)
+        if self.sizeType == "trace":
+            size = np.power(0.5*(df[self.colXx] + df[self.colYy]), 0.5)
+        else:
+            size = np.power(df[self.colXx]*df[self.colYy] - df[self.colXy]**2, 0.25)
+
         return size
+
+    def validate(self):
+        super().validate()
+        if self.sizeType == "determinant" and self.colXy is None:
+            raise ValueError("colXy is required for determinant-type size")
 
 
 class ColorDiff(MultiColumnAction):
