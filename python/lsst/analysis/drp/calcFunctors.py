@@ -3,7 +3,7 @@ __all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorD
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionField
 from lsst.pipe.tasks.dataFrameActions import DataFrameAction, DivideColumns, MultiColumnAction
-from lsst.pex.config import Field, DictField
+from lsst.pex.config import ChoiceField, DictField, Field
 from astropy import units as u
 import numpy as np
 import logging
@@ -157,6 +157,18 @@ class CalcE(MultiColumnAction):
                   dtype=str,
                   default="ixy")
 
+    ellipticityType = ChoiceField(
+        doc="The type of ellipticity to calculate",
+        dtype=str,
+        allowed={"chi": ("Distortion, defined as (Ixx - Iyy + 2j*Ixy)/"
+                         "(Ixx + Iyy)"
+                         ),
+                 "epsilon": ("Shear, defined as (Ixx - Iyy + 2j*Ixy)/"
+                             "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
+                             ),
+                 },
+        default="chi")
+
     halvePhaseAngle = Field(doc=("Divide the phase angle by 2? "
                                  "Suitable for quiver plots."),
                             dtype=bool,
@@ -168,7 +180,13 @@ class CalcE(MultiColumnAction):
 
     def __call__(self, df):
         e = (df[self.colXx] - df[self.colYy]) + 1j*(2*df[self.colXy])
-        e /= (df[self.colXx] + df[self.colYy])
+        denom = (df[self.colXx] + df[self.colYy])
+
+        if self.ellipticityType == "epsilon":
+            denom += 2*np.sqrt(df[self.colXx]*df[self.colYy] - df[self.colXy]**2)
+
+        e /= denom
+
         if self.halvePhaseAngle:
             # Ellipiticity is |e|*exp(i*2*theta), but we want to return
             # |e|*exp(i*theta). So we multiply by |e| and take its square root
@@ -237,14 +255,40 @@ class CalcE1(MultiColumnAction):
                   dtype=str,
                   default="iyy")
 
+    colXy = Field(doc="The column name to get the xy shape component from.",
+                  dtype=str,
+                  default="ixy",
+                  optional=True)
+
+    ellipticityType = ChoiceField(
+        doc="The type of ellipticity to calculate",
+        dtype=str,
+        allowed={"chi": "Distortion, defined as (Ixx - Iyy)/(Ixx + Iyy)",
+                 "epsilon": ("Shear, defined as (Ixx - Iyy)/"
+                             "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
+                             ),
+                 },
+        default="chi")
+
     @property
     def columns(self):
-        return (self.colXx, self.colYy)
+        if self.ellipticityType == "chi":
+            return (self.colXx, self.colYy)
+        else:
+            return (self.colXx, self.colYy, self.colXy)
 
     def __call__(self, df):
-        e1 = (df[self.colXx] - df[self.colYy])/(df[self.colXx] + df[self.colYy])
+        denom = df[self.colXx] + df[self.colYy]
+        if self.ellipticityType == "epsilon":
+            denom += 2*np.sqrt(df[self.colXx] * df[self.colYy] - df[self.colXy]**2)
+        e1 = (df[self.colXx] - df[self.colYy])/denom
 
         return e1
+
+    def validate(self):
+        super().validate()
+        if self.ellipticityType == "epsilon" and self.colXy is None:
+            raise ValueError("colXy is required for epsilon-type shear ellipticity")
 
 
 class CalcE2(MultiColumnAction):
@@ -264,12 +308,25 @@ class CalcE2(MultiColumnAction):
                   dtype=str,
                   default="ixy")
 
+    ellipticityType = ChoiceField(
+        doc="The type of ellipticity to calculate",
+        dtype=str,
+        allowed={"chi": "Distortion, defined as 2*Ixy/(Ixx + Iyy)",
+                 "epsilon": ("Shear, defined as 2*Ixy/"
+                             "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
+                             ),
+                 },
+        default="chi")
+
     @property
     def columns(self):
         return (self.colXx, self.colYy, self.colXy)
 
     def __call__(self, df):
-        e2 = 2*df[self.colXy]/(df[self.colXx] + df[self.colYy])
+        denom = df[self.colXx] + df[self.colYy]
+        if self.ellipticityType == "epsilon":
+            denom += 2*np.sqrt(df[self.colXx] * df[self.colYy] - df[self.colXy]**2)
+        e2 = 2*df[self.colXy]/denom
         return e2
 
 
