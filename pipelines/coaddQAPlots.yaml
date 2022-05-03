@@ -315,13 +315,14 @@ tasks:
     # This plot shows the on sky distribution of these values for sky objects.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      axisActions.zAction.column: "i_ap09Flux"
       connections.plotName: skyObject_i
       selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["sky_object"]
+      selectorActions.flagSelector.selectWhenFalse: ["i_pixelFlags_edge"]
       sourceSelectorActions: None
       statisticSelectorActions.statSelector.threshold: -1e12
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
+      axisActions.zAction.column: "i_ap09Flux"
       python: |
         from lsst.analysis.drp.dataSelectors import (FlagSelector)
 
@@ -331,9 +332,10 @@ tasks:
     # The right panel histograms show the equivalent sigma flux values (flux/fluxErr)
     class: lsst.analysis.drp.histPlot.HistPlotTask
     config:
-      connections.plotName: skyObject
+      connections.plotName: skyObject_i
       selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["sky_object"]
+      selectorActions.flagSelector.selectWhenFalse: ["i_pixelFlags_edge"]
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector
         from lsst.analysis.drp import calcFunctors
