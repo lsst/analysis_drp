@@ -385,18 +385,23 @@ class CalcE2(MultiColumnAction):
 
 
 class CalcShapeSize(MultiColumnAction):
-    """Calculate a size: (ixx*iyy - ixy**2)**0.25
+    """Calculate a size: (Ixx*Iyy - Ixy**2)**0.25 OR (0.5*(Ixx + Iyy))**0.5
 
     The square of size measure is typically expressed either as the arithmetic
     mean of the eigenvalues of the moment matrix (trace radius) or as the
-    geometric mean of the eigenvalues (determinant radius, computed here).
-    Both of these measures give the `sigma^2` parameter for a 2D Gaussian.
-    The determinant radius computed here is consistent with the measure
-    computed in GalSim:
-    http://github.com/GalSim-developers/GalSim/blob/ece3bd32c1ae6ed771f2b489c5ab1b25729e0ea4/galsim/hsm.py#L42
+    geometric mean of the eigenvalues (determinant radius), which can be
+    specified using the ``sizeType`` parameter. Both of these measures give the
+    `sigma^2` parameter for a 2D Gaussian.
 
+    Since lensing preserves surface brightness, the determinant radius relates
+    the magnification cleanly as it is derived from the area of isophotes, but
+    have a slightly higher chance of being NaNs for noisy moment estimates.
+
+    Note
+    ----
     This is a size measurement used for doing QA on the ellipticity
-    of the sources."""
+    of the sources.
+    """
 
     colXx = Field(doc="The column name to get the xx shape component from.",
                   dtype=str,
