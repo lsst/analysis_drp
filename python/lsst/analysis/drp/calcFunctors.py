@@ -172,17 +172,23 @@ class CalcE(MultiColumnAction):
     CalcE2
     """
 
-    colXx = Field(doc="The column name to get the xx shape component from.",
-                  dtype=str,
-                  default="ixx")
+    colXx = Field(
+        doc="The column name to get the xx shape component from.",
+        dtype=str,
+        default="ixx",
+    )
 
-    colYy = Field(doc="The column name to get the yy shape component from.",
-                  dtype=str,
-                  default="iyy")
+    colYy = Field(
+        doc="The column name to get the yy shape component from.",
+        dtype=str,
+        default="iyy",
+    )
 
-    colXy = Field(doc="The column name to get the xy shape component from.",
-                  dtype=str,
-                  default="ixy")
+    colXy = Field(
+        doc="The column name to get the xy shape component from.",
+        dtype=str,
+        default="ixy",
+    )
 
     ellipticityType = ChoiceField(
         doc="The type of ellipticity to calculate",
@@ -194,12 +200,14 @@ class CalcE(MultiColumnAction):
                              "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
                              ),
                  },
-        default="chi")
+        default="chi",
+    )
 
-    halvePhaseAngle = Field(doc=("Divide the phase angle by 2? "
-                                 "Suitable for quiver plots."),
-                            dtype=bool,
-                            default=False)
+    halvePhaseAngle = Field(
+        doc="Divide the phase angle by 2? Suitable for quiver plots.",
+        dtype=bool,
+        default=False,
+    )
 
     @property
     def columns(self):
@@ -244,18 +252,23 @@ class CalcEDiff(DataFrameAction):
     If `halvePhaseAngle` config parameter is set to `True`, then
     the returned quantity therefore corresponds to |e|*exp(j*theta).
     """
-    colA = ConfigurableActionField(doc="Ellipticity to subtract from",
-                                   dtype=MultiColumnAction,
-                                   default=CalcE)
+    colA = ConfigurableActionField(
+        doc="Ellipticity to subtract from",
+        dtype=MultiColumnAction,
+        default=CalcE,
+    )
 
-    colB = ConfigurableActionField(doc="Ellipticity to subtract",
-                                   dtype=MultiColumnAction,
-                                   default=CalcE)
+    colB = ConfigurableActionField(
+        doc="Ellipticity to subtract",
+        dtype=MultiColumnAction,
+        default=CalcE,
+    )
 
-    halvePhaseAngle = Field(doc=("Divide the phase angle by 2? "
-                                 "Suitable for quiver plots."),
-                            dtype=bool,
-                            default=False)
+    halvePhaseAngle = Field(
+        doc="Divide the phase angle by 2? Suitable for quiver plots.",
+        dtype=bool,
+        default=False,
+    )
 
     @property
     def columns(self):
@@ -291,18 +304,24 @@ class CalcE1(MultiColumnAction):
     of the sources.
     """
 
-    colXx = Field(doc="The column name to get the xx shape component from.",
-                  dtype=str,
-                  default="ixx")
+    colXx = Field(
+        doc="The column name to get the xx shape component from.",
+        dtype=str,
+        default="ixx",
+    )
 
-    colYy = Field(doc="The column name to get the yy shape component from.",
-                  dtype=str,
-                  default="iyy")
+    colYy = Field(
+        doc="The column name to get the yy shape component from.",
+        dtype=str,
+        default="iyy",
+    )
 
-    colXy = Field(doc="The column name to get the xy shape component from.",
-                  dtype=str,
-                  default="ixy",
-                  optional=True)
+    colXy = Field(
+        doc="The column name to get the xy shape component from.",
+        dtype=str,
+        default="ixy",
+        optional=True,
+    )
 
     ellipticityType = ChoiceField(
         doc="The type of ellipticity to calculate",
@@ -312,7 +331,8 @@ class CalcE1(MultiColumnAction):
                              "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
                              ),
                  },
-        default="chi")
+        default="chi",
+    )
 
     @property
     def columns(self):
@@ -350,17 +370,23 @@ class CalcE2(MultiColumnAction):
     of the sources.
     """
 
-    colXx = Field(doc="The column name to get the xx shape component from.",
-                  dtype=str,
-                  default="ixx")
+    colXx = Field(
+        doc="The column name to get the xx shape component from.",
+        dtype=str,
+        default="ixx",
+    )
 
-    colYy = Field(doc="The column name to get the yy shape component from.",
-                  dtype=str,
-                  default="iyy")
+    colYy = Field(
+        doc="The column name to get the yy shape component from.",
+        dtype=str,
+        default="iyy",
+    )
 
-    colXy = Field(doc="The column name to get the xy shape component from.",
-                  dtype=str,
-                  default="ixy")
+    colXy = Field(
+        doc="The column name to get the xy shape component from.",
+        dtype=str,
+        default="ixy",
+    )
 
     ellipticityType = ChoiceField(
         doc="The type of ellipticity to calculate",
@@ -370,7 +396,8 @@ class CalcE2(MultiColumnAction):
                              "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
                              ),
                  },
-        default="chi")
+        default="chi",
+    )
 
     @property
     def columns(self):
@@ -403,25 +430,33 @@ class CalcShapeSize(MultiColumnAction):
     of the sources.
     """
 
-    colXx = Field(doc="The column name to get the xx shape component from.",
-                  dtype=str,
-                  default="ixx")
+    colXx = Field(
+        doc="The column name to get the xx shape component from.",
+        dtype=str,
+        default="ixx",
+    )
 
-    colYy = Field(doc="The column name to get the yy shape component from.",
-                  dtype=str,
-                  default="iyy")
+    colYy = Field(
+        doc="The column name to get the yy shape component from.",
+        dtype=str,
+        default="iyy",
+    )
 
-    colXy = Field(doc="The column name to get the xy shape component from.",
-                  dtype=str,
-                  default="ixy",
-                  optional=True)
+    colXy = Field(
+        doc="The column name to get the xy shape component from.",
+        dtype=str,
+        default="ixy",
+        optional=True,
+    )
 
-    sizeType = ChoiceField(doc="The type of size to calculate",
-                           dtype=str,
-                           default="determinant",
-                           allowed={"trace": "trace radius",
-                                    "determinant": "determinant radius",
-                                    })
+    sizeType = ChoiceField(
+        doc="The type of size to calculate",
+        dtype=str,
+        default="determinant",
+        allowed={"trace": "trace radius",
+                 "determinant": "determinant radius",
+                 },
+    )
 
     @property
     def columns(self):
