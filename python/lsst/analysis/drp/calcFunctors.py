@@ -132,17 +132,44 @@ class ExtinctionCorrectedMagDiff(DataFrameAction):
 
 
 class CalcE(MultiColumnAction):
-    """Calculate a complex value representation of the ellipticity
-
-    This is a shape measurement used for doing QA on the ellipticity
-    of the sources.
+    """Calculate a complex value representation of the ellipticity.
 
     The complex ellipticity is typically defined as
-    E = ((ixx - iyy) + 1j*(2*ixy))/(ixx + iyy) = |E|exp(i*2*theta).
+    e = |e|exp(j*2*theta) = ((Ixx - Iyy) + j*(2*Ixy))/(Ixx + Iyy), where j is
+    the square root of -1 and Ixx, Iyy, Ixy are second-order central moments.
+    This is sometimes referred to as distortion, and denoted by e = (e1, e2)
+    in GalSim and referred to as chi-type ellipticity following the notation
+    in Eq. 4.4 of Bartelmann and Schneider (2001). The other definition differs
+    in normalization. It is referred to as shear, and denoted by g = (g1, g2)
+    in GalSim and referred to as epsilon-type ellipticity again following the
+    notation in Eq. 4.10 of Bartelmann and Schneider (2001). It is defined as
+    g = ((Ixx - Iyy) + j*(2*Ixy))/(Ixx + Iyy + 2sqrt(Ixx*Iyy - Ixy**2)).
 
-    For plotting purposes we might want to plot |E|*exp(i*theta).
+    The shear measure is unbiased in weak-lensing shear, but may exclude some
+    objects in the presence of noisy moment estimates. The distortion measure
+    is biased in weak-lensing distortion, but does not suffer from selection
+    artifacts.
+
+    Reference
+    ---------
+    [1] Bartelmann, M. and Schneider, P., “Weak gravitational lensing”,
+    Physics Reports, vol. 340, no. 4–5, pp. 291–472, 2001.
+    doi:10.1016/S0370-1573(00)00082-X; https://arxiv.org/abs/astro-ph/9912508
+
+    Notes
+    -----
+
+    1. This is a shape measurement used for doing QA on the ellipticity
+    of the sources.
+
+    2. For plotting purposes we might want to plot |E|*exp(i*theta).
     If `halvePhaseAngle` config parameter is set to `True`, then
-    the returned quantity therefore corresponds to |E|*exp(i*theta)
+    the returned quantity therefore corresponds to |E|*exp(i*theta).
+
+    See Also
+    --------
+    CalcE1
+    CalcE2
     """
 
     colXx = Field(doc="The column name to get the xx shape component from.",
@@ -200,15 +227,22 @@ class CalcE(MultiColumnAction):
 class CalcEDiff(DataFrameAction):
     """Calculate the difference of two ellipticities as a complex quantity.
 
-    This is a shape measurement used for doing QA on the ellipticity
+    The complex ellipticity difference between e_A and e_B is defined as
+    e_A - e_B = de = |de|exp(j*2*theta).
+
+    See Also
+    --------
+    CalcE
+
+    Notes
+    -----
+
+    1. This is a shape measurement used for doing QA on the ellipticity
     of the sources.
 
-    The complex ellipticity difference between E_A and E_B is efined as
-    dE = |dE|exp(i*2*theta).
-
-    For plotting purposes we might want to plot |dE|*exp(i*theta).
+    2. For plotting purposes we might want to plot |de|*exp(j*theta).
     If `halvePhaseAngle` config parameter is set to `True`, then
-    the returned quantity therefore corresponds to |E|*exp(i*theta)
+    the returned quantity therefore corresponds to |e|*exp(j*theta).
     """
     colA = ConfigurableActionField(doc="Ellipticity to subtract from",
                                    dtype=MultiColumnAction,
@@ -234,7 +268,7 @@ class CalcEDiff(DataFrameAction):
         eDiff = eMeas - ePSF
         if self.halvePhaseAngle:
             # Ellipiticity is |e|*exp(i*2*theta), but we want to return
-            # |e|*exp(i*theta). So we multiply by |e| and take its square root
+            # |e|*exp(j*theta). So we multiply by |e| and take its square root
             # instead of the more expensive trig calls.
             eDiff *= np.abs(eDiff)
             return np.sqrt(eDiff)
@@ -243,9 +277,19 @@ class CalcEDiff(DataFrameAction):
 
 
 class CalcE1(MultiColumnAction):
-    """Calculate E1: (ixx - iyy)/(ixx + iyy)
+    """Calculate chi-type e1 = (Ixx - Iyy)/(Ixx + Iyy) or
+    epsilon-type g1 = (Ixx - Iyy)/(Ixx + Iyy + 2sqrt(Ixx*Iyy - Ixy**2)).
+
+    See Also
+    --------
+    CalcE
+    CalcE2
+
+    Note
+    ----
     This is a shape measurement used for doing QA on the ellipticity
-    of the sources."""
+    of the sources.
+    """
 
     colXx = Field(doc="The column name to get the xx shape component from.",
                   dtype=str,
@@ -292,9 +336,19 @@ class CalcE1(MultiColumnAction):
 
 
 class CalcE2(MultiColumnAction):
-    """Calculate E2: 2ixy/(ixx+iyy)
+    """Calculate chi-type e2 = 2Ixy/(Ixx+Iyy) or
+    epsilon-type g2 = 2Ixy/(Ixx+Iyy+2sqrt(Ixx*Iyy - Ixy**2)).
+
+    See Also
+    --------
+    CalcE
+    CalcE1
+
+    Note
+    ----
     This is a shape measurement used for doing QA on the ellipticity
-    of the sources."""
+    of the sources.
+    """
 
     colXx = Field(doc="The column name to get the xx shape component from.",
                   dtype=str,
