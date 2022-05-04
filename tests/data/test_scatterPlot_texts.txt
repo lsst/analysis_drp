@@ -1,8 +1,10 @@
 None
-S/N > 50.0 Stats (mag < 21.97)[newline]Median: 0.52    $\sigma_{MAD}$: 11.38
-S/N > 20.0 Stats (mag < 24.09)[newline]Median: -5.99    $\sigma_{MAD}$: 38.77
-S/N > 50.0 Stats (mag < 22.90)[newline]Median: -1.68    $\sigma_{MAD}$: 12.26
-S/N > 20.0 Stats (mag < 24.89)[newline]Median: -1.15    $\sigma_{MAD}$: 34.02
+S/N > 50.0 Stats (mag < 21.3)[newline]Median: 0.521    $\sigma_{MAD}$: 11.4    N$_{points}$: 5
+S/N > 20.0 Stats (mag < 24.1)[newline]Median: -5.99    $\sigma_{MAD}$: 38.8    N$_{points}$: 70
+S/N > 50.0 Stats (mag < 22.9)[newline]Median: -1.68    $\sigma_{MAD}$: 12.3    N$_{points}$: 77
+S/N > 20.0 Stats (mag < 24.8)[newline]Median: -1.15    $\sigma_{MAD}$: 34    N$_{points}$: 425
+test
+test[newline]PhotoCalib: None, Astrometry: None[newline]Table: test, Bands: i, S/N: N/A
 
 
 mag
@@ -11,10 +13,13 @@ Running Median
 $\sigma_{MAD}$
 2$\sigma_{MAD}$
 3$\sigma_{MAD}$
+High SN
+Low SN
 Running Median
 $\sigma_{MAD}$
 2$\sigma_{MAD}$
 3$\sigma_{MAD}$
+High SN
 
 
 Number
@@ -34,5 +39,3 @@ Dec. (deg)
 
 
 Median Value
-test
-test[newline]PhotoCalib: None, Astrometry: None[newline]Table: test, Bands: i, S/N: N/A
