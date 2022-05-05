@@ -1,5 +1,6 @@
-__all__ = ("FlagSelector", "PsfFlagSelector", "StarIdentifier", "GalaxyIdentifier", "UnknownIdentifier",
-           "CoaddPlotFlagSelector", "BaseSNRSelector", "SnSelector")
+__all__ = ("FlagSelector", "PsfFlagSelector", "BaseSNRSelector", "SnSelector",
+           "StarIdentifier", "GalaxyIdentifier", "UnknownIdentifier",
+           "VisitPlotFlagSelector", "CoaddPlotFlagSelector")
 
 from abc import abstractmethod
 from lsst.pex.config import ListField, Field
