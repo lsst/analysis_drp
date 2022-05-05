@@ -366,7 +366,7 @@ tasks:
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E1 Difference (ixx - ixxPSF)"}
+                   "y": "E2 Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
