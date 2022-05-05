@@ -18,8 +18,8 @@ tasks:
       axisActions.yAction.colB.colYy: "i_iyyPSF"
       connections.plotName: E1Diff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -46,8 +46,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: E2Diff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -74,8 +74,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeFractionDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -101,8 +101,8 @@ tasks:
       connections.plotName: E1Diff_sky_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -129,8 +129,8 @@ tasks:
       connections.plotName: E2Diff_sky_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -157,8 +157,8 @@ tasks:
       connections.plotName: ShapeSizeFractionDiff_sky_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -185,8 +185,8 @@ tasks:
       axisActions.yAction.colB.colYy: "i_iyyPSF"
       connections.plotName: E1Diff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -216,8 +216,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: E2Diff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -247,8 +247,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeFractionDiff_magDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -276,8 +276,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -308,8 +308,8 @@ tasks:
       axisActions.yAction.colB.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizeDiff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -337,8 +337,8 @@ tasks:
       connections.plotName: ShapeSizeDiff_sky_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -367,8 +367,8 @@ tasks:
       connections.plotName: Ediff_quiver_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -388,8 +388,8 @@ tasks:
       axisActions.yAction.colYy: "i_iyy"
       connections.plotName: e1_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -410,8 +410,8 @@ tasks:
       axisActions.yAction.colXy: "i_ixy"
       connections.plotName: e2_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -432,8 +432,8 @@ tasks:
       axisActions.yAction.colXy: "i_ixy"
       connections.plotName: ShapeSize_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -453,8 +453,8 @@ tasks:
       axisActions.yAction.colYy: "i_iyyPSF"
       connections.plotName: e1PSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -475,8 +475,8 @@ tasks:
       axisActions.yAction.colXy: "i_ixyPSF"
       connections.plotName: e2PSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
@@ -497,8 +497,8 @@ tasks:
       axisActions.yAction.colXy: "i_ixyPSF"
       connections.plotName: ShapeSizePSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
+      selectorActions.flagSelector.bands: ["i"]
       selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
       selectorActions.SnSelector.fluxType: "psfFlux"
       selectorActions.SnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
