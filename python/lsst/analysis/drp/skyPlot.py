@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
 from scipy.stats import binned_statistic_2d
-from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
@@ -11,8 +10,8 @@ from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
-
+from .plotUtils import (generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort,
+                        plotPatchOutlines)
 import pandas as pd
 
 __all__ = ["SkyPlotTaskConfig", "SkyPlotTask"]
@@ -75,7 +74,18 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
     )
 
     plotOutlines = pexConfig.Field(
-        doc="Plot the outlines of the ccds/patches?",
+        doc="Plot the outlines of the ccds/patches?  The plot limits will be trimmed "
+            "to the area where data exists if ``trimToData`` is `True`, otherwise the "
+            "the plot limits will be set to the full tract.",
+        default=True,
+        dtype=bool,
+    )
+
+    trimToData = pexConfig.Field(
+        doc="Trim the plot limits to the area where data actually exists? "
+            "(e.g. if only one patch has data, limit the axis ranges to "
+            "just that patch to avoid plotting a full tract of mostly empty "
+            "patches).",
         default=True,
         dtype=bool,
     )
@@ -163,7 +173,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         `self.config.axisActions['zAction']`.
 
         """
-
+        patchesWithData = catPlot.patch.unique()  # Want to know this for the full unfiltered dataset
         # Apply the selectors to narrow down the sources to use
         mask = np.ones(len(catPlot), dtype=bool)
         for selector in self.config.selectorActions:
@@ -204,7 +214,8 @@ class SkyPlotTask(pipeBase.PipelineTask):
         # Get useful information about the plot
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
-        sumStats = generateSummaryStats(plotDf, self.config.axisLabels["z"], skymap, plotInfo)
+        sumStats = generateSummaryStats(plotDf, self.config.axisLabels["z"], skymap, plotInfo,
+                                        patchesWithData)
         # Make the plot
         fig = self.skyPlot(plotDf, plotInfo, sumStats)
 
@@ -347,41 +358,30 @@ class SkyPlotTask(pipeBase.PipelineTask):
             toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
 
         # Corner plot of patches showing summary stat in each
+        limitsKey = "dataLimits" if self.config.trimToData else "tract"
         if self.config.plotOutlines:
-            patches = []
-            for dataId in sumStats.keys():
-                (corners, stat) = sumStats[dataId]
-                ra = corners[0][0].asDegrees()
-                dec = corners[0][1].asDegrees()
-                xy = (ra, dec)
-                width = corners[2][0].asDegrees() - ra
-                height = corners[2][1].asDegrees() - dec
-                patches.append(Rectangle(xy, width, height, alpha=0.3))
-                ras = [ra.asDegrees() for (ra, dec) in corners]
-                decs = [dec.asDegrees() for (ra, dec) in corners]
-                ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-                cenX = ra + width / 2
-                cenY = dec + height / 2
-                if dataId == "tract":
-                    minRa = np.min(ras)
-                    minDec = np.min(decs)
-                    maxRa = np.max(ras)
-                    maxDec = np.max(decs)
-                if dataId != "tract":
-                    ax.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center",
-                                path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
+            plotLimitsStruct = plotPatchOutlines(ax, sumStats, limitsKey=limitsKey)
+            minRa = plotLimitsStruct.minRa
+            maxRa = plotLimitsStruct.maxRa
+            minDec = plotLimitsStruct.minDec
+            maxDec = plotLimitsStruct.maxDec
+        else:
+            # If not using plotPatchOutlines, set axis limits according to data
+            maxRa, maxDec = -1e12, -1e12
+            minRa, minDec = 1e12, 1e12
+            for (xs, ys, _, _, _) in toPlotList:
+                minRa = np.min([minRa, np.min(xs)])
+                maxRa = np.max([maxRa, np.max(xs)])
+                minDec = np.min([minDec, np.min(ys)])
+                maxDec = np.max([maxDec, np.max(ys)])
+
+        # Avoid identical end points which causes problems in binning
+        if minRa == maxRa:
+            maxRa += 1e-5  # There is no reason to pick this number in particular
+        if minDec == maxDec:
+            maxDec += 1e-5  # There is no reason to pick this number in particular
 
         for (i, (xs, ys, colorVals, cmap, label)) in enumerate(toPlotList):
-            if "tract" not in sumStats.keys() or not self.config.plotOutlines:
-                minRa = np.min(xs)
-                maxRa = np.max(xs)
-                minDec = np.min(ys)
-                maxDec = np.max(ys)
-                # Avoid identical end points which causes problems in binning
-                if minRa == maxRa:
-                    maxRa += 1e-5  # There is no reason to pick this number in particular
-                if minDec == maxDec:
-                    maxDec += 1e-5  # There is no reason to pick this number in particular
             med = np.median(colorVals)
             mad = sigmaMad(colorVals)
             vmin = med - 2*mad
@@ -417,30 +417,30 @@ class SkyPlotTask(pipeBase.PipelineTask):
             plt.colorbar(plotOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
             text = cax.text(0.5, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
-                            ha="center", va="center", fontsize=10)
+                            ha="center", va="center", fontsize=9)
             text.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
             cax.tick_params(labelsize=7)
 
             if i == 0 and len(toPlotList) > 1:
                 cax.yaxis.set_ticks_position("left")
 
-        ax.set_xlabel(xCol)
-        ax.set_ylabel(yCol)
+        ax.set_xlabel(xCol, fontsize=8, labelpad=2)
+        ax.set_ylabel(yCol, fontsize=8, labelpad=2)
         ax.tick_params(axis="x", labelrotation=25)
         ax.tick_params(labelsize=7)
 
         ax.set_aspect("equal")
-        plt.draw()
 
-        # Find some useful axis limits
-        lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
-        if lenXs != [] and np.max(lenXs) > 1000:
-            padRa = (maxRa - minRa)/10
-            padDec = (maxDec - minDec)/10
-            ax.set_xlim(maxRa + padRa, minRa - padRa)
-            ax.set_ylim(minDec - padDec, maxDec + padDec)
-        else:
-            ax.invert_xaxis()
+        # Set useful axis limits if not alread done when plotting outlines.
+        if not self.config.plotOutlines:
+            lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
+            if lenXs != [] and np.max(lenXs) > 1000:
+                padRa = (maxRa - minRa)/10
+                padDec = (maxDec - minDec)/10
+                ax.set_xlim(maxRa + padRa, minRa - padRa)
+                ax.set_ylim(minDec - padDec, maxDec + padDec)
+            else:
+                ax.invert_xaxis()
 
         # Add useful information to the plot
         plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85)

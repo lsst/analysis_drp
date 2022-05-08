@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
-from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 from lsst.pex.config import Field
 import lsst.pipe.base as pipeBase
 from lsst.skymap import BaseSkyMap
 
-from .plotUtils import addPlotInfo, mkColormap, extremaSort
+from .plotUtils import addPlotInfo, mkColormap, extremaSort, plotPatchOutlines
 from .skyPlot import SkyPlotTask, SkyPlotTaskConfig
 
 __all__ = ["QuiverPlotTaskConfig", "QuiverPlotTask"]
@@ -51,7 +50,7 @@ class QuiverPlotTask(SkyPlotTask):
     ConfigClass = QuiverPlotTaskConfig
     _DefaultName = "quiverPlotTask"
 
-    def skyPlot(self, catPlot, plotInfo, sumStats):
+    def skyPlot(self, catPlot, plotInfo, sumStats, trimToData=True):
         """Make a quiver plot of a complex quantity at given points on the sky.
 
         Parameters
@@ -71,6 +70,11 @@ class QuiverPlotTask(SkyPlotTask):
         sumStats : `dict`
             A dictionary where the patchIds are the keys which store the R.A.
             and dec of the corners of the patch.
+        trimToData : `bool`, optional
+            If `True`, trim the plot limits to the area where data actually
+            exists (e.g. if only one patch has data, limit the axis ranges to
+            just that patch to avoid plotting a full tract of mostly empty
+            patches).
 
         Returns
         -------
@@ -191,36 +195,20 @@ class QuiverPlotTask(SkyPlotTask):
             toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
 
         # Corner plot of patches showing summary stat in each
+        limitsKey = "dataLimits" if trimToData else "tract"
         if self.config.plotOutlines:
-            patches = []
-            for dataId in sumStats.keys():
-                (corners, stat) = sumStats[dataId]
-                ra = corners[0][0].asDegrees()
-                dec = corners[0][1].asDegrees()
-                xy = (ra, dec)
-                width = corners[2][0].asDegrees() - ra
-                height = corners[2][1].asDegrees() - dec
-                patches.append(Rectangle(xy, width, height, alpha=0.3))
-                ras = [ra.asDegrees() for (ra, dec) in corners]
-                decs = [dec.asDegrees() for (ra, dec) in corners]
-                ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-                cenX = ra + width / 2
-                cenY = dec + height / 2
-                if dataId == "tract":
-                    minRa = np.min(ras)
-                    minDec = np.min(decs)
-                    maxRa = np.max(ras)
-                    maxDec = np.max(decs)
-                if dataId != "tract":
-                    ax.annotate(dataId, (cenX, cenY), color="k", fontsize=7, ha="center", va="center",
-                                path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
+            _ = plotPatchOutlines(ax, sumStats, limitsKey=limitsKey)
+        else:
+            # If not using plotPatchOutlines, set axis limits according to data
+            maxRa, maxDec = -1e12, -1e12
+            minRa, minDec = 1e12, 1e12
+            for (xs, ys, _, _, _) in toPlotList:
+                minRa = np.min([minRa, np.min(xs)])
+                maxRa = np.max([maxRa, np.max(xs)])
+                minDec = np.min([minDec, np.min(ys)])
+                maxDec = np.max([maxDec, np.max(ys)])
 
         for (i, (xs, ys, eVals, cmap, label)) in enumerate(toPlotList):
-            if "tract" not in sumStats.keys() or not self.config.plotOutlines:
-                minRa = np.min(xs)
-                maxRa = np.max(xs)
-                minDec = np.min(ys)
-                maxDec = np.max(ys)
             e, e1, e2 = np.abs(eVals), np.real(eVals), np.imag(eVals)
             quiverOut = ax.quiver(xs, ys, e1, e2, e, angles="uv", scale=None, pivot="middle",
                                   units="width", width=0.001, headwidth=0.0, headlength=0.0,
@@ -240,30 +228,29 @@ class QuiverPlotTask(SkyPlotTask):
             plt.colorbar(quiverOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
             text = cax.text(0.5, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
-                            ha="center", va="center", fontsize=10)
+                            ha="center", va="center", fontsize=9)
             text.set_path_effects([pathEffects.Stroke(linewidth=3, foreground="w"), pathEffects.Normal()])
             cax.tick_params(labelsize=7)
 
             if i == 0 and len(toPlotList) > 1:
                 cax.yaxis.set_ticks_position("left")
 
-        ax.set_xlabel(xCol)
-        ax.set_ylabel(yCol)
+        ax.set_xlabel(xCol, fontsize=8, labelpad=2)
+        ax.set_ylabel(yCol, fontsize=8, labelpad=2)
         ax.tick_params(axis="x", labelrotation=25)
         ax.tick_params(labelsize=7)
 
-        ax.set_aspect("equal")
-        plt.draw()
-
         # Find some useful axis limits
-        lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
-        if lenXs != [] and np.max(lenXs) > 1000:
-            padRa = (maxRa - minRa)/10
-            padDec = (maxDec - minDec)/10
-            ax.set_xlim(maxRa + padRa, minRa - padRa)
-            ax.set_ylim(minDec - padDec, maxDec + padDec)
-        else:
-            ax.invert_xaxis()
+        if not self.config.plotOutlines:
+            lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
+            if lenXs != [] and np.max(lenXs) > 1000:
+                padRa = (maxRa - minRa)/10
+                padDec = (maxDec - minDec)/10
+                ax.set_xlim(maxRa + padRa, minRa - padRa)
+                ax.set_ylim(minDec - padDec, maxDec + padDec)
+                ax.set_aspect("equal")
+            else:
+                ax.invert_xaxis()
 
         # Add useful information to the plot
         plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85)

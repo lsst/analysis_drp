@@ -20,13 +20,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.odr as scipyODR
 import matplotlib
+import matplotlib.patheffects as pathEffects
+import matplotlib.pyplot as plt
 from matplotlib import colors
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import scipy.odr as scipyODR
 from typing import List, Tuple
 
 from lsst.geom import Box2D, SpherePoint, degrees
+import lsst.pipe.base as pipeBase
 
 null_formatter = matplotlib.ticker.NullFormatter()
 
@@ -62,7 +67,7 @@ def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
     return plotInfo
 
 
-def generateSummaryStats(cat, colName, skymap, plotInfo):
+def generateSummaryStats(cat, colName, skymap, plotInfo, patchesWithData):
     """Generate a summary statistic in each patch or detector
 
     Parameters
@@ -71,6 +76,7 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     colName : `str`
     skymap : `lsst.skymap.ringsSkyMap.RingsSkyMap`
     plotInfo : `dict`
+    patchesWithData : `numpy.ndarray`
 
     Returns
     -------
@@ -89,6 +95,7 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
     patchInfoDict = {}
     maxPatchNum = tractInfo.num_patches.x*tractInfo.num_patches.y
     patches = np.arange(0, maxPatchNum, 1)
+    dataLimitsBbox = None
     for patch in patches:
         if patch is None:
             continue
@@ -107,14 +114,28 @@ def generateSummaryStats(cat, colName, skymap, plotInfo):
             gen3PatchId = patch
             patchInfo = tractInfo.getPatchInfo(patch)
 
-        corners = Box2D(patchInfo.getInnerBBox()).getCorners()
+        innerBbox = Box2D(patchInfo.getInnerBBox())
+        corners = innerBbox.getCorners()
         skyCoords = tractWcs.pixelToSky(corners)
 
         patchInfoDict[gen3PatchId] = (skyCoords, stat)
+        # Make a BBox that includes all patches with data
+        if patch in patchesWithData:
+            if dataLimitsBbox is None:
+                dataLimitsBbox = innerBbox
+            else:
+                dataLimitsBbox.include(innerBbox)
 
     tractCorners = Box2D(tractInfo.getBBox()).getCorners()
     skyCoords = tractWcs.pixelToSky(tractCorners)
     patchInfoDict["tract"] = (skyCoords, np.nan)
+    if dataLimitsBbox is not None:
+        dataCoords = tractWcs.pixelToSky(dataLimitsBbox.getCorners())
+    else:
+        # If no data was found, fall back to the full tract boundary
+        dataCoords = skyCoords
+    patchInfoDict["dataLimits"] = (dataCoords, np.nan)
+    patchInfoDict["patchesWithData"] = patchesWithData
 
     return patchInfoDict
 
@@ -472,3 +493,132 @@ def extremaSort(xs):
     dists = np.abs(xs - med)
     ids = np.argsort(dists)
     return ids
+
+
+def plotPatchOutlines(ax, sumStats, limitsKey="dataLimits", forcePatchLabel=True, colorByPatchStat=False,
+                      fig=None, histPlot=False):
+    """Plot the patch outlines on the given axis.
+
+    Parameters
+    ----------
+    ax : `plt.Axis`
+        A matplotlib figure axis.
+    sumStats : `dict`
+        A dictionary where the patchIds are the keys which store the R.A.
+        and dec of the corners of the patch.
+    limitsKey : `str`, optional
+        Trims the returned plot axis limits to the area covering patches
+        that have data if equal to "dataLimits".  Sets returned plot limits
+        to the tract boundary if equal to "tract".  Currently can only be
+        one of "dataLimits" or "tract".
+
+    Returns
+    -------
+    plotLimits : `lsst.pipe.base.Struct`
+        Results struct with attribute:
+
+            ``minRa``
+                The minimum RA extent for the plot (in degrees).  Trimmed to
+                the area with data present if ``limitsKey`` is "dataLimits".
+            ``maxRa``
+                The maximum RA extent for the plot (in degrees).  Trimmed to
+                the area with data present if ``limitsKey`` is "dataLimits".
+            ``minDec``
+                The minimum Dec extent for the plot (in degrees).  Trimmed to
+                the area with data present if ``limitsKey`` is "dataLimits".
+            ``maxDec``
+                The maximum Dec extent for the plot (in degrees).  Trimmed to
+                the area with data present if ``limitsKey`` is "dataLimits".
+
+    Raises
+    ------
+    ValueError
+        If the ``limitsKey`` is set to a value that is not one of the
+        ``sumStats`` keys.
+    """
+    if limitsKey not in sumStats.keys():
+        raise ValueError(f"Value of limitKey must be one included in sumStats.keys().  "
+                         f"Was given: {limitsKey}.")
+
+    patchesWithData = sumStats.pop("patchesWithData")
+    patches = []
+    colors = []
+    minFontSize = 4 if colorByPatchStat else 5
+    for dataId in sumStats.keys():
+        (corners, stat) = sumStats[dataId]
+        ra = corners[0][0].asDegrees()
+        dec = corners[0][1].asDegrees()
+        ras = [ra.asDegrees() for (ra, dec) in corners]
+        decs = [dec.asDegrees() for (ra, dec) in corners]
+        if dataId == limitsKey:
+            minRa = np.min(ras)
+            minDec = np.min(decs)
+            maxRa = np.max(ras)
+            maxDec = np.max(decs)
+        if dataId != "dataLimits":
+            if not (limitsKey == "dataLimits" and dataId == "tract"):
+                ax.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
+            if dataId != "tract":
+                if limitsKey == "tract" or (limitsKey != "tract" and dataId in patchesWithData):
+                    xy = (ra, dec)
+                    width = corners[2][0].asDegrees() - ra
+                    height = corners[2][1].asDegrees() - dec
+                    patches.append(Rectangle(xy, width, height, alpha=0.3))
+                    colors.append(stat)
+                    cenX = ra + width / 2
+                    cenY = dec + height / 2
+                    if forcePatchLabel or len(patchesWithData) <= 81:
+                        if colorByPatchStat:
+                            pathEffectsObj = None
+                        else:
+                            pathEffectsObj = [pathEffects.withStroke(linewidth=2, foreground="w")]
+                        ax.annotate(dataId, (cenX, cenY), color="k", fontsize=minFontSize, ha="center",
+                                    va="center", path_effects=pathEffectsObj)
+
+    # Find and set useful axis limits
+    padRa = (maxRa - minRa)/20
+    padDec = (maxDec - minDec)/20
+    ax.set_xlim(maxRa + padRa, minRa - padRa)
+    ax.set_ylim(minDec - padDec, maxDec + padDec)
+    ax.set_aspect("equal")
+    ax.tick_params(axis="both", labelsize=minFontSize + 1, length=2, pad=1)
+    ax.set_xlabel("R.A. (deg)", fontsize=minFontSize + 2, labelpad=2)
+    ax.set_ylabel("Dec. (deg)", fontsize=minFontSize + 2, labelpad=2)
+
+    # Add colormapping for per-patch metric coloring
+    collection = None
+    if colorByPatchStat:
+        cmapPatch = plt.cm.coolwarm.copy()
+        cmapPatch.set_bad(color="none")
+        # Set the bad color to transparent and make a masked array
+        colors = np.ma.array(colors, mask=np.isnan(colors))
+        collection = PatchCollection(patches, cmap=cmapPatch)
+        collection.set_array(colors)
+        ax.add_collection(collection)
+
+        # Add a colorbar
+        if histPlot:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("top", size="12%", pad="5%")
+        else:
+            ax.yaxis.tick_right()
+            ax.yaxis.set_label_position("right")
+            ax.xaxis.tick_top()
+            ax.xaxis.set_label_position("top")
+            pos = ax.get_position()
+            delY = pos.y1 - pos.y0
+            cax = fig.add_axes([pos.x0, pos.y0 + 1.3*delY, pos.x1 - pos.x0, 0.15*delY])
+        plt.colorbar(collection, cax=cax, orientation="horizontal")
+        cax.text(0.5, 0.5, "Median Value", color="k", transform=cax.transAxes, rotation="horizontal",
+                 horizontalalignment="center", verticalalignment="center", fontsize=minFontSize + 1)
+        cax.tick_params(axis="x", labelsize=minFontSize + 1, labeltop=True, labelbottom=False, bottom=False,
+                        top=True, pad=0.5, length=2)
+
+    plotLimits = pipeBase.Struct(
+        minRa=minRa,
+        maxRa=maxRa,
+        minDec=minDec,
+        maxDec=maxDec,
+        collection=collection,
+    )
+    return plotLimits

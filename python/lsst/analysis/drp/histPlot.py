@@ -3,16 +3,13 @@ import numpy as np
 import pandas as pd
 from scipy.stats import median_absolute_deviation as sigmaMad
 from matplotlib import gridspec
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, plotPatchOutlines
 from . import calcFunctors  # noqa
 
 
@@ -116,6 +113,15 @@ class HistPlotTaskConfig(pipeBase.PipelineTaskConfig,
         default="i_ap09Flux",
     )
 
+    trimToData = pexConfig.Field(
+        doc="Trim the plot limits to the area where data actually exists? "
+            "(e.g. if only one patch has data, limit the axis ranges to "
+            "just that patch to avoid plotting a full tract of mostly empty "
+            "patches).",
+        default=True,
+        dtype=bool,
+    )
+
 
 class HistPlotTask(pipeBase.PipelineTask):
 
@@ -203,7 +209,7 @@ class HistPlotTask(pipeBase.PipelineTask):
         `histPlot` which makes an N-panel figure containing a series of
         histograms.
         """
-
+        patchesWithData = catPlot.patch.unique()  # Want to know this for the full unfiltered dataset
         # Apply the global selectors to narrow down the objects to use
         mask = np.ones(len(catPlot), dtype=bool)
         for selector in self.config.selectorActions:
@@ -225,7 +231,8 @@ class HistPlotTask(pipeBase.PipelineTask):
             SN = "N/A"
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
-        sumStats = generateSummaryStats(plotDf, self.config.summaryStatsColumn, skymap, plotInfo)
+        sumStats = generateSummaryStats(plotDf, self.config.summaryStatsColumn, skymap, plotInfo,
+                                        patchesWithData)
 
         # Make the plot
         fig = self.histPlot(plotDf, plotInfo, sumStats)
@@ -342,7 +349,7 @@ class HistPlotTask(pipeBase.PipelineTask):
                 ax.axvline(med, ls="--", lw=1, c=col)
             ax.set_yscale(self.config.panels[panel].yscale)
             ax.set_xlim(vLower, vUpper)
-            ax.set_xlabel(self.config.panels[panel].label, labelpad=1)
+            ax.set_xlabel(self.config.panels[panel].label, fontsize=9, labelpad=1)
             ax.tick_params(labelsize=7)
             # add a buffer to the top of the plot to allow space for labels
             ylims = list(ax.get_ylim())
@@ -366,54 +373,19 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         # summary stats plot
         axCorner = fig.add_subplot(gs[-summary_block-59:, :summary_block])
-        axCorner.set_aspect("equal")
-        axCorner.invert_xaxis()
-        patches = []
-        colors = []
-        for dataId in sumStats.keys():
-            (corners, stat) = sumStats[dataId]
-            ra = corners[0][0].asDegrees()
-            dec = corners[0][1].asDegrees()
-            xy = (ra, dec)
-            width = corners[2][0].asDegrees() - ra
-            height = corners[2][1].asDegrees() - dec
-            patches.append(Rectangle(xy, width, height))
-            colors.append(stat)
-            ras = [ra.asDegrees() for (ra, dec) in corners]
-            decs = [dec.asDegrees() for (ra, dec) in corners]
-            axCorner.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-            cenX = ra + width / 2
-            cenY = dec + height / 2
-            if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
-        cmapUse = plt.cm.coolwarm
-        # Set the bad color to transparent and make a masked array
-        cmapUse.set_bad(color="none")
-        colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapUse)
-        collection.set_array(colors)
-        axCorner.add_collection(collection)
-        axCorner.set_xlabel("R.A. (deg)", fontsize=7, labelpad=1)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=7, labelpad=1)
-        axCorner.tick_params(labelsize=5, length=2, pad=1)
-        # add a colorbar
-        divider = make_axes_locatable(axCorner)
-        cax = divider.append_axes("top", size="14%", pad=0.05)
-        cbar = plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cbar.ax.tick_params(labelsize=5, labeltop=True, labelbottom=False, top=True, bottom=False, length=2,
-                            pad=0.5)
-        cax.text(0.5, 0.4, "Median Value", color="k", rotation="horizontal", transform=cax.transAxes,
-                 horizontalalignment="center", verticalalignment="center", fontsize=7)
+        limitsKey = "dataLimits" if self.config.trimToData else "tract"
+        _ = plotPatchOutlines(axCorner, sumStats, limitsKey=limitsKey, forcePatchLabel=False,
+                              colorByPatchStat=True, fig=fig, histPlot=True)
+
         axCorner.text(0.5, 1.35, self.config.summaryStatsColumn, color="k", rotation="horizontal",
                       transform=axCorner.transAxes, horizontalalignment="center", verticalalignment="center",
-                      fontsize=7)
+                      fontsize=6)
 
         # Wrap up: add global y-axis label, hist stats key, and adjust subplots
         plt.text((summary_block + panel_pad / 2) / 240, 0.41, "Frequency", rotation=90,
-                 transform=fig.transFigure)
+                 transform=fig.transFigure, fontsize=9)
         plt.text(0.955, 0.889, "Key: med, ${{\\sigma}}_{{MAD}}$, $n_{{points}}$",
-                 transform=fig.transFigure, ha="right", va="bottom", fontsize=7)
-        plt.draw()
+                 transform=fig.transFigure, ha="right", va="bottom", fontsize=6)
         plt.subplots_adjust(left=0.05, right=0.99, bottom=0.02, top=0.91)
         fig = addPlotInfo(fig, plotInfo)
 

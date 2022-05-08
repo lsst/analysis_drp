@@ -23,9 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import gridspec
-from matplotlib.patches import Rectangle
 from matplotlib.path import Path
-from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
@@ -35,7 +33,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, plotPatchOutlines
 from .statistics import sigmaMad
 
 cmapPatch = plt.cm.coolwarm.copy()
@@ -149,6 +147,15 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         dtype=bool,
     )
 
+    trimToData = pexConfig.Field(
+        doc="Trim the plot limits to the area where data actually exists? "
+            "(e.g. if only one patch has data, limit the axis ranges to "
+            "just that patch to avoid plotting a full tract of mostly empty "
+            "patches).",
+        default=True,
+        dtype=bool,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.magAction.column = "i_cModelFlux"
@@ -219,7 +226,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         `scatterPlotWithTwoHists` which makes a scatter plot of the points with
         a histogram of each axis.
         """
-
+        patchesWithData = catPlot.patch.unique()  # Want to know this for the full unfiltered dataset
         # Apply the selectors to narrow down the sources to use
         mask = np.ones(len(catPlot), dtype=bool)
         for selector in self.config.selectorActions:
@@ -272,7 +279,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
         # Calculate the corners of the patches and some associated stats
         sumStats = {} if skymap is None else generateSummaryStats(
-            plotDf, self.config.axisLabels["y"], skymap, plotInfo)
+            plotDf, self.config.axisLabels["y"], skymap, plotInfo, patchesWithData)
         # Make the plot
         try:
             fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
@@ -394,6 +401,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         # Main scatter plot
         ax = fig.add_subplot(gs[1:, :-1])
+        ax.tick_params(axis="both", which="both", labelsize=8)
         binThresh = 5
 
         yBinsOut = []
@@ -568,8 +576,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                   edgecolor="k", borderpad=0.4, handlelength=1)
 
         # Add axes labels
-        ax.set_ylabel(yCol, fontsize=10, labelpad=10)
-        ax.set_xlabel(xCol, fontsize=10, labelpad=2)
+        ax.set_ylabel(yCol, fontsize=9, labelpad=9)
+        ax.set_xlabel(xCol, fontsize=9, labelpad=2)
 
         # Top histogram
         topHist = plt.gcf().add_subplot(gs[0, :-1], sharex=ax)
@@ -582,6 +590,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             topHist.hist(xsStars, bins=100, color="midnightblue", histtype="step", log=True,
                          label=f"Stars ({len(np.where(stars)[0])})")
         topHist.axes.get_xaxis().set_visible(False)
+        topHist.tick_params(axis="both", which="both", labelsize=8)
         topHist.set_ylabel("Number", fontsize=8)
         topHist.legend(fontsize=6, framealpha=0.9, borderpad=0.4, loc="lower left", ncol=3, edgecolor="k")
 
@@ -616,60 +625,20 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                               ls=":")
 
         sideHist.axes.get_yaxis().set_visible(False)
+        sideHist.tick_params(axis="both", labelsize=8)
         sideHist.set_xlabel("Number", fontsize=8)
         if self.config.plot2DHist and histIm is not None:
             divider = make_axes_locatable(sideHist)
             cax = divider.append_axes("right", size="8%", pad=0)
+            cax.tick_params(axis="both", which="both", labelsize=8)
             plt.colorbar(histIm, cax=cax, orientation="vertical", label="Number of Points Per Bin")
 
         # Corner plot of patches showing summary stat in each
         axCorner = plt.gcf().add_subplot(gs[0, -1])
-        axCorner.yaxis.tick_right()
-        axCorner.yaxis.set_label_position("right")
-        axCorner.xaxis.tick_top()
-        axCorner.xaxis.set_label_position("top")
-        axCorner.set_aspect("equal")
+        limitsKey = "dataLimits" if self.config.trimToData else "tract"
+        _ = plotPatchOutlines(axCorner, sumStats, limitsKey=limitsKey, forcePatchLabel=False,
+                              colorByPatchStat=True, fig=fig)
 
-        patches = []
-        colors = []
-        for dataId in sumStats.keys():
-            (corners, stat) = sumStats[dataId]
-            ra = corners[0][0].asDegrees()
-            dec = corners[0][1].asDegrees()
-            xy = (ra, dec)
-            width = corners[2][0].asDegrees() - ra
-            height = corners[2][1].asDegrees() - dec
-            patches.append(Rectangle(xy, width, height))
-            colors.append(stat)
-            ras = [ra.asDegrees() for (ra, dec) in corners]
-            decs = [dec.asDegrees() for (ra, dec) in corners]
-            axCorner.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-            cenX = ra + width / 2
-            cenY = dec + height / 2
-            if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
-
-        # Set the bad color to transparent and make a masked array
-        colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapPatch)
-        collection.set_array(colors)
-        axCorner.add_collection(collection)
-
-        axCorner.set_xlabel("R.A. (deg)", fontsize=7)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=7)
-        axCorner.tick_params(axis="both", labelsize=6, length=0, pad=1.5)
-        axCorner.invert_xaxis()
-
-        # Add a colorbar
-        pos = axCorner.get_position()
-        cax = fig.add_axes([pos.x0, pos.y0 + 0.23, pos.x1 - pos.x0, 0.025])
-        plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cax.text(0.5, 0.5, "Median Value", color="k", transform=cax.transAxes, rotation="horizontal",
-                 horizontalalignment="center", verticalalignment="center", fontsize=6)
-        cax.tick_params(axis="x", labelsize=6, labeltop=True, labelbottom=False, bottom=False, top=True,
-                        pad=0.5, length=2)
-
-        plt.draw()
         plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22, left=0.21)
         fig = plt.gcf()
         fig = addPlotInfo(fig, plotInfo)
