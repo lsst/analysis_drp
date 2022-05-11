@@ -1,5 +1,5 @@
 __all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull",
-           "ExtinctionCorrectedMagDiff"]
+           "ExtinctionCorrectedMagDiff", "CalcE", "CalcEDiff", "CalcE1", "CalcE2", "CalcShapeSize"]
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionField
 from lsst.pipe.tasks.dataFrameActions import DataFrameAction, DivideColumns, MultiColumnAction
