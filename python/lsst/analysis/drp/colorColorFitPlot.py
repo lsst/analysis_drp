@@ -11,9 +11,10 @@ import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
-from .calcFunctors import ExtinctionCorrectedMagDiff
-from . import dataSelectors as dataSelectors
-from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
+from lsst.analysis.tools.calculators.calcFunctors import ExtinctionCorrectedMagDiff
+from lsst.analysis.tools.selectors import dataSelectors as dataSelectors
+from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
+from lsst.analysis.tools.calculators.utils import stellarLocusFit, perpDistance
 
 
 class ColorColorFitPlotConnections(pipeBase.PipelineTaskConnections,
@@ -59,7 +60,7 @@ class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector}
     )
 
     stellarLocusFitDict = pexConfig.DictField(
@@ -132,6 +133,12 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
             SN = "N/A"
 
         plotDf = pd.DataFrame(columns)
+
+        # Make sure that the x and y values are finite
+        # otherwise the KDE in the plot function sulks
+        for col in [self.config.axisLabels["x"], self.config.axisLabels["y"]]:
+            mask = np.isfinite(plotDf[col].values)
+            plotDf = plotDf[mask]
 
         xs = plotDf[self.config.axisLabels["x"]].values
         ys = plotDf[self.config.axisLabels["y"]].values
