@@ -179,8 +179,8 @@ class CalcE(MultiColumnAction):
     is biased in weak-lensing distortion, but does not suffer from selection
     artifacts.
 
-    Reference
-    ---------
+    References
+    ----------
     [1] Bartelmann, M. and Schneider, P., “Weak gravitational lensing”,
     Physics Reports, vol. 340, no. 4–5, pp. 291–472, 2001.
     doi:10.1016/S0370-1573(00)00082-X; https://arxiv.org/abs/astro-ph/9912508
