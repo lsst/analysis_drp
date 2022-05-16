@@ -27,6 +27,7 @@ import numpy as np
 import lsst.utils.tests
 from lsst.afw.geom import Quadrupole
 from lsst.analysis.drp.calcFunctors import CalcE, CalcE1, CalcE2, CalcShapeSize
+from lsst.pex.config import FieldValidationError
 
 
 class ShapeSizeTestCase(lsst.utils.tests.TestCase):
@@ -113,13 +114,13 @@ class ShapeSizeTestCase(lsst.utils.tests.TestCase):
     def test_e1_validation(self):
         """Test that CalcE1 throws an exception when misconfigured."""
         CalcE1(ellipticityType="chi", colXy=None).validate()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(FieldValidationError):
             CalcE1(ellipticityType="epsilon", colXy=None).validate()
 
     def test_size_validation(self):
         """Test that CalcShapeSize throws an exception when misconfigured."""
         CalcShapeSize(sizeType="trace", colXy=None).validate()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(FieldValidationError):
             CalcShapeSize(sizeType="determinant", colXy=None).validate()
 
 
