@@ -364,7 +364,7 @@ tasks:
       axisActions.zAction.colB.colYy: "i_iyyPSF"
       axisActions.zAction.colB.colXy: "i_ixyPSF"
       axisActions.zAction.colB.halvePhaseAngle: False
-      connections.plotName: Ediff_quiver_i
+      connections.plotName: Ediff_i
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]

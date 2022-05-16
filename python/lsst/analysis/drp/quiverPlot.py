@@ -5,37 +5,22 @@ from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 from lsst.pex.config import Field
 import lsst.pipe.base as pipeBase
-from lsst.skymap import BaseSkyMap
 
 from .plotUtils import addPlotInfo, mkColormap, extremaSort
-from .skyPlot import SkyPlotTask, SkyPlotTaskConfig
+from .skyPlot import SkyPlotTask, SkyPlotTaskConnections
 
-__all__ = ["QuiverPlotTaskConfig", "QuiverPlotTask"]
-
-
-class QuiverPlotTaskConnections(pipeBase.PipelineTaskConnections, dimensions=("tract", "skymap"),
-                                defaultTemplates={"inputCoaddName": "deep", "plotName": "deltaCoords",
-                                                  "tableType": "forced"}):
-
-    catPlot = pipeBase.connectionTypes.Input(doc="The tract-wide catalog to make plots from.",
-                                             storageClass="DataFrame",
-                                             name="sourceTable_tract",
-                                             dimensions=("tract",),
-                                             deferLoad=True)
-
-    skymap = pipeBase.connectionTypes.Input(doc="The skymap for the tract",
-                                            storageClass="SkyMap",
-                                            name=BaseSkyMap.SKYMAP_DATASET_TYPE_NAME,
-                                            dimensions=("skymap",))
-
-    quiverPlot = pipeBase.connectionTypes.Output(doc=("A quiver plot showing the on-sky distribution of a "
-                                                      "complex value."),
-                                                 storageClass="Plot",
-                                                 name="quiverPlot_{plotName}",
-                                                 dimensions=("tract", "skymap"))
+__all__ = ["QuiverPlotTaskConnections", "QuiverPlotTaskConfig", "QuiverPlotTask"]
 
 
-class QuiverPlotTaskConfig(SkyPlotTaskConfig):
+class QuiverPlotTaskConnections(SkyPlotTaskConnections):
+    skyPlot = pipeBase.connectionTypes.Output(doc=("A quiver plot showing the on-sky distribution of a "
+                                                   "complex value."),
+                                              storageClass="Plot",
+                                              name="quiverPlot_{plotName}",
+                                              dimensions=("tract", "skymap"))
+
+
+class QuiverPlotTaskConfig(SkyPlotTask.ConfigClass, pipelineConnections=QuiverPlotTaskConnections):
 
     includeQuiverKey = Field(doc=("Include a key in addition to the colorbar "
                                   "to show the scale of the quivers?"),
