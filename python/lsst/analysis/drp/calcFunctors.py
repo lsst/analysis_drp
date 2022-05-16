@@ -304,6 +304,12 @@ class CalcEDiff(DataFrameAction):
         yield from self.colA.columns
         yield from self.colB.columns
 
+    def validate(self):
+        super().validate()
+        if self.colA.ellipticityType != self.colB.ellipticityType:
+            msg = "Both the ellipticities in CalcEDiff must have the same type."
+            raise FieldValidationError(self.colB.__class__.ellipticityType, self, msg)
+
     def __call__(self, df):
         eMeas = self.colA(df)
         ePSF = self.colB(df)
