@@ -381,7 +381,8 @@ class CalcE1(MultiColumnAction):
     def validate(self):
         super().validate()
         if self.ellipticityType == "epsilon" and self.colXy is None:
-            raise ValueError("colXy is required for epsilon-type shear ellipticity")
+            msg = "colXy is required for epsilon-type shear ellipticity"
+            raise FieldValidationError(self.__class__.colXy, self, msg)
 
 
 class CalcE2(MultiColumnAction):
@@ -505,7 +506,8 @@ class CalcShapeSize(MultiColumnAction):
     def validate(self):
         super().validate()
         if self.sizeType == "determinant" and self.colXy is None:
-            raise ValueError("colXy is required for determinant-type size")
+            msg = "colXy is required for determinant-type size"
+            raise FieldValidationError(self.__class__.colXy, self, msg)
 
 
 class CalcRhoStatistics(DataFrameAction):
