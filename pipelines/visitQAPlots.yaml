@@ -5,9 +5,6 @@ description: |
     For visit level plots the bands needs to be set to [""] to allow the code to be reused between
     the coadd level tables, which have band_ prepended to their column names, and the visit level
     tables which do not.
-parameters:
-  VisitApFluxName: "ap12Flux"
-  band: i
 tasks:
   # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
   # This plot shows the on sky distribution of these values for stars.
@@ -15,7 +12,7 @@ tasks:
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: MagDiff
-      axisActions.zAction.col1: parameters.VisitApFluxName
+      axisActions.zAction.col1: "ap12Flux"
       axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_stars
       selectorActions.flagSelector: VisitPlotFlagSelector
