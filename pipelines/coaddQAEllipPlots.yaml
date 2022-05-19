@@ -507,11 +507,3 @@ tasks:
       python: |
         from lsst.analysis.drp.dataSelectors import (CoaddPlotFlagSelector, SnSelector, StarIdentifier)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
-
-  plot_RhoStatistics:
-    # Plot the Rho statistics
-    class: lsst.analysis.drp.rhoPlot.RhoPlotTask
-    config:
-      rhoStatisticsAction.treecorr.nbins: 21
-      rhoStatisticsAction.treecorr.min_sep: 0.01
-      rhoStatisticsAction.treecorr.max_sep: 100
