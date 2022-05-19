@@ -283,6 +283,9 @@ class RhoPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(catPlot[col])
         catPlot = catPlot[mask]
 
+        if len(catPlot) < 2:
+            raise ValueError("Not enough sources to make a plot")
+
         # This should be unnecessary as we will always select stars
         sourceTypes = np.zeros(len(catPlot))
         for selector in self.config.sourceSelectorActions:
