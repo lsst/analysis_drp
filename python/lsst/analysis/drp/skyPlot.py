@@ -244,8 +244,8 @@ class SkyPlotTask(pipeBase.PipelineTask):
         The points plotted are those selected by the selectors specified in
         `self.config.selectorActions`.
         """
-        self.log.info("Plotting {}: the values of {} on a sky plot.".format(
-                      self.config.connections.plotName, self.config.axisLabels["z"]))
+        self.log.info("Plotting %s: the values of %s on a sky plot.",
+                      self.config.connections.plotName, self.config.axisLabels["z"])
 
         fig = plt.figure(dpi=300)
         ax = fig.add_subplot(111)

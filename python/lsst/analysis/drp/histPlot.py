@@ -276,7 +276,7 @@ class HistPlotTask(pipeBase.PipelineTask):
         patch is shown in the upper right corner of the resultant plot.
         """
         num_panels = len(self.config.panels)
-        self.log.info(f"Generating a {num_panels}-panel histogram plot.")
+        self.log.info("Generating a %d-panel histogram plot.", num_panels)
 
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(240, 240)
