@@ -217,7 +217,7 @@ tasks:
       axisActions.zAction.colB.colYy: "iyyPSF"
       axisActions.zAction.colB.colXy: "ixyPSF"
       axisActions.zAction.colB.halvePhaseAngle: False
-      connections.plotName: Ediff_ixxPSF_quiver
+      connections.plotName: Ediff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
       selectorActions.SnSelector: SnSelector
       selectorActions.SnSelector.bands: [""]
