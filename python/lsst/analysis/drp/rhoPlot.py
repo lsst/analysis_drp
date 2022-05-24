@@ -224,8 +224,10 @@ class RhoPlotTask(pipeBase.PipelineTask):
         inputs["tableName"] = localConnections.catPlot.name
         inputs["bands"] = bands if bands else dataId["band"]
         outputs = self.run(**inputs)
-        butlerQC.put(outputs, outputRefs)
-        plt.close()
+        # TODO: DM-34939 Remove the conditional butler.put
+        if outputs:
+            butlerQC.put(outputs, outputRefs)
+            plt.close()
 
     def run(self, catPlot, dataId, runName, tableName, bands):
         """Run the rho-statistics computation and plot them.
@@ -284,7 +286,10 @@ class RhoPlotTask(pipeBase.PipelineTask):
         catPlot = catPlot[mask]
 
         if len(catPlot) < 2:
-            raise ValueError("Not enough sources to make a plot")
+            self.log.error("Not enough sources to make Rho statistics plots")
+            # TODO: DM-34939 Raise ValueError after fixing the breakage
+            # in ci_hsc
+            return None
 
         # This should be unnecessary as we will always select stars
         sourceTypes = np.zeros(len(catPlot))
