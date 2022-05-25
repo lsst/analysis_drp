@@ -163,9 +163,9 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         `self.config.sourceTypeColName` is used for star galaxy separation.
         """
 
-        self.log.info(("Plotting {}: {} against {} on a color-color plot.".format(
+        self.log.info(("Plotting %s: %s against %s on a color-color plot.",
                        self.config.connections.plotName, self.config.axisLabels["x"],
-                       self.config.axisLabels["y"])))
+                       self.config.axisLabels["y"]))
 
         # Define a new colormap
         newBlues = mkColormap(["paleturquoise", "midnightblue"])

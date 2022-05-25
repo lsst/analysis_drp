@@ -325,8 +325,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         which points to plot and the statisticSelector actions to determine
         which points to use for the printed statistics.
         """
-        self.log.info(f"Plotting {self.config.connections.plotName}: "
-                      "the values of {self.config.axisLabels['y']} on a scatter plot.")
+        self.log.info("Plotting %s: the values of %s on a scatter plot.",
+                      self.config.connections.plotName, self.config.axisLabels['y'])
 
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(4, 4)

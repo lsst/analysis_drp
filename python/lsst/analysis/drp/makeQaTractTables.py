@@ -235,8 +235,8 @@ class BaseMakeQaTractTablesTask(pipeBase.PipelineTask):
                                    "band requested: {}".format(band))
         else:
             filterName = band
-        self.log.info("Aggregating QA table for {} tract {} including {} patches".
-                      format(filterName, tract, len(inputObjCats)))
+        self.log.info("Aggregating QA table for %s tract %d including %d patches",
+                      filterName, tract, len(inputObjCats))
         # It is much faster to concatenate a list of DataFrames than to
         # concatenate successively within the for loop.
         catList = []
@@ -254,7 +254,7 @@ class BaseMakeQaTractTablesTask(pipeBase.PipelineTask):
             cat = self.collateTable(inputCat, loadListObject, activeFilterName, filterName, haveFilter)
             catList.append(cat)
 
-        self.log.info("Concatenating tables from {} patches".format(len(catList)))
+        self.log.info("Concatenating tables from %d patches", len(catList))
         if not catList:
             raise RuntimeError("No catalogs read for {}.".format(inputObjCats))
         allCats = pd.concat(catList, axis=0)
@@ -420,8 +420,8 @@ class MakeForcedQaTractTablesTask(BaseMakeQaTractTablesTask):
             # "X,Y" notation for the patchId column.
             patchId = forcedCat["patchId"].unique()[0]
             tractId = forcedCat["tractId"].unique()[0]
-            self.log.info("Filter {} does not exist for: {}, {:2d} [{}].  Setting NaNs for patch "
-                          "columns...".format(filterName, tractId, int(patch), patchId))
+            self.log.info("Filter %s does not exist for: %d, %d [%s].  Setting NaNs for patch "
+                          "columns...", filterName, tractId, int(patch), patchId)
             forcedCat = pd.DataFrame().reindex_like(forcedCat)
             refCat = pd.DataFrame().reindex_like(refCat)
             measCat = pd.DataFrame().reindex_like(measCat)

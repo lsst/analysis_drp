@@ -1,12 +1,41 @@
-__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull",
-           "ExtinctionCorrectedMagDiff", "CalcE", "CalcEDiff", "CalcE1", "CalcE2", "CalcShapeSize"]
+# This file is part of analysis_drp.
+#
+# Developed for the LSST Data Management System.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.pipe.tasks.configurableActions import ConfigurableActionField
-from lsst.pipe.tasks.dataFrameActions import DataFrameAction, DivideColumns, MultiColumnAction
-from lsst.pex.config import ChoiceField, DictField, Field
-from astropy import units as u
-import numpy as np
+__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull",
+           "ExtinctionCorrectedMagDiff", "CalcE", "CalcE1", "CalcE2", "CalcEDiff", "CalcShapeSize",
+           "CalcRhoStatistics", ]
+
 import logging
+
+import numpy as np
+import treecorr
+from astropy import units as u
+
+from lsst.pex.config import ChoiceField, ConfigField, DictField, Field, FieldValidationError
+from lsst.pipe.tasks.configurableActions import ConfigurableActionField
+from lsst.pipe.tasks.dataFrameActions import (CoordColumn, DataFrameAction, DivideColumns,
+                                              FractionalDifferenceColumns, MultiColumnAction,
+                                              SingleColumnAction,)
+
+from ._treecorrConfig import BinnedCorr2Config
 
 _LOG = logging.getLogger(__name__)
 
@@ -150,8 +179,8 @@ class CalcE(MultiColumnAction):
     is biased in weak-lensing distortion, but does not suffer from selection
     artifacts.
 
-    Reference
-    ---------
+    References
+    ----------
     [1] Bartelmann, M. and Schneider, P., “Weak gravitational lensing”,
     Physics Reports, vol. 340, no. 4–5, pp. 291–472, 2001.
     doi:10.1016/S0370-1573(00)00082-X; https://arxiv.org/abs/astro-ph/9912508
@@ -275,6 +304,12 @@ class CalcEDiff(DataFrameAction):
         yield from self.colA.columns
         yield from self.colB.columns
 
+    def validate(self):
+        super().validate()
+        if self.colA.ellipticityType != self.colB.ellipticityType:
+            msg = "Both the ellipticities in CalcEDiff must have the same type."
+            raise FieldValidationError(self.colB.__class__.ellipticityType, self, msg)
+
     def __call__(self, df):
         eMeas = self.colA(df)
         ePSF = self.colB(df)
@@ -352,7 +387,8 @@ class CalcE1(MultiColumnAction):
     def validate(self):
         super().validate()
         if self.ellipticityType == "epsilon" and self.colXy is None:
-            raise ValueError("colXy is required for epsilon-type shear ellipticity")
+            msg = "colXy is required for epsilon-type shear ellipticity"
+            raise FieldValidationError(self.__class__.colXy, self, msg)
 
 
 class CalcE2(MultiColumnAction):
@@ -476,7 +512,311 @@ class CalcShapeSize(MultiColumnAction):
     def validate(self):
         super().validate()
         if self.sizeType == "determinant" and self.colXy is None:
-            raise ValueError("colXy is required for determinant-type size")
+            msg = "colXy is required for determinant-type size"
+            raise FieldValidationError(self.__class__.colXy, self, msg)
+
+
+class CalcRhoStatistics(DataFrameAction):
+    r"""Calculate Rho statistics.
+
+    Rho statistics refer to a collection of correlation functions involving
+    PSF ellipticity and size residuals. They quantify the contribution from PSF
+    leakage due to errors in PSF modeling to the weak lensing shear correlation
+    functions. The standard rho statistics are indexed from 1 to 5, and
+    this action calculates a sixth rho statistic, indexed 0.
+
+    Notes
+    -----
+    The exact definitions of rho statistics as defined in [1]_ are given below.
+    In addition to these five, we also compute the auto-correlation function of
+    the fractional size residuals and call it as the :math:`\rho_0( \theta )`.
+
+    .. math::
+
+       \rho_0(\theta) &= \left\langle \frac{\delta T_{PSF}}{T_{PSF}}(x) \frac{\delta T_{PSF}}{T_{PSF}}(x+\theta) \right\rangle  # noqa: E501, W505
+
+       \rho_1(\theta) &= \langle \delta e^*_{PSF}(x) \delta e_{PSF}(x+\theta) \rangle  # noqa: W505
+
+       \rho_2(\theta) &= \langle e^*_{PSF}(x) \delta e_{PSF}(x+\theta) \rangle
+
+       \rho_3(\theta) &= \left\langle (e^*_{PSF}\frac{\delta T_{PSF}}{T_{PSF}}(x)) \delta e_{PSF}(x+\theta) \right\rangle  # noqa: E501, W505
+
+       \rho_4(\theta) &= \left\langle (\delta e^*_{PSF}(x) (e_{PSF}\frac{\delta T_{PSF}}{T_{PSF}}(x+\theta)) \right\rangle  # noqa: E501, W505
+
+       \rho_5(\theta) &= \left\langle (e^*_{PSF}(x) (e_{PSF}\frac{\delta T_{PSF}}{T_{PSF}}(x+\theta)) \right\rangle  # noqa: E501, W505
+
+    The definition of ellipticity used in [1]_ correspond to ``epsilon``-type ellipticity, which is typically
+    smaller by a factor of 4 than using ``chi``-type ellipticity.
+
+    References
+    ----------
+    .. [1] Jarvis, M., Sheldon, E., Zuntz, J., Kacprzak, T., Bridle, S. L., et. al (2016).  # noqa: W501
+           The DES Science Verification weak lensing shear catalogues.
+           MNRAS, 460, 2245–2281.
+           https://doi.org/10.1093/mnras/stw990;
+           https://arxiv.org/abs/1507.05603
+    """
+
+    colRa = ConfigurableActionField(doc="RA column", dtype=SingleColumnAction, default=CoordColumn)
+
+    colDec = ConfigurableActionField(doc="Dec column", dtype=SingleColumnAction, default=CoordColumn)
+
+    colXx = Field(
+        doc="The column name to get the xx shape component from.",
+        dtype=str,
+        default="ixx"
+    )
+
+    colYy = Field(
+        doc="The column name to get the yy shape component from.",
+        dtype=str,
+        default="iyy"
+    )
+
+    colXy = Field(
+        doc="The column name to get the xy shape component from.",
+        dtype=str,
+        default="ixy"
+    )
+
+    colPsfXx = Field(
+        doc="The column name to get the PSF xx shape component from.",
+        dtype=str,
+        default="ixxPSF"
+    )
+
+    colPsfYy = Field(
+        doc="The column name to get the PSF yy shape component from.",
+        dtype=str,
+        default="iyyPSF"
+    )
+
+    colPsfXy = Field(
+        doc="The column name to get the PSF xy shape component from.",
+        dtype=str,
+        default="ixyPSF"
+    )
+
+    ellipticityType = ChoiceField(
+        doc="The type of ellipticity to calculate",
+        dtype=str,
+        allowed={"chi": "Distortion, defined as (Ixx - Iyy)/(Ixx + Iyy)",
+                 "epsilon": ("Shear, defined as (Ixx - Iyy)/"
+                             "(Ixx + Iyy + 2*sqrt(Ixx*Iyy - Ixy**2))"
+                             ),
+                 },
+        default="chi",
+    )
+
+    sizeType = ChoiceField(
+        doc="The type of size to calculate",
+        dtype=str,
+        default="trace",
+        allowed={"trace": "trace radius",
+                 "determinant": "determinant radius",
+                 },
+    )
+
+    treecorr = ConfigField(
+        doc="TreeCorr configuration",
+        dtype=BinnedCorr2Config,
+    )
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.treecorr = BinnedCorr2Config()
+        self.treecorr.sep_units = "arcmin"
+        self.treecorr.metric = "Arc"
+        # Note: self.treecorr is not configured completely at this point.
+        # Exactly three of nbins, bin_size, min_sep, max_sep need to be set.
+        # These are expected to be set in the tasks that use this action.
+
+    @property
+    def columns(self):
+        return (
+            self.colXx,
+            self.colYy,
+            self.colXy,
+            self.colPsfXx,
+            self.colPsfYy,
+            self.colPsfXy,
+            self.colRa.column,
+            self.colDec.column,
+        )
+
+    def __call__(self, df):
+        # Create instances of various actions.
+        calcEMeas = CalcE(
+            colXx=self.colXx,
+            colYy=self.colYy,
+            colXy=self.colXy,
+            ellipticityType=self.ellipticityType,
+        )
+        calcEpsf = CalcE(
+            colXx=self.colPsfXx,
+            colYy=self.colPsfYy,
+            colXy=self.colPsfXy,
+            ellipticityType=self.ellipticityType,
+        )
+
+        calcEDiff = CalcEDiff(colA=calcEMeas, colB=calcEpsf)
+
+        calcSizeResiduals = FractionalDifferenceColumns(
+            colA=CalcShapeSize(
+                colXx=self.colXx,
+                colYy=self.colYy,
+                colXy=self.colXy,
+                sizeType=self.sizeType,
+            ),
+            colB=CalcShapeSize(
+                colXx=self.colPsfXx,
+                colYy=self.colPsfYy,
+                colXy=self.colPsfXy,
+                sizeType=self.sizeType,
+            ),
+        )
+
+        # Call the actions on the dataframe.
+        eMEAS = calcEMeas(df)
+        e1, e2 = np.real(eMEAS), np.imag(eMEAS)
+        eRes = calcEDiff(df)
+        e1Res, e2Res = np.real(eRes), np.imag(eRes)
+        sizeRes = calcSizeResiduals(df)
+
+        # Scale the sizeRes by ellipticities
+        e1SizeRes = e1*sizeRes
+        e2SizeRes = e2*sizeRes
+
+        # Package the arguments to capture auto-/cross-correlations for the
+        # Rho statistics.
+        args = {
+            0: (sizeRes, None),
+            1: (e1Res, e2Res, None, None),
+            2: (e1, e2, e1Res, e2Res),
+            3: (e1SizeRes, e2SizeRes, None, None),
+            4: (e1Res, e2Res, e1SizeRes, e2SizeRes),
+            5: (e1, e2, e1SizeRes, e2SizeRes),
+        }
+
+        ra = self.colRa(df)
+        dec = self.colDec(df)
+
+        # If RA and DEC are not in radians, they are assumed to be in degrees.
+        if self.colRa.inRadians:
+            ra *= 180.0/np.pi
+        if self.colDec.inRadians:
+            dec *= 180.0/np.pi
+
+        # Convert the self.treecorr Config to a kwarg dict.
+        treecorrKwargs = self.treecorr.toDict()
+
+        # Pass the appropriate arguments to the correlator and build a dict
+        rhoStats = {
+            rhoIndex: self._corrSpin2(ra, dec, *(args[rhoIndex]), **treecorrKwargs)
+            for rhoIndex in range(1, 6)
+        }
+        rhoStats[0] = self._corrSpin0(ra, dec, *(args[0]), **treecorrKwargs)
+
+        return rhoStats
+
+    @classmethod
+    def _corrSpin0(cls, ra, dec, k1, k2=None, raUnits="degrees", decUnits="degrees", **treecorrKwargs):
+        """Function to compute correlations between at most two scalar fields.
+
+        This is used to compute Rho0 statistics, given the appropriate spin-0
+        (scalar) fields, usually fractional size residuals.
+
+        Parameters
+        ----------
+        ra : `numpy.array`
+            The right ascension values of entries in the catalog.
+        dec : `numpy.array`
+            The declination values of entries in the catalog.
+        k1 : `numpy.array`
+            The primary scalar field.
+        k2 : `numpy.array`, optional
+            The secondary scalar field.
+            Autocorrelation of the primary field is computed if `None`.
+        raUnits : `str`, optional
+            Unit of the right ascension values. Valid options are
+            "degrees", "arcmin", "arcsec", "hours" or "radians".
+        decUnits : `str`, optional
+            Unit of the declination values. Valid options are
+            "degrees", "arcmin", "arcsec", "hours" or "radians".
+        **treecorrKwargs
+            Keyword arguments to be passed to `treecorr.KKCorrelation`.
+
+        Returns
+        -------
+        xy : `treecorr.KKCorrelation`
+            A `treecorr.KKCorrelation` object containing the correlation
+            function.
+        """
+
+        xy = treecorr.KKCorrelation(**treecorrKwargs)
+        catA = treecorr.Catalog(ra=ra, dec=dec, k=k1, ra_units=raUnits,
+                                dec_units=decUnits)
+        if k2 is None:
+            # Calculate the auto-correlation
+            xy.process(catA)
+        else:
+            catB = treecorr.Catalog(ra=ra, dec=dec, k=k2, ra_units=raUnits,
+                                    dec_units=decUnits)
+            # Calculate the cross-correlation
+            xy.process(catA, catB)
+
+        return xy
+
+    @classmethod
+    def _corrSpin2(cls, ra, dec, g1a, g2a, g1b=None, g2b=None,
+                   raUnits="degrees", decUnits="degrees", **treecorrKwargs):
+        """Function to compute correlations between shear-like fields.
+
+        This is used to compute Rho statistics, given the appropriate spin-2
+        (shear-like) fields.
+
+        Parameters
+        ----------
+        ra : `numpy.array`
+            The right ascension values of entries in the catalog.
+        dec : `numpy.array`
+            The declination values of entries in the catalog.
+        g1a : `numpy.array`
+            The first component of the primary shear-like field.
+        g2a : `numpy.array`
+            The second component of the primary shear-like field.
+        g1b : `numpy.array`, optional
+            The first component of the secondary shear-like field.
+            Autocorrelation of the primary field is computed if `None`.
+        g2b : `numpy.array`, optional
+            The second component of the secondary shear-like field.
+            Autocorrelation of the primary field is computed if `None`.
+        raUnits : `str`, optional
+            Unit of the right ascension values. Valid options are
+            "degrees", "arcmin", "arcsec", "hours" or "radians".
+        decUnits : `str`, optional
+            Unit of the declination values. Valid options are
+            "degrees", "arcmin", "arcsec", "hours" or "radians".
+        **treecorrKwargs
+            Keyword arguments to be passed to `treecorr.GGCorrelation`.
+
+        Returns
+        -------
+        xy : `treecorr.GGCorrelation`
+            A `treecorr.GGCorrelation` object containing the correlation
+            function.
+        """
+        xy = treecorr.GGCorrelation(**treecorrKwargs)
+        catA = treecorr.Catalog(ra=ra, dec=dec, g1=g1a, g2=g2a, ra_units=raUnits, dec_units=decUnits)
+        if g1b is None or g2b is None:
+            # Calculate the auto-correlation
+            xy.process(catA)
+        else:
+            catB = treecorr.Catalog(ra=ra, dec=dec, g1=g1b, g2=g2b, ra_units=raUnits, dec_units=decUnits)
+            # Calculate the cross-correlation
+            xy.process(catA, catB)
+
+        return xy
 
 
 class ColorDiff(MultiColumnAction):
@@ -616,15 +956,18 @@ class ColorDiffPull(ColorDiff):
             color1_errors = True
         elif ((self.color1_flux1_err and not self.color1_flux2_err)
               or (not self.color1_flux1_err and self.color1_flux2_err)):
-            raise ValueError("Must set both color1_flux1_err and color1_flux2_err if either is set.")
+            msg = "Must set both color1_flux1_err and color1_flux2_err if either is set."
+            raise FieldValidationError(self.__class__.color1_flux1_err, self, msg)
         if self.color2_flux1_err and self.color2_flux2_err:
             color2_errors = True
         elif ((self.color2_flux1_err and not self.color2_flux2_err)
               or (not self.color2_flux1_err and self.color2_flux2_err)):
-            raise ValueError("Must set both color2_flux1_err and color2_flux2_err if either is set.")
+            msg = "Must set both color2_flux1_err and color2_flux2_err if either is set."
+            raise FieldValidationError(self.__class__.color2_flux1_err, self, msg)
 
         if not color1_errors and not color2_errors:
-            raise ValueError("Must configure flux errors for at least color1 or color2.")
+            msg = "Must configure flux errors for at least color1 or color2."
+            raise FieldValidationError(self.__class__.color1_flux1_err, self, msg)
 
     @property
     def columns(self):

@@ -71,8 +71,8 @@ class QuiverPlotTask(SkyPlotTask):
         `self.config.selectorActions`.
         """
         # TODO: DM-34057 - the notes in the above docstring aren't quite right.
-        self.log.info("Plotting {}: the values of {} on a quiver plot.".format(
-                      self.config.connections.plotName, self.config.axisLabels["z"]))
+        self.log.info("Plotting %s: the values of %s on a quiver plot.",
+                      self.config.connections.plotName, self.config.axisLabels["z"])
 
         fig = plt.figure(dpi=300)
         ax = fig.add_subplot(111, aspect=1.0)
