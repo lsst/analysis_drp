@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -27,6 +27,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.path import Path
 from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
 from lsst.skymap import BaseSkyMap
@@ -41,6 +42,7 @@ from .statistics import sigmaMad
 
 cmapPatch = plt.cm.coolwarm.copy()
 cmapPatch.set_bad(color="none")
+matplotlib.use("Agg")
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,

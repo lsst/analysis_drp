@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ import lsst.pex.config as pexConfig
 
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
 from . import calcFunctors  # noqa
+
+matplotlib.use("Agg")
 
 
 class HistPlotTaskConnections(pipeBase.PipelineTaskConnections,
