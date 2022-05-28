@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
@@ -15,6 +16,8 @@ from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
+
+matplotlib.use("Agg")
 
 __all__ = ["SkyPlotTaskConfig", "SkyPlotTask"]
 

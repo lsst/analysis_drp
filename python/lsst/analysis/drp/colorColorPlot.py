@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pathEffects
 import numpy as np
@@ -10,6 +11,8 @@ from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import ExtinctionCorrectedMagDiff
 from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
+
+matplotlib.use("Agg")
 
 
 class ColorColorPlotConnections(pipeBase.PipelineTaskConnections,

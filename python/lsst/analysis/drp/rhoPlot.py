@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,6 +29,8 @@ from lsst.pipe.tasks.configurableActions import ConfigurableActionField, Configu
 from . import dataSelectors
 from .calcFunctors import CalcRhoStatistics
 from .plotUtils import addPlotInfo, parsePlotInfo
+
+matplotlib.use("Agg")
 
 __all__ = ["RhoPlotTaskConfig", "RhoPlotTask"]
 
