@@ -443,7 +443,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         ax = fig.add_subplot(gs[1:, :-1])
         binThresh = 5
 
-        yBinsOut = []
         linesForLegend = []
 
         if (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
@@ -498,11 +497,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             medYs = np.nanmedian(ys)
             fiveSigmaHigh = medYs + 5.0*sigMadYs
             fiveSigmaLow = medYs - 5.0*sigMadYs
-            binSize = (fiveSigmaHigh - fiveSigmaLow)/101.0
+            binSize = (fiveSigmaHigh - fiveSigmaLow)/self.config.nBins
             yEdges = np.arange(fiveSigmaLow, fiveSigmaHigh, binSize)
 
             counts, xBins, yBins = np.histogram2d(xs, ys, bins=(xEdges, yEdges))
-            yBinsOut.append(yBins)
             countsYs = np.sum(counts, axis=1)
 
             ids = np.where((countsYs > binThresh))[0]
@@ -522,7 +520,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 sigMads = np.zeros(len(xEdgesPlot))
 
                 for (i, xEdge) in enumerate(xEdgesPlot):
-                    ids = np.where((xs < xEdge) & (xs > xEdges[i]) & (np.isfinite(ys)))[0]
+                    ids = np.where((xs < xEdge) & (xs >= xEdges[i]) & (np.isfinite(ys)))[0]
                     med = np.median(ys[ids])
                     sigMad = sigmaMad(ys[ids])
                     meds[i] = med
