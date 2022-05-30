@@ -19,9 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["SNCalculator", "KronFluxDivPsfFlux", "MagDiff", "ColorDiff", "ColorDiffPull",
-           "ExtinctionCorrectedMagDiff", "CalcE", "CalcE1", "CalcE2", "CalcEDiff", "CalcShapeSize",
-           "CalcRhoStatistics", ]
+__all__ = ["SNCalculator", "SnDiffCalculator", "SnPercentDiffCalculator", "KronFluxDivPsfFlux",
+           "MagDiff", "ColorDiff", "ColorDiffPull", "ExtinctionCorrectedMagDiff",
+           "CalcE", "CalcE1", "CalcE2", "CalcEDiff", "CalcShapeSize", "CalcRhoStatistics", ]
 
 import logging
 
@@ -33,7 +33,8 @@ from lsst.pex.config import ChoiceField, ConfigField, DictField, Field, FieldVal
 from lsst.pipe.tasks.configurableActions import ConfigurableActionField
 from lsst.pipe.tasks.dataFrameActions import (CoordColumn, DataFrameAction, DivideColumns,
                                               FractionalDifferenceColumns, MultiColumnAction,
-                                              SingleColumnAction,)
+                                              SingleColumnAction, DiffOfDividedColumns,
+                                              PercentDiffOfDividedColumns)
 
 from ._treecorrConfig import BinnedCorr2Config
 
@@ -47,6 +48,36 @@ class SNCalculator(DivideColumns):
         super().setDefaults()
         self.colA.column = "i_psfFlux"
         self.colB.column = "i_psfFluxErr"
+
+
+class SnDiffCalculator(DiffOfDividedColumns):
+    """Calculate the signal to noise difference between two measurements.
+
+    By default the i band flux is used and the S/N comparison is between PSF
+    and CModel fluxes.
+    """
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.colA1.column = "i_psfFlux"
+        self.colB1.column = "i_psfFluxErr"
+        self.colA2.column = "i_cModelFlux"
+        self.colB2.column = "i_cModelFluxErr"
+
+
+class SnPercentDiffCalculator(PercentDiffOfDividedColumns):
+    """Calculate the signal to noise %difference between two measurements.
+
+    By default the i band flux is used and the S/N comparison is between PSF
+    and CModel fluxes.
+    """
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.colA1.column = "i_psfFlux"
+        self.colB1.column = "i_psfFluxErr"
+        self.colA2.column = "i_cModelFlux"
+        self.colB2.column = "i_cModelFluxErr"
 
 
 class KronFluxDivPsfFlux(DivideColumns):
