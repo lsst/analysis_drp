@@ -153,6 +153,29 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         dtype=bool,
     )
 
+    xLims = pexConfig.ListField(
+        doc="Minimum and maximum x-axis limit to force (provided as a list of [xMin, xMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    yLims = pexConfig.ListField(
+        doc="Minimum and maximum y-axis limit to force (provided as a list of [yMin, yMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    minPointSize = pexConfig.Field(
+        doc="When plotting points (as opposed to 2D hist bins), the minimum size they can be.  Some "
+            "relative scaling will be perfomed depending on the \"flavor\" of the set of points.",
+        default=2.0,
+        dtype=float,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.magAction.column = "i_cModelFlux"
@@ -294,10 +317,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot
         fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
-
         return pipeBase.Struct(scatterPlot=fig)
 
-    def scatterPlotWithTwoHists(self, catPlot, plotInfo, sumStats, yLims=False, xLims=False):
+    def scatterPlotWithTwoHists(self, catPlot, plotInfo, sumStats):
         """Makes a generic plot with a 2D histogram and collapsed histograms of
         each axis.
 
@@ -319,14 +341,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             A dictionary where the patchIds are the keys which store the R.A.
             and dec of the corners of the patch, along with a summary
             statistic for each patch.
-        yLims : `Bool` or `tuple`, optional
-            The y axis limits to use for the plot.  If `False`, they are
-            calculated from the data.  If being given a tuple of
-            (yMin, yMax).
-        xLims : `Bool` or `tuple`, optional
-            The x axis limits to use for the plot.  If `False`, they are
-            calculated from the data.
-            If being given a tuple of (xMin, xMax).
 
         Returns
         -------
@@ -343,6 +357,11 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         of the resultant plot. The code uses the selectorActions to decide
         which points to plot and the statisticSelector actions to determine
         which points to use for the printed statistics.
+
+        The axis limits are set based on the values of `config.xLim` and
+        `config.yLims`.  If provided (as a `list` of [min, max]), those will
+        be used.  If `None` (the default), the axis limits will be computed
+        and set based on the data.
         """
         self.log.info("Plotting %s: the values of %s on a scatter plot.",
                       self.config.connections.plotName, self.config.axisLabels['y'])
@@ -538,7 +557,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # Check which points are outside 3 sigma MAD of the median
                 # and plot these as points.
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
-                ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs[~inside], ys[~inside], ".", ms=self.config.minPointSize, alpha=0.3,
+                        mfc=color, mec=color, zorder=-1)
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
@@ -586,7 +606,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
 
             else:
-                ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs, ys, ".", ms=self.config.minPointSize + 3, alpha=0.3, mfc=color, mec=color,
+                        zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
                 medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.3g}", lw=0.8)
                 linesForLegend.append(medLine)
@@ -604,8 +625,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             plotMed = np.nanmedian(ysGalaxies)
         if len(xs) < 2:
             meds = [np.median(ys)]
-        if yLims:
-            ax.set_ylim(yLims[0], yLims[1])
+
+        if self.config.yLims is not None:
+            yLimMin = self.config.yLims[0]
+            yLimMax = self.config.yLims[1]
         else:
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
@@ -616,10 +639,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             numSig += 1
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs
-            ax.set_ylim(yLimMin, yLimMax)
+        ax.set_ylim(yLimMin, yLimMax)
 
-        if xLims:
-            ax.set_xlim(xLims[0], xLims[1])
+        if self.config.xLims is not None:
+            ax.set_xlim(self.config.xLims[0], self.config.xLims[1])
         elif len(xs) > 2:
             if xMin is None:
                 xMin = xs1 - 2*xScale
