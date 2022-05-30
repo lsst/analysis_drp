@@ -562,17 +562,19 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
-                bbox = dict(edgecolor=color, linestyle="--", facecolor="none")
-                highThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
-                statText = f"S/N > {highThresh} Stats ({magCol} < {highMags[sourceType]})\n"
-                statText += highStats[sourceType]
-                fig.text(xPos, 0.090, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    bbox = dict(edgecolor=color, linestyle="--", facecolor="none")
+                    highThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
+                    statText = f"S/N > {highThresh} Stats [{magCol} $\\lesssim$ {highMags[sourceType]}]\n"
+                    statText += highStats[sourceType]
+                    fig.text(xPos, 0.090, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
 
-                bbox = dict(edgecolor=color, linestyle=":", facecolor="none")
-                lowThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
-                statText = f"S/N > {lowThresh} Stats ({magCol} < {lowMags[sourceType]})\n"
-                statText += lowStats[sourceType]
-                fig.text(xPos, 0.020, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    bbox = dict(edgecolor=color, linestyle=":", facecolor="none")
+                    lowThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
+                    statText = f"S/N > {lowThresh} Stats [{magCol} $\\lesssim$ {lowMags[sourceType]}]\n"
+                    statText += lowStats[sourceType]
+                    fig.text(xPos, 0.020, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
 
                 if self.config.plot2DHist:
                     histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
@@ -584,26 +586,29 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # numbers of sources.
                 sources = (catPlot["sourceType"] == sourceType)
                 statInfo = catPlot["useForStats"].loc[sources].values
-                highSn = (statInfo == 1)
-                lowSn = ((statInfo == 2) | (statInfo == 2))
-                if np.sum(highSn) < 100 and np.sum(highSn) > 0:
-                    ax.plot(xs[highSn], ys[highSn], marker="x", ms=4, mec="w", mew=2, ls="none")
-                    highSnLine, = ax.plot(xs[highSn], ys[highSn], color=color, marker="x", ms=4, ls="none",
-                                          label="High SN")
-                    linesForLegend.append(highSnLine)
-                    xMin = np.min(xs[highSn])
-                else:
-                    ax.axvline(float(highMags[sourceType]), color=color, ls="--")
-
-                if np.sum(lowSn) < 100 and np.sum(lowSn) > 0:
-                    ax.plot(xs[lowSn], ys[lowSn], marker="+", ms=4, mec="w", mew=2, ls="none")
-                    lowSnLine, = ax.plot(xs[lowSn], ys[lowSn], color=color, marker="+", ms=4, ls="none",
-                                         label="Low SN")
-                    linesForLegend.append(lowSnLine)
-                    if xMin is None or xMin > np.min(xs[lowSn]):
-                        xMin = np.min(xs[lowSn])
-                else:
-                    ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    highSn = (statInfo == 1)
+                    if np.sum(highSn) < 100 and np.sum(highSn) > 0:
+                        ax.plot(xs[highSn], ys[highSn], marker="x", ms=self.config.minPointSize + 1,
+                                mec="w", mew=2, ls="none")
+                        highSnLine, = ax.plot(xs[highSn], ys[highSn], color=color, marker="x",
+                                              ms=self.config.minPointSize + 1, ls="none", label="High SN")
+                        linesForLegend.append(highSnLine)
+                        xMin = np.min(xs[highSn])
+                    else:
+                        ax.axvline(float(highMags[sourceType]), color=color, ls="--")
+                if hasattr(self.config.lowSnStatisticSelectorActions, "statSelector"):
+                    lowSn = ((statInfo == 2) | (statInfo == 2))
+                    if np.sum(lowSn) < 100 and np.sum(lowSn) > 0:
+                        ax.plot(xs[lowSn], ys[lowSn], marker="+", ms=self.config.minPointSize + 1, mec="w",
+                                mew=2, ls="none")
+                        lowSnLine, = ax.plot(xs[lowSn], ys[lowSn], color=color, marker="+",
+                                             ms=self.config.minPointSize + 1, ls="none", label="Low SN")
+                        linesForLegend.append(lowSnLine)
+                        if xMin is None or xMin > np.min(xs[lowSn]):
+                            xMin = np.min(xs[lowSn])
+                    else:
+                        ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
 
             else:
                 ax.plot(xs, ys, ".", ms=self.config.minPointSize + 3, alpha=0.3, mfc=color, mec=color,
