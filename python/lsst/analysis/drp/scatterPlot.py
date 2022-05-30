@@ -369,8 +369,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(4, 4)
 
-        newBlues = mkColormap(["paleturquoise", "midnightBlue"])
-        newReds = mkColormap(["lemonchiffon", "firebrick"])
+        newBlues = mkColormap(["paleturquoise", "darkblue"])
+        newReds = mkColormap(["lemonchiffon", "tab:red"])
 
         # Need to separate stars and galaxies
         stars = (catPlot["sourceType"] == 1)
@@ -448,25 +448,25 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         if (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
                 and not np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])):
-            toPlotList = [(xsStars.values, ysStars.values, "midnightblue", newBlues,
+            toPlotList = [(xsStars.values, ysStars.values, "midnightBlue", newBlues, "lightsteelblue",
                            sourceTypeMapper["stars"])]
         elif (np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])
                 and not np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])):
-            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds,
+            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds, "orange",
                            sourceTypeMapper["galaxies"])]
         elif (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
                 and np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])):
-            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds,
+            toPlotList = [(xsGalaxies.values, ysGalaxies.values, "firebrick", newReds, "orange",
                            sourceTypeMapper["galaxies"]),
-                          (xsStars.values, ysStars.values, "midnightblue", newBlues,
+                          (xsStars.values, ysStars.values, "midnightblue", newBlues, "lightsteelblue",
                            sourceTypeMapper["stars"])]
         elif np.any(catPlot["sourceType"] == sourceTypeMapper["unknowns"]):
             unknowns = (catPlot["sourceType"] == sourceTypeMapper["unknowns"])
             toPlotList = [(catPlot.loc[unknowns, xCol].values, catPlot.loc[unknowns, yCol].values,
-                           "green", None, sourceTypeMapper["unknowns"])]
+                           "green", None, None, sourceTypeMapper["unknowns"])]
         elif np.any(catPlot["sourceType"] == sourceTypeMapper["all"]):
-            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", None,
-                           sourceTypeMapper["all"])]
+            toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", plt.get_cmap("plasma_r"),
+                           "darkorchid", sourceTypeMapper["all"])]
         else:
             toPlotList = []
             noDataFig = plt.Figure()
@@ -475,7 +475,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             return noDataFig
 
         xMin = None
-        for (j, (xs, ys, color, cmap, sourceType)) in enumerate(toPlotList):
+        histImList = []
+        for (j, (xs, ys, color, cmap, colorUnder, sourceType)) in enumerate(toPlotList):
+            cmap.set_under(color=colorUnder, alpha=1.0)
+            cmap.colorbar_extend = "min"
             sigMadYs = sigmaMad(ys, nan_policy="omit")
             if len(xs) < 2:
                 medLine, = ax.plot(xs, np.nanmedian(ys), color,
@@ -486,7 +489,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                                       label=r"$\sigma_{MAD}$: " + f"{sigMads[0]:0.3g}")
                 ax.plot(xs, np.nanmedian(ys) - 1.0*sigMads, color, alpha=0.8)
                 linesForLegend.append(sigMadLine)
-                histIm = None
                 continue
 
             [xs1, xs25, xs50, xs75, xs95, xs97] = np.nanpercentile(xs, [1, 25, 50, 75, 95, 97])
@@ -509,6 +511,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             xEdgesPlot = xEdges[ids][1:]
             xEdges = xEdges[ids]
 
+            madLw = 1.0  # For line-width setting
+
             if len(ids) > 1:
                 # Create the codes needed to turn the sigmaMad lines
                 # into a path to speed up checking which points are
@@ -530,35 +534,36 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     threeSigMadVerts[i, :] = [xEdge, med + 3*sigMad]
                     threeSigMadVerts[-(i + 1), :] = [xEdge, med - 3*sigMad]
 
-                medLine, = ax.plot(xEdgesPlot, meds, color, label="Running Median")
+                medLine, = ax.plot(xEdgesPlot, meds, color, lw=madLw + 0.5, label="Running Median")
                 linesForLegend.append(medLine)
 
                 # Make path to check which points lie within one sigma mad
                 threeSigMadPath = Path(threeSigMadVerts, codes)
 
-                # Add lines for the median +/- 3 * sigma MAD
-                threeSigMadLine, = ax.plot(xEdgesPlot, threeSigMadVerts[:len(xEdgesPlot), 1], color,
-                                           alpha=0.4, label=r"3$\sigma_{MAD}$")
-                ax.plot(xEdgesPlot[::-1], threeSigMadVerts[len(xEdgesPlot):, 1], color, alpha=0.4)
-
                 # Add lines for the median +/- 1 * sigma MAD
-                sigMadLine, = ax.plot(xEdgesPlot, meds + 1.0*sigMads, color, alpha=0.8,
+                sigMadLine, = ax.plot(xEdgesPlot, meds + 1.0*sigMads, color, alpha=0.8, lw=madLw,
                                       label=r"$\sigma_{MAD}$")
                 linesForLegend.append(sigMadLine)
-                ax.plot(xEdgesPlot, meds - 1.0*sigMads, color, alpha=0.8)
+                ax.plot(xEdgesPlot, meds - 1.0*sigMads, color, alpha=0.8, lw=madLw)
 
                 # Add lines for the median +/- 2 * sigma MAD
-                twoSigMadLine, = ax.plot(xEdgesPlot, meds + 2.0*sigMads, color, alpha=0.6,
+                twoSigMadLine, = ax.plot(xEdgesPlot, meds + 2.0*sigMads, color, alpha=0.65, lw=madLw,
                                          label=r"2$\sigma_{MAD}$")
                 linesForLegend.append(twoSigMadLine)
+                ax.plot(xEdgesPlot, meds - 2.0*sigMads, color, alpha=0.65, lw=madLw)
+
+                # Add lines for the median +/- 3 * sigma MAD
+                threeSigMadLine, = ax.plot(xEdgesPlot, threeSigMadVerts[:len(xEdgesPlot), 1], color,
+                                           alpha=0.5, lw=madLw, label=r"3$\sigma_{MAD}$")
                 linesForLegend.append(threeSigMadLine)
-                ax.plot(xEdgesPlot, meds - 2.0*sigMads, color, alpha=0.6)
+                ax.plot(xEdgesPlot[::-1], threeSigMadVerts[len(xEdgesPlot):, 1], color, alpha=0.5,
+                        lw=madLw)
 
                 # Check which points are outside 3 sigma MAD of the median
                 # and plot these as points.
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
-                ax.plot(xs[~inside], ys[~inside], ".", ms=self.config.minPointSize, alpha=0.3,
-                        mfc=color, mec=color, zorder=-1)
+                ax.plot(xs[~inside], ys[~inside], ".", ms=self.config.minPointSize, alpha=1.0,
+                        mfc=colorUnder, mec=colorUnder, zorder=-1)
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
@@ -577,7 +582,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                     fig.text(xPos, 0.020, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
 
                 if self.config.plot2DHist:
-                    histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
+                    histImList.append(ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1,
+                                                zorder=-2))
 
                 # If there are not many sources being used for the
                 # statistics then plot them individually as just
@@ -611,23 +617,24 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                         ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
 
             else:
-                ax.plot(xs, ys, ".", ms=self.config.minPointSize + 3, alpha=0.3, mfc=color, mec=color,
+                ax.plot(xs, ys, ".", ms=self.config.minPointSize + 3, alpha=0.5, mfc=color, mec=color,
                         zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
-                medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.3g}", lw=0.8)
+                medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.3g}", lw=madLw + 0.5)
                 linesForLegend.append(medLine)
                 sigMads = np.array([sigmaMad(ys, nan_policy="omit")]*len(xs))
-                sigMadLine, = ax.plot(xs, meds + 1.0*sigMads, color, alpha=0.8, lw=0.8,
+                sigMadLine, = ax.plot(xs, meds + 1.0*sigMads, color, alpha=0.8, lw=madLw,
                                       label=r"$\sigma_{MAD}$: " + f"{sigMads[0]:0.3g}")
-                ax.plot(xs, meds - 1.0*sigMads, color, alpha=0.8)
+                ax.plot(xs, meds - 1.0*sigMads, color, alpha=0.8, lw=madLw)
                 linesForLegend.append(sigMadLine)
-                histIm = None
 
         # Set the scatter plot limits
         if len(ysStars) > 0:
             plotMed = np.nanmedian(ysStars)
-        else:
+        elif len(ysGalaxies) > 0:
             plotMed = np.nanmedian(ysGalaxies)
+        else:
+            plotMed = np.nanmedian(ys)
         if len(xs) < 2:
             meds = [np.median(ys)]
 
@@ -705,10 +712,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         sideHist.axes.get_yaxis().set_visible(False)
         sideHist.set_xlabel("Number", fontsize=8)
-        if self.config.plot2DHist and histIm is not None:
+        if self.config.plot2DHist and len(histImList) > 0:
             divider = make_axes_locatable(sideHist)
             cax = divider.append_axes("right", size="8%", pad=0)
-            plt.colorbar(histIm, cax=cax, orientation="vertical", label="Number of Points Per Bin")
+            plt.colorbar(histImList[0], cax=cax, orientation="vertical", label="Number of Points Per Bin")
 
         # Corner plot of patches showing summary stat in each
         axCorner = plt.gcf().add_subplot(gs[0, -1])
