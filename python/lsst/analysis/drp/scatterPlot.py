@@ -669,7 +669,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
 
         # Corner plot of patches showing summary stat in each
         sumPlotLoc = gs[0, -1]
-        addSummaryPlot(fig, sumPlotLoc, sumStats)
+        addSummaryPlot(fig, sumPlotLoc, sumStats, self.config.axisLabels["y"])
 
         plt.draw()
         plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22, left=0.21)
