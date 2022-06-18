@@ -9,8 +9,8 @@ import lsst.pex.config as pexConfig
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import ExtinctionCorrectedMagDiff
+from .dataSelectors import FlagSelector, SnSelector, StarIdentifier, GalaxyIdentifier, CoaddPlotFlagSelector
 from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
-from . import dataSelectors as dataSelectors
 
 matplotlib.use("Agg")
 
@@ -48,15 +48,86 @@ class ColorColorPlotConfig(pipeBase.PipelineTaskConfig,
 
     sourceIdentifierActions = ConfigurableActionStructField(
         doc="What types of sources to use.",
-        default={"starIdentifier": dataSelectors.StarIdentifier(),
-                 "galaxyIdentifier": dataSelectors.GalaxyIdentifier()},
+        default={"starIdentifier": StarIdentifier,
+                 "galaxyIdentifier": GalaxyIdentifier},
     )
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector,
-                 "catSnSelector": dataSelectors.SnSelector},
+        default={"flagSelector": CoaddPlotFlagSelector,
+                 "extraFlagSelector": FlagSelector,
+                 "catSnSelector": SnSelector},
     )
+
+    bands = pexConfig.DictField(
+        doc="Names of the bands to use for the colors.  Plots are of band2 - band3 vs. band2 - band1",
+        keytype=str,
+        itemtype=str,
+        default={"band1": "g", "band2": "r", "band3": "i"}
+    )
+
+    fluxTypeForColor = pexConfig.Field(
+        doc="Flavor of flux measurement to use for colors",
+        default="psfFlux",
+        dtype=str,
+    )
+
+    nBins = pexConfig.Field(
+        doc="Number of bins for 2d histograms.  Ignored if ``config.contourPlot`` is `False",
+        default=40,
+        dtype=int,
+    )
+
+    xLims = pexConfig.ListField(
+        doc="Minimum and maximum x-axis limit to force (provided as a list of [xMin, xMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    yLims = pexConfig.ListField(
+        doc="Minimum and maximum y-axis limit to force (provided as a list of [yMin, yMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    def setDefaults(self):
+        super().setDefaults()
+        self.axisActions.zAction.column = "i_psfFlux"
+        self.axisActions.xAction.magDiff.returnMillimags = False
+        self.axisActions.yAction.magDiff.returnMillimags = False
+        self.selectorActions.catSnSelector.fluxType = "psfFlux"
+        self.selectorActions.catSnSelector.threshold = 50
+        self.setConfigDependencies()
+
+    def setConfigDependencies(self):
+        # The following config settings are conditional on other configs.
+        # Set them based on the inter-dependencies here to ensure they are
+        # in sync.  This can (and should) be called in the pipeline definition
+        # if any of the inter-dependent configs are chaned (e.g. self.bands
+        # or self.fluxTypeForColor here.  See plot_iz_ri_psf in
+        # coaddQAPlots.yaml for an example use case.
+        band1 = self.bands["band1"]
+        band2 = self.bands["band2"]
+        band3 = self.bands["band3"]
+        fluxTypeStr = self.fluxTypeForColor.removesuffix("Flux")
+        fluxFlagStr = fluxTypeStr if "cModel" in fluxTypeStr else self.fluxTypeForColor
+        self.selectorActions.extraFlagSelector.selectWhenFalse = [band1 + "_" + fluxFlagStr + "_flag",
+                                                                  band2 + "_" + fluxFlagStr + "_flag",
+                                                                  band3 + "_" + fluxFlagStr + "_flag"]
+        self.axisActions.xAction.magDiff.col1 = band1 + "_" + self.fluxTypeForColor
+        self.axisActions.xAction.magDiff.col2 = band2 + "_" + self.fluxTypeForColor
+        self.axisActions.yAction.magDiff.col1 = band2 + "_" + self.fluxTypeForColor
+        self.axisActions.yAction.magDiff.col2 = band3 + "_" + self.fluxTypeForColor
+        self.selectorActions.flagSelector.bands = (band1, band2, band3)
+        self.selectorActions.catSnSelector.bands = (band1, band2, band3)
+        self.selectorActions.catSnSelector.fluxType = self.fluxTypeForColor
+        self.axisLabels = {"x": band1 + " - " + band2 + " " + fluxTypeStr + " (mag)",
+                           "y": band2 + " - " + band3 + " " + fluxTypeStr + " (mag)",
+                           "z": self.axisActions.zAction.column.removesuffix("Flux") + " (mag)"}
 
 
 class ColorColorPlotTask(pipeBase.PipelineTask):
@@ -176,9 +247,9 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         `self.config.sourceTypeColName` is used for star galaxy separation.
         """
 
-        self.log.info(("Plotting %s: %s against %s on a color-color plot.",
-                       self.config.connections.plotName, self.config.axisLabels["x"],
-                       self.config.axisLabels["y"]))
+        self.log.info("Plotting %s: %s against %s on a color-color plot.",
+                      self.config.connections.plotName, self.config.axisLabels["x"],
+                      self.config.axisLabels["y"])
 
         # Define a new colormap
         newBlues = mkColormap(["paleturquoise", "midnightblue"])
@@ -220,10 +291,12 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             starPoints = None
 
         # Add text details
-        galBBox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
-        fig.text(0.70, 0.9, "Num. Galaxies: {}".format(galaxies.sum()), bbox=galBBox, fontsize=8)
-        starBBox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
-        fig.text(0.70, 0.96, "Num. Stars: {}".format(stars.sum()), bbox=starBBox, fontsize=8)
+        if galPoints:
+            galBBox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
+            fig.text(0.70, 0.9, "Num. Galaxies: {}".format(galaxies.sum()), bbox=galBBox, fontsize=8)
+        if starPoints:
+            starBBox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
+            fig.text(0.70, 0.96, "Num. Stars: {}".format(stars.sum()), bbox=starBBox, fontsize=8)
 
         # Add colorbars
         magLabel = self.config.axisLabels["z"]
@@ -245,12 +318,21 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         ax.set_ylabel(self.config.axisLabels["y"])
 
         # Set useful axis limits
-        if len(xsStars) > 0:
-            starPercsX = np.nanpercentile(xsStars, [1, 99.5])
-            starPercsY = np.nanpercentile(ysStars, [1, 99.5])
-            pad = (starPercsX[1] - starPercsX[0])/10
-            ax.set_xlim(starPercsX[0] - pad, starPercsX[1] + pad)
-            ax.set_ylim(starPercsY[0] - pad, starPercsY[1] + pad)
+        if self.config.xLims is not None:
+            ax.set_xlim(self.config.xLims[0], self.config.xLims[1])
+        else:
+            if len(xsStars) > 0:
+                starPercsX = np.nanpercentile(xsStars, [1, 99.5])
+                pad = (starPercsX[1] - starPercsX[0])/10
+                ax.set_xlim(starPercsX[0] - pad, starPercsX[1] + pad)
+
+        if self.config.yLims is not None:
+            ax.set_ylim(self.config.yLims[0], self.config.yLims[1])
+        else:
+            if len(ysStars) > 0:
+                starPercsY = np.nanpercentile(ysStars, [1, 99.5])
+                pad = (starPercsY[1] - starPercsY[0])/10
+                ax.set_ylim(starPercsY[0] - pad, starPercsY[1] + pad)
 
         fig = addPlotInfo(plt.gcf(), plotInfo)
 
