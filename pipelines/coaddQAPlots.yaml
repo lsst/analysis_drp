@@ -157,6 +157,90 @@ tasks:
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
+  plot_PsfFluxSN_meas_stars_scatter:
+    # Make a plot showing the signal to noise ratio for the PSF flux.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: PsfFluxSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      xLims: (17.5, 28.0)
+      yLims: (-20.0, 6000)
+      python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisActions.yAction = DivideColumns
+        config.axisActions.yAction.colA.column = "i_psfFlux"
+        config.axisActions.yAction.colB.column = "i_psfFluxErr"
+        config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
+                                                            config.axisActions.yAction.colB.column)})
+
+  plot_CModelFluxSN_meas_stars_scatter:
+    # Make a plot showing the signal to noise ratio for the CModel flux.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: CModelFluxSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      xLims: (17.0, 28.0)
+      yLims: (-20.0, 6000)
+      python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisActions.yAction = DivideColumns
+        config.axisActions.yAction.colA.column = "i_cModelFlux"
+        config.axisActions.yAction.colB.column = "i_cModelFluxErr"
+        config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
+                                                            config.axisActions.yAction.colB.column)})
+
+  plot_PsfSN_sub_CModelSN_meas_scatter_stars:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnDiffCalculator
+      connections.plotName: PsfSN_sub_CModelSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      xLims: (17.0, 28.0)
+      yLims: (-10.0, 60)
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      python: |
+        from lsst.analysis.drp.calcFunctors import SnDiffCalculator
+        config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
+
+  plot_PsfSN_sub_CModelSN_meas_scatter_gals:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnDiffCalculator
+      connections.plotName: PsfSN_sub_CModelSN_meas_gals_i
+      selectorActions.catSnSelector.threshold: 5
+      xLims: (17.0, 28.0)
+      yLims: (-3000.0, 500)
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        from lsst.analysis.drp.calcFunctors import SnDiffCalculator
+        config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
+
+  plot_PercentDiff_PsfSN_CModelSN_meas_scatter_stars:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnPercentDiffCalculator
+      connections.plotName: PercentDiff_PsfSN_CModelSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      python: |
+        from lsst.analysis.drp.calcFunctors import SnPercentDiffCalculator
+        config.axisLabels.update({"y": "Percent Diff: S/N$_{PSF}$ - S/N$_{CModel}$"})
+
   skyPlot_skyObject:
     # Make a plot showing the 9-pixel radius circular aperture flux in units of nJy.
     # This plot shows the on sky distribution of these values for sky objects.
