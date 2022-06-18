@@ -116,7 +116,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "sky"]:
                         bands.append(band)
 
         bands = set(bands)
