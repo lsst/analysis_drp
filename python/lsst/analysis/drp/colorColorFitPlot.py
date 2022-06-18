@@ -13,7 +13,7 @@ from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
 from .calcFunctors import ExtinctionCorrectedMagDiff
-from .dataSelectors import StarIdentifier, CoaddPlotFlagSelector, SnSelector
+from .dataSelectors import FlagSelector, StarIdentifier, CoaddPlotFlagSelector, SnSelector
 from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
 
 matplotlib.use("Agg")
@@ -63,6 +63,7 @@ class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={"flagSelector": CoaddPlotFlagSelector,
+                 "extraFlagSelector": FlagSelector,
                  "catSnSelector": SnSelector},
     )
 
@@ -128,9 +129,9 @@ class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
         band3 = self.bands["band3"]
         fluxTypeStr = self.fluxTypeForColor.removesuffix("Flux")
         fluxFlagStr = fluxTypeStr if "cModel" in fluxTypeStr else self.fluxTypeForColor
-        self.selectorActions.flagSelector.selectWhenFalse = [band1 + "_" + fluxFlagStr + "_flag",
-                                                             band2 + "_" + fluxFlagStr + "_flag",
-                                                             band3 + "_" + fluxFlagStr + "_flag"]
+        self.selectorActions.extraFlagSelector.selectWhenFalse = [band1 + "_" + fluxFlagStr + "_flag",
+                                                                  band2 + "_" + fluxFlagStr + "_flag",
+                                                                  band3 + "_" + fluxFlagStr + "_flag"]
         self.axisActions.xAction.magDiff.col1 = band1 + "_" + self.fluxTypeForColor
         self.axisActions.xAction.magDiff.col2 = band2 + "_" + self.fluxTypeForColor
         self.axisActions.yAction.magDiff.col1 = band2 + "_" + self.fluxTypeForColor

@@ -1,7 +1,6 @@
 description: Make stellar locus plots for QA
 tasks:
-
-  # Each of the plots needs to have a stellarLocusFitDict
+  # Each of the plots needs to set the stellarLocusFitDict
   # this dict contains xMin, xMax, yMin, yMax which define
   # a box in color space that is used for the fit. The
   # color space that it is depends on the plot. It also
@@ -12,157 +11,54 @@ tasks:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: wFit_PSF
-      axisActions.xAction.magDiff.col1: "g_psfFlux"
-      axisActions.xAction.magDiff.col2: "r_psfFlux"
-      axisActions.yAction.magDiff.col1: "r_psfFlux"
-      axisActions.yAction.magDiff.col2: "i_psfFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.magAction.column: "r_psfFlux"
-      axisLabels: {"x": "g - r PSF Magnitude (mag)",
-                   "y": "r - i PSF Magnitude (mag)",
-                   "mag": "r PSF Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
-      stellarLocusFitDict: {"xMin": 0.28, "xMax": 1.0, "yMin": 0.02, "yMax": 0.48,
-                            "mHW": 0.52, "bHW": -0.08}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+
   plot_wFit_CModel:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: wFit_CModel
-      axisActions.xAction.magDiff.col1: "g_cModelFlux"
-      axisActions.xAction.magDiff.col2: "r_cModelFlux"
-      axisActions.yAction.magDiff.col1: "r_cModelFlux"
-      axisActions.yAction.magDiff.col2: "i_cModelFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.magAction.column: "r_cModelFlux"
-      axisLabels: {"x": "g - r CModel Magnitude (mag)",
-                   "y": "r - i CModel Magnitude (mag)",
-                   "mag": "r CModel Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.additionalFlagSelector: FlagSelector
-      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
-                                                               "r_cModel_flag",
-                                                               "i_cModel_flag"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "cModelFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
-      stellarLocusFitDict: {"xMin": 0.28, "xMax": 1.0, "yMin": 0.02, "yMax": 0.48,
-                            "mHW": 0.52, "bHW": -0.08}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
+      python: |
+        config.fluxTypeForColor = "cModelFlux"
+        config.setConfigDependencies()
 
   plot_xFit_PSF:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: xFit_PSF
-      axisActions.xAction.magDiff.col1: "g_psfFlux"
-      axisActions.xAction.magDiff.col2: "r_psfFlux"
-      axisActions.yAction.magDiff.col1: "r_psfFlux"
-      axisActions.yAction.magDiff.col2: "i_psfFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.magAction.column: "r_psfFlux"
-      axisLabels: {"x": "g - r PSF Magnitude (mag)",
-                   "y": "r - i PSF Magnitude (mag)",
-                   "mag": "r PSF Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
       stellarLocusFitDict: {"xMin": 1.05, "xMax": 1.55, "yMin": 0.78, "yMax": 1.62,
                             "mHW": 13.35, "bHW": -15.54}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+
   plot_xFit_CModel:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: xFit_CModel
-      axisActions.xAction.magDiff.col1: "g_cModelFlux"
-      axisActions.xAction.magDiff.col2: "r_cModelFlux"
-      axisActions.yAction.magDiff.col1: "r_cModelFlux"
-      axisActions.yAction.magDiff.col2: "i_cModelFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.magAction.column: "r_cModelFlux"
-      axisLabels: {"x": "g - r CModel Magnitude (mag)",
-                   "y": "r - i CModel Magnitude (mag)",
-                   "mag": "r CModel Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.additionalFlagSelector: FlagSelector
-      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
-                                                               "r_cModel_flag",
-                                                               "i_cModel_flag"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
       stellarLocusFitDict: {"xMin": 1.05, "xMax": 1.55, "yMin": 0.78, "yMax": 1.62,
                             "mHW": 13.35, "bHW": -15.54}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
+      python: |
+        config.fluxTypeForColor = "cModelFlux"
+        config.setConfigDependencies()
 
   plot_yFit_PSF:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: yFit_PSF
-      axisActions.xAction.magDiff.col1: "r_psfFlux"
-      axisActions.xAction.magDiff.col2: "i_psfFlux"
-      axisActions.yAction.magDiff.col1: "i_psfFlux"
-      axisActions.yAction.magDiff.col2: "z_psfFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
       axisActions.magAction.column: "i_psfFlux"
-      axisLabels: {"x": "r - i PSF Magnitude (mag)",
-                   "y": "i - z PSF Magnitude (mag)",
-                   "mag": "i PSF Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["r", "i", "z"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["r", "i", "z"]
       stellarLocusFitDict: {"xMin": 0.82, "xMax": 2.01, "yMin": 0.37, "yMax": 0.9,
                             "mHW": 0.40, "bHW": 0.03}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+      xLims: (-0.8, 3.2)
+      yLims: (-0.5, 1.4)
+      python: |
+        config.bands = {"band1": "r", "band2": "i", "band3": "z"}
+        config.setConfigDependencies()
+
   plot_yFit_CModel:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
     config:
       connections.plotName: yFit_CModel
-      axisActions.xAction.magDiff.col1: "r_cModelFlux"
-      axisActions.xAction.magDiff.col2: "i_cModelFlux"
-      axisActions.yAction.magDiff.col1: "i_cModelFlux"
-      axisActions.yAction.magDiff.col2: "z_cModelFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.magAction.column: "i_cModelFlux"
-      axisLabels: {"x": "r - i CModel Magnitude (mag)",
-                   "y": "i - z CModel Magnitude (mag)",
-                   "mag": "i CModel Magnitude (mag)"}
-      selectorActions.flagSelector: CoaddPlotFlagSelector
-      selectorActions.flagSelector.bands: ["r", "i", "z"]
-      selectorActions.additionalFlagSelector: FlagSelector
-      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
-                                                               "r_cModel_flag",
-                                                               "i_cModel_flag"]
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["r", "i", "z"]
       stellarLocusFitDict: {"xMin": 0.82, "xMax": 2.01, "yMin": 0.37, "yMax": 0.9,
                             "mHW": 0.40, "bHW": 0.03}
-      python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
+      xLims: (-0.8, 3.2)
+      yLims: (-0.5, 1.4)
+      python: |
+        config.fluxTypeForColor = "cModelFlux"
+        config.bands = {"band1": "r", "band2": "i", "band3": "z"}
+        config.setConfigDependencies()
