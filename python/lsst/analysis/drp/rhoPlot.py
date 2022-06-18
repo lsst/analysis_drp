@@ -169,7 +169,7 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ("coord", "extend", "detect", "xy", "merge"):
+                    if band not in ("coord", "extend", "detect", "xy", "merge", "sky"):
                         bands.add(band)
 
         columnNames.update(self.rhoStatisticsAction.columns)

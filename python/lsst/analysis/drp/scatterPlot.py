@@ -116,7 +116,7 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
     nonBandColumnPrefixes = pexConfig.ListField(
         doc="Column prefixes that are not bands and which should not be added to the set of bands",
         dtype=str,
-        default=["coord", "extend", "detect", "xy", "merge"],
+        default=["coord", "extend", "detect", "xy", "merge", "sky"],
     )
 
     selectorActions = ConfigurableActionStructField(
