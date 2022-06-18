@@ -171,6 +171,40 @@ tasks:
         from lsst.analysis.drp.calcFunctors import SnPercentDiffCalculator
         config.axisLabels.update({"y": "Percent Diff: S/N$_{PSF}$ - S/N$_{CModel}$"})
 
+  plot_ri_gr_contour_psf:
+    # Make a contour color color plot of gri in PSF magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: ri_gr_contour_psf
+      contourPlot: True
+      xLims: (-0.99, 2.4)
+      yLims: (-0.8, 2.8)
+
+  plot_ri_gr_contour_cmodel:
+    # Make a contour color color plot of gri in CModel magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: ri_gr_contour_cmodel
+      contourPlot: True
+      axisActions.zAction.column: "i_cModelFlux"
+      xLims: (-0.99, 2.4)
+      yLims: (-0.8, 2.8)
+      python: |
+        config.fluxTypeForColor = "cModelFlux"
+        config.setConfigDependencies()
+
+  plot_iz_ri_contour_psf:
+    # Make a contour color color plot of riz in PSF magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: iz_ri_contour_psf
+      contourPlot: True
+      xLims: (-1.2, 3.3)
+      yLims: (-0.99, 1.99)
+      python: |
+        config.bands = {"band1": "r", "band2": "i", "band3": "z"}
+        config.setConfigDependencies()
+
   # Tier 2 Ellipticity coadd plots
   plot_shapeSizeDiff_scatter:
     # Plots the difference between the calculated determinant size

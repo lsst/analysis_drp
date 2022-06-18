@@ -157,48 +157,36 @@ tasks:
           "hist2": "ap09Flux SN",
         }
 
-  plot_ri_gr_cmodel:
-    # Make a color color plot of gri in CModel magnitudes.
-    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
-    config:
-      connections.plotName: ri_gr_cmodel
-      axisActions.xAction.magDiff.col1: "g_cModelFlux"
-      axisActions.xAction.magDiff.col2: "r_cModelFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.col1: "r_cModelFlux"
-      axisActions.yAction.magDiff.col2: "i_cModelFlux"
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.zAction.column: "i_cModelFlux"
-      axisLabels: {"x": "g - r CModel (mag)",
-                   "y": "r - i CModel (mag)",
-                   "z": "i_cModelMag (mag)"}
-      selectorActions.coaddSelector: FlagSelector
-      selectorActions.coaddSelector.selectWhenFalse: ["g_cModel_flag", "r_cModel_flag", "i_cModel_flag"]
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.catSnSelector.fluxType: "cModelFlux"
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
-      python: >
-        from lsst.analysis.drp.dataSelectors import FlagSelector
-
   plot_ri_gr_psf:
     # Make a color color plot of gri in PSF magnitudes.
     class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
     config:
       connections.plotName: ri_gr_psf
-      axisActions.xAction.magDiff.col1: "g_psfFlux"
-      axisActions.xAction.magDiff.col2: "r_psfFlux"
-      axisActions.xAction.magDiff.returnMillimags: False
-      axisActions.yAction.magDiff.col1: "r_psfFlux"
-      axisActions.yAction.magDiff.col2: "i_psfFlux"
-      axisActions.yAction.magDiff.returnMillimags: False
-      axisActions.zAction.column: "i_psfFlux"
-      axisLabels: {"x": "g - r PSF (mag)",
-                   "y": "r - i PSF (mag)",
-                   "z": "i_PsfMag (mag)"}
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.catSnSelector.threshold: 50
-      selectorActions.catSnSelector.bands: ["g", "r", "i"]
+      xLims: (-0.99, 2.4)
+      yLims: (-0.8, 2.8)
+
+  plot_ri_gr_cmodel:
+    # Make a color color plot of gri in CModel magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: ri_gr_cmodel
+      xLims: (-0.99, 2.4)
+      yLims: (-0.8, 2.8)
+      python: |
+        config.fluxTypeForColor = "cModelFlux"
+        config.axisActions.zAction.column = "i_cModelFlux"
+        config.setConfigDependencies()
+
+  plot_iz_ri_psf:
+    # Make a color color plot of riz in PSF magnitudes.
+    class: lsst.analysis.drp.colorColorPlot.ColorColorPlotTask
+    config:
+      connections.plotName: iz_ri_psf
+      xLims: (-1.2, 3.3)
+      yLims: (-0.99, 1.99)
+      python: |
+        config.bands = {"band1": "r", "band2": "i", "band3": "z"}
+        config.setConfigDependencies()
 
   plot_astromRefCat_sky_tract_dRA:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
