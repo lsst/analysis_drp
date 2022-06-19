@@ -1,10 +1,13 @@
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
 import lsst.pipe.base as pipeBase
 
+from .calcFunctors import MagDiff
+from .dataSelectors import VisitPlotFlagSelector
 from .plotUtils import generateSummaryStatsVisit, parsePlotInfo
 from .skyPlot import SkyPlotTask
-import pandas as pd
-import matplotlib.pyplot as plt
 
 __all__ = ["SkyPlotVisitTaskConfig", "SkyPlotVisitTask"]
 
@@ -32,14 +35,22 @@ class SkyPlotVisitTaskConnections(pipeBase.PipelineTaskConnections, dimensions=(
 class SkyPlotVisitTaskConfig(SkyPlotTask.ConfigClass, pipelineConnections=SkyPlotVisitTaskConnections):
 
     def setDefaults(self):
-        super().setDefaults()
         self.axisActions.xAction.column = "coord_ra"
         self.axisActions.xAction.inRadians = False
         self.axisActions.yAction.column = "coord_dec"
         self.axisActions.yAction.inRadians = False
+        self.axisActions.zAction = MagDiff
+        self.axisActions.zAction.col1 = "ap12Flux"
+        self.axisActions.zAction.col2 = "psfFlux"
+        self.selectorActions.flagSelector = VisitPlotFlagSelector
+        self.selectorActions.catSnSelector.bands = [""]
+        self.selectorActions.catSnSelector.threshold = 10
         self.sourceSelectorActions.sourceSelector.band = ""
         self.statisticSelectorActions.statSelector.bands = [""]
         self.statisticSelectorActions.statSelector.threshold = 100
+        self.axisLabels = {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
+                           "z": "{} - {} (mmag)".format(self.axisActions.zAction.col1.removesuffix("Flux"),
+                                                        self.axisActions.zAction.col2.removesuffix("Flux"))}
 
 
 class SkyPlotVisitTask(SkyPlotTask):

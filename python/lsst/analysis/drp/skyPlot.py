@@ -10,7 +10,8 @@ from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
-from . import dataSelectors as dataSelectors
+from .calcFunctors import MagDiff
+from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
@@ -55,17 +56,18 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
 
     sourceSelectorActions = ConfigurableActionStructField(
         doc="What types of sources to use.",
-        default={"sourceSelector": dataSelectors.StarIdentifier},
+        default={"sourceSelector": StarIdentifier},
     )
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": CoaddPlotFlagSelector,
+                 "catSnSelector": SnSelector},
     )
 
     statisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating statistics.",
-        default={"statSelector": dataSelectors.SnSelector},
+        default={"statSelector": SnSelector},
     )
 
     fixAroundZero = pexConfig.Field(
@@ -86,6 +88,13 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         self.axisActions.xAction.inRadians = False
         self.axisActions.yAction.column = "coord_dec"
         self.axisActions.yAction.inRadians = False
+        self.axisActions.zAction = MagDiff
+        self.axisActions.zAction.col1 = "i_ap12Flux"
+        self.axisActions.zAction.col2 = "i_psfFlux"
+        self.selectorActions.flagSelector.bands = ["i"]
+        self.axisLabels = {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
+                           "z": "{} - {} (mmag)".format(self.axisActions.zAction.col1.removesuffix("Flux"),
+                                                        self.axisActions.zAction.col2.removesuffix("Flux"))}
 
 
 class SkyPlotTask(pipeBase.PipelineTask):

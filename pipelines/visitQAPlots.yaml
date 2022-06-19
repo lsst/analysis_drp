@@ -11,40 +11,18 @@ tasks:
   plot_CircAp12_sub_PS_meas_sky_stars_visit:
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "ap12Flux"
-      axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_stars
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: psfFlux
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, SnSelector
-        from lsst.analysis.drp.calcFunctors import MagDiff
 
   plot_CircAp12_sub_PS_meas_sky_gals_visit:
     # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "ap12Flux"
-      axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_gals
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
-        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_CircAp12_sub_PS_meas_calib_psf_used_sky_stars_visit:
     # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
@@ -52,21 +30,11 @@ tasks:
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "ap12Flux"
-      axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_stars
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, FlagSelector, SnSelector
-        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector
 
   plot_CircAp12_sub_PS_meas_calib_psf_used_sky_gals_visit:
     # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
@@ -74,24 +42,13 @@ tasks:
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "ap12Flux"
-      axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_gals
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-        SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
 
   plot_CircAp12_sub_PS_calib_psf_used_sky_unknown_visit:
     # Make a plot showing the difference between the aperture 12 magnitude and the PS magnitude.
@@ -99,24 +56,104 @@ tasks:
     # that were selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction: MagDiff
-      axisActions.zAction.col1: "ap12Flux"
-      axisActions.zAction.col2: "psfFlux"
       connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unkowns
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, UnknownIdentifier,
-        SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
+        from lsst.analysis.drp.dataSelectors import FlagSelector, UnknownIdentifier
+
+  plot_CircAp12_sub_PS_meas_calib_psf_used_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
+    # magnitude for all types of object. These objects were all selected as having the flag
+    # calib_psf_used = True.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
+                                     "unknownSelector": UnknownIdentifier}
+      sourceSelectorActions.galaxySelector.band: ""
+      sourceSelectorActions.unknownSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier, UnknownIdentifier
+
+  plot_CircAp12_sub_PS_all_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
+    # magnitude for all types of object.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_all
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
+                                     "unknownSelector": UnknownIdentifier}
+      sourceSelectorActions.galaxySelector.band: ""
+      sourceSelectorActions.unknownSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier, UnknownIdentifier
+
+  plot_CircAp25_sub_PS_all_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 25 magnitude and the PSF
+    # magnitude for all types of object.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp25_sub_PSF_all
+      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
+                                     "unknownSelector": UnknownIdentifier}
+      sourceSelectorActions.galaxySelector.band: ""
+      sourceSelectorActions.unknownSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier, UnknownIdentifier
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
+
+  plot_CircAp12_sub_PS_gals_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
+    # magnitude for galaxies.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp12_sub_PS_gals
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+
+  plot_CircAp25_sub_PS_gals_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 25 magnitude and the PS
+    # magnitude for galaixes.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp25_sub_PS_gals
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      sourceSelectorActions.sourceSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
+
+  plot_CircAp12_sub_PS_meas_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
+    # magnitude for stars.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp12_sub_PS_meas
+
+  plot_CircAp25_sub_PS_meas_scatter_visit:
+    # Make a scatter plot showing the difference between the circular aperture 25 magnitude and the PSF
+    # magnitude for stars.
+    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
+    config:
+      connections.plotName: CircAp25_sub_PS_meas
+      python: |
+        config.axisActions.yAction.col1 = "ap25Flux"
+        config.axisLabels.update({"y": "{} - {} (mmag)".
+                                 format(config.axisActions.yAction.col1.removesuffix("Flux"),
+                                        config.axisActions.yAction.col2.removesuffix("Flux"))})
 
   plot_PSFluxSN_meas_sky_all_visit:
     # Make a plot showing the signal to noise ratio for the PS flux.
@@ -127,261 +164,80 @@ tasks:
       axisActions.zAction.colA.column: "psfFlux"
       axisActions.zAction.colB.column: "psfFluxErr"
       connections.plotName: PSFluxSN_meas_all
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      selectorActions.catSnSelector.bands: [""]
       sourceSelectorActions: None
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.pipe.tasks.dataFrameActions import DivideColumns
-
-  plot_CircAp12_sub_PS_meas_calib_psf_used_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap12Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used
-      selectorActions.calibPointSelector: FlagSelector
-      selectorActions.calibPointSelector.selectWhenTrue: ["calib_psf_used"]
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier,
-                                     "unknownSelector": UnknownIdentifier}
-      sourceSelectorActions.galaxySelector.band: ""
-      sourceSelectorActions.unknownSelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-                                                     SnSelector, UnknownIdentifier)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp12_sub_PS_all_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap12Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_all
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
-      sourceSelectorActions.galaxySelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp25_sub_PS_all_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap25Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_all
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
-      sourceSelectorActions.galaxySelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp12_sub_PS_gals_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap12Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_gals
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp25_sub_PS_gals_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object. These objects were all selected as having the flag
-    # calib_psf_used = True.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap25Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_gals
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (msg)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, GalaxyIdentifier, SnSelector)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp12_sub_PS_meas_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap12Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp12_sub_PS_meas
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-        SnSelector, UnknownIdentifier)
-        from lsst.analysis.drp.calcFunctors import MagDiff
-
-  plot_CircAp25_sub_PS_meas_scatter_visit:
-    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PS
-    # magnitude for all types of object.
-    class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
-    config:
-      axisActions.yAction: MagDiff
-      axisActions.yAction.col1: "ap25Flux"
-      axisActions.yAction.col2: "psfFlux"
-      connections.plotName: CircAp25_sub_PS_meas
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Circular Ap 25 - PSF (mmag) (Meas)"}
-      python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, FlagSelector, GalaxyIdentifier,
-        SnSelector, UnknownIdentifier)
-        from lsst.analysis.drp.calcFunctors import MagDiff
+        config.axisLabels.update({"z": "S/N = psfFlux/psfFluxErr"})
 
   plot_skyObject_sky_visit:
     # Make a plot showing the 9-pixel radius circular aperture flux in units of nJy.
     # This plot shows the on sky distribution of these values for sky objects.
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      axisActions.zAction.column: "ap09Flux"
       connections.plotName: skyObject
+      axisActions.zAction: SingleColumnAction
+      axisActions.zAction.column: "ap09Flux"
       selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["sky_source"]
       sourceSelectorActions: None
       statisticSelectorActions.statSelector.threshold: -1e12
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Sky Object Flux (nJy)"}
       python: |
-       from lsst.analysis.drp.dataSelectors import (FlagSelector)
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+        from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
+        config.axisLabels.update({"z": "Sky Object: ap09Flux (nJy)"})
 
   plot_astromRefCat_sky_visit_dRA:
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       connections.plotName: astromRefCatResiduals_sky_ra_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       axisActions.zAction: AstromDiff
       axisActions.zAction.col1: "coord_ra_target"
       axisActions.zAction.col2: "coord_ra_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      sourceSelectorActions.sourceSelector: StarIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "$RA_{target} - RA_{ref}$ (marcsec)"}
+      selectorActions.remove: ["catSnSelector"]
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
         from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$RA_{target} - RA_{ref}$ (marcsec)"})
 
   plot_astromRefCat_sky_visit_dDec:
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
-      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       connections.plotName: astromRefCatResiduals_sky_dec_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       axisActions.zAction: AstromDiff
       axisActions.zAction.col1: "coord_dec_target"
       axisActions.zAction.col2: "coord_dec_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      sourceSelectorActions.sourceSelector: StarIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
-                   "z": "$Dec_{target} - Dec_{ref}$ (marcsec)"}
+      selectorActions.remove: ["catSnSelector"]
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
         from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"z": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
 
   plot_astromRefCat_scatter_visit_dRA:
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
-      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       connections.plotName: astromRefCatResiduals_scatter_ra_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_ra_target"
       axisActions.yAction.col2: "coord_ra_ref"
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      sourceSelectorActions.sourceSelector: StarIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "$RA_{target} - RA_{ref}$ (marcsec)"}
+      selectorActions.remove: ["catSnSelector"]
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
         from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$RA_{target} - RA_{ref}$ (marcsec)"})
 
   plot_astromRefCat_scatter_visit_dDec:
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
     config:
-      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       connections.plotName: astromRefCatResiduals_scatter_dec_visit
+      connections.catPlot: sourceTable_visit_astrometryRefCat_match
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_dec_target"
       axisActions.yAction.col2: "coord_dec_ref"
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      sourceSelectorActions.sourceSelector: StarIdentifier
-      sourceSelectorActions.sourceSelector.band: ""
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "$Dec_{target} - Dec_{ref}$ (marcsec)"}
+      selectorActions.remove: ["catSnSelector"]
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, StarIdentifier
         from lsst.analysis.drp.calcFunctors import AstromDiff
+        config.axisLabels.update({"y": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
