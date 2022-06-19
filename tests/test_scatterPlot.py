@@ -69,6 +69,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
         config.selectorActions.flagSelector.bands = ["i"]
         config.axisActions.yAction = MagDiff(col1="refcat_flux", col2="refcat_flux")
         config.nonBandColumnPrefixes.append("refcat")
+        config.selectorActions.catSnSelector.threshold = -1e12
         config.sourceSelectorActions.galaxySelector = GalaxyIdentifier
         config.highSnStatisticSelectorActions.statSelector.threshold = 50
         config.lowSnStatisticSelectorActions.statSelector.threshold = 20
