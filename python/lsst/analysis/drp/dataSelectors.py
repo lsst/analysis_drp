@@ -136,7 +136,7 @@ class SnSelector(DataFrameAction):
                      default="psfFlux")
     threshold = Field(doc="The S/N threshold to remove sources with.",
                       dtype=float,
-                      default=500.0)
+                      default=100.0)
     bands = ListField(doc="The bands to apply the signal to noise cut in.",
                       dtype=str,
                       default=["i"])

@@ -12,16 +12,9 @@ tasks:
       axisActions.yAction.colXx: "ixx"
       axisActions.yAction.colYy: "iyy"
       connections.plotName: e1_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E1: (ixx - iyy)/(ixx + iyy)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"y": "E1: (ixx - iyy)/(ixx + iyy)"})
 
   plot_e1_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E1
@@ -31,15 +24,9 @@ tasks:
       axisActions.zAction.colXx: "ixx"
       axisActions.zAction.colYy: "iyy"
       connections.plotName: e1_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1: (ixx - iyy)/(ixx + iyy)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"z": "E1: (ixx - iyy)/(ixx + iyy)"})
 
   plot_e2_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E2 for
@@ -51,16 +38,9 @@ tasks:
       axisActions.yAction.colYy: "iyy"
       axisActions.yAction.colXy: "ixy"
       connections.plotName: e2_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E2: 2ixy/(ixx + iyy)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"y": "E2: 2ixy/(ixx + iyy)"})
 
   plot_e2_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E2
@@ -71,15 +51,9 @@ tasks:
       axisActions.zAction.colYy: "iyy"
       axisActions.zAction.colXy: "ixy"
       connections.plotName: e2_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2: 2ixy/(ixx + iyy)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"z": "E2: 2ixy/(ixx + iyy)"})
 
   plot_shapeSize_scatter_visit:
     # Plot a scatter plot of the values of (ixx*iyy - ixy^2)^(1/4) a measurement of
@@ -91,16 +65,9 @@ tasks:
       axisActions.yAction.colYy: "iyy"
       axisActions.yAction.colXy: "ixy"
       connections.plotName: shape_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"y": "Shape: (ixx*iyy - ixy^2)^(1/4)"})
 
   plot_shapeSize_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
@@ -112,15 +79,9 @@ tasks:
       axisActions.zAction.colYy: "iyy"
       axisActions.zAction.colXy: "ixy"
       connections.plotName: shape_ixx
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"z": "Shape: (ixx*iyy - ixy^2)^(1/4)"})
 
   plot_e1PSF_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E1 for the PSF
@@ -131,16 +92,9 @@ tasks:
       axisActions.yAction.colXx: "ixxPSF"
       axisActions.yAction.colYy: "iyyPSF"
       connections.plotName: e1_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"})
 
   plot_e1PSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E1 for the PSF
@@ -150,16 +104,9 @@ tasks:
       axisActions.zAction.colXx: "ixxPSF"
       axisActions.zAction.colYy: "iyyPSF"
       connections.plotName: e1_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
-                   "z": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisLabels.update({"z": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"})
 
   plot_e2PSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E2 for the PSF
@@ -170,15 +117,9 @@ tasks:
       axisActions.zAction.colYy: "iyyPSF"
       axisActions.zAction.colXy: "ixyPSF"
       connections.plotName: e2_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"z": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"})
 
   plot_e2PSF_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E2 for the PSF
@@ -190,16 +131,9 @@ tasks:
       axisActions.yAction.colYy: "iyyPSF"
       axisActions.yAction.colXy: "ixyPSF"
       connections.plotName: e2_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisLabels.update({"y": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"})
 
   plot_ellipResids_quiver_visit:
     # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
@@ -218,15 +152,9 @@ tasks:
       axisActions.zAction.colB.colXy: "ixyPSF"
       axisActions.zAction.colB.halvePhaseAngle: False
       connections.plotName: Ediff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+        config.axisLabels.update({"z": "E Difference (eMEAS - ePSF)"})
 
   plot_shapeSizePSF_scatter_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
@@ -238,16 +166,9 @@ tasks:
       axisActions.yAction.colYy: "iyyPSF"
       axisActions.yAction.colXy: "ixyPSF"
       connections.plotName: shape_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"})
 
   plot_shapeSizePSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
@@ -259,16 +180,9 @@ tasks:
       axisActions.zAction.colYy: "iyyPSF"
       axisActions.zAction.colXy: "ixyPSF"
       connections.plotName: shape_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
-                   "z": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisLabels.update({"z": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"})
 
   plot_shapeSizeDiff_scatter_visit:
     # Calculates the difference between the shapes calculated from CModel and the PSF
@@ -285,17 +199,10 @@ tasks:
       axisActions.yAction.colB.colYy: "iyyPSF"
       axisActions.yAction.colB.colXy: "ixyPSF"
       connections.plotName: shapeDiff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Shape Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "Shape Difference (ixx - ixxPSF)"})
 
   plot_shapeSizeFractionalDiff_scatter_visit:
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
@@ -310,17 +217,10 @@ tasks:
       axisActions.yAction.colB.colYy: "iyyPSF"
       axisActions.yAction.colB.colXy: "ixyPSF"
       connections.plotName: shapeFractionDiff_sizePSF_scatter
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "Fractional shape difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
+        config.axisLabels.update({"y": "Fractional shape difference (ixx - ixxPSF)"})
 
   plot_E1Diff_scatter_visit:
     # Plots the difference between the calculated E1 for CModel and the PSF against
@@ -335,17 +235,10 @@ tasks:
       axisActions.yAction.colB.colXx: "ixxPSF"
       axisActions.yAction.colB.colYy: "iyyPSF"
       connections.plotName: E1Diff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E1 Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE1
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "E1 Difference (ixx - ixxPSF)"})
 
   plot_E2Diff_scatter_visit:
     # Plots the difference between the calculated E2 for CModel and the PSF against
@@ -360,17 +253,10 @@ tasks:
       axisActions.yAction.colB.colXx: "ixxPSF"
       axisActions.yAction.colB.colYy: "iyyPSF"
       connections.plotName: E2Diff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
-                   "y": "E2 Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import (VisitPlotFlagSelector, SnSelector)
         from lsst.analysis.drp.calcFunctors import CalcE2
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"y": "E2 Difference (ixx - ixxPSF)"})
 
   plot_E1Diff_sky_visit:
     # Plots the on-sky distribution of the differences between E1 calculated for the PSF
@@ -385,16 +271,10 @@ tasks:
       axisActions.zAction.colB.colXx: "ixxPSF"
       axisActions.zAction.colB.colYy: "iyyPSF"
       connections.plotName: E1Diff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1 Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE1
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E1 Difference (ixx - ixxPSF)"})
 
   plot_E2Diff_sky_visit:
     # Plots the on-sky distribution of the differences between E2 calculated for the PSF
@@ -411,16 +291,10 @@ tasks:
       axisActions.zAction.colB.colYy: "iyyPSF"
       axisActions.zAction.colB.colXy: "ixyPSF"
       connections.plotName: E2Diff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2 Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcE2
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "E2 Difference (ixx - ixxPSF)"})
 
   plot_ShapeDiff_sky_visit:
     # Plots the on-sky distribution of the difference between the sizes calculated
@@ -437,13 +311,7 @@ tasks:
       axisActions.zAction.colB.colYy: "iyyPSF"
       axisActions.zAction.colB.colXy: "ixyPSF"
       connections.plotName: ShapeSizeDiff_ixxPSF
-      selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.catSnSelector: SnSelector
-      selectorActions.catSnSelector.bands: [""]
-      selectorActions.catSnSelector.fluxType: "psfFlux"
-      selectorActions.catSnSelector.threshold: 10
-      axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Size Difference (ixx - ixxPSF)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "Size Difference (ixx - ixxPSF)"})

@@ -3,6 +3,8 @@ import pandas as pd
 
 import lsst.pipe.base as pipeBase
 
+from .calcFunctors import MagDiff
+from .dataSelectors import VisitPlotFlagSelector
 from .plotUtils import generateSummaryStatsVisit, parsePlotInfo
 from .scatterPlot import ScatterPlotWithTwoHistsTask
 
@@ -32,14 +34,24 @@ class ScatterPlotVisitConfig(ScatterPlotWithTwoHistsTask.ConfigClass,
                              pipelineConnections=ScatterPlotVisitConnections):
 
     def setDefaults(self):
-        super().setDefaults()
         self.axisActions.magAction.column = "psfFlux"
         self.axisActions.xAction.column = "psfFlux"
+        self.axisActions.yAction = MagDiff
+        self.axisActions.yAction.col1 = "ap12Flux"
+        self.axisActions.yAction.col2 = "psfFlux"
+        self.selectorActions.flagSelector = VisitPlotFlagSelector
+        self.selectorActions.catSnSelector.bands = [""]
+        self.selectorActions.catSnSelector.threshold = 10
+        self.sourceSelectorActions.sourceSelector.band = ""
         self.highSnStatisticSelectorActions.statSelector.threshold = 100
         self.highSnStatisticSelectorActions.statSelector.bands = [""]
         self.lowSnStatisticSelectorActions.statSelector.threshold = 50
         self.lowSnStatisticSelectorActions.statSelector.bands = [""]
         self.sourceSelectorActions.sourceSelector.band = ""
+        self.axisLabels = {"x": self.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+                           "mag": self.axisActions.magAction.column.removesuffix("Flux") + "  (mag)",
+                           "y": "{} - {} (mmag)".format(self.axisActions.yAction.col1.removesuffix("Flux"),
+                                                        self.axisActions.yAction.col2.removesuffix("Flux"))}
 
 
 class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):

@@ -34,7 +34,8 @@ from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from . import dataSelectors as dataSelectors
+from .calcFunctors import MagDiff
+from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
 from .statistics import sigmaMad
 
@@ -118,23 +119,23 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
-                 "catSnSelector": dataSelectors.SnSelector},
+        default={"flagSelector": CoaddPlotFlagSelector,
+                 "catSnSelector": SnSelector},
     )
 
     highSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the high SN statistics.",
-        default={"statSelector": dataSelectors.SnSelector},
+        default={"statSelector": SnSelector},
     )
 
     lowSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the low SN statistics.",
-        default={"statSelector": dataSelectors.SnSelector},
+        default={"statSelector": SnSelector},
     )
 
     sourceSelectorActions = ConfigurableActionStructField(
         doc="What types of sources to use.",
-        default={"sourceSelector": dataSelectors.StarIdentifier},
+        default={"sourceSelector": StarIdentifier},
     )
 
     nBins = pexConfig.Field(
@@ -154,8 +155,21 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         super().setDefaults()
         self.axisActions.magAction.column = "i_cModelFlux"
         self.axisActions.xAction.column = "i_cModelFlux"
+        self.axisActions.yAction = MagDiff
+        self.axisActions.yAction.col1 = "i_ap12Flux"
+        self.axisActions.yAction.col2 = "i_psfFlux"
+        self.selectorActions.flagSelector.bands = ["i"]
+        self.selectorActions.catSnSelector.fluxType = "psfFlux"
+        self.highSnStatisticSelectorActions.statSelector.fluxType = "cModelFlux"
         self.highSnStatisticSelectorActions.statSelector.threshold = 2700
+        self.lowSnStatisticSelectorActions.statSelector.fluxType = "cModelFlux"
         self.lowSnStatisticSelectorActions.statSelector.threshold = 500
+        self.axisLabels = {
+            "x": self.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+            "mag": self.axisActions.magAction.column.removesuffix("Flux") + "  (mag)",
+            "y": ("{} - {} (mmag)".format(self.axisActions.yAction.col1.removesuffix("Flux"),
+                                          self.axisActions.yAction.col2.removesuffix("Flux")))
+        }
 
 
 class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):

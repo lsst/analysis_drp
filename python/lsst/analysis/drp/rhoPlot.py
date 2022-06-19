@@ -193,6 +193,8 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
         self.rhoStatisticsAction.colPsfYy = "i_iyyPSF"
         self.rhoStatisticsAction.colPsfXy = "i_ixyPSF"
 
+        self.selectorActions.flagSelector.bands = ["i"]
+
         _yLabels = {
             0: r"$\rho_{0}(\theta) = \langle \frac{\delta T}{T}, \frac{\delta T}{T}\rangle$",
             1: r"$\rho_{1}(\theta) = \langle \delta e, \delta e \rangle$",

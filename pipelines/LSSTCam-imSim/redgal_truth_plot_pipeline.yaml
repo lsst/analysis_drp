@@ -9,14 +9,12 @@ tasks:
   plot_red_galaxy_gmr_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "g_cModelFlux"
       axisActions.yAction.color1_flux2: "r_cModelFlux"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -26,12 +24,10 @@ tasks:
         - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (g-r) - true (g-r) (mmag)"
@@ -39,12 +35,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_gmr_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "g_cModelFlux"
@@ -53,7 +47,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "r_cModelFluxErr"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -63,12 +56,10 @@ tasks:
         - g_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (g-r) - true (g-r) / cModel (g-r) err"
@@ -76,19 +67,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "r_cModelFlux"
       axisActions.yAction.color1_flux2: "i_cModelFlux"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -98,12 +86,10 @@ tasks:
         - i_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (r-i) - true (r-i) (mmag)"
@@ -111,12 +97,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "r_cModelFlux"
@@ -125,7 +109,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "i_cModelFluxErr"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -135,12 +118,10 @@ tasks:
         - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (r-i) - true (r-i) / cModel (r-i) err"
@@ -148,19 +129,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "i_cModelFlux"
       axisActions.yAction.color1_flux2: "z_cModelFlux"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -170,12 +148,10 @@ tasks:
         - z_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (i-z) - true (i-z) (mmag)"
@@ -183,12 +159,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "i_cModelFlux"
@@ -197,7 +171,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "z_cModelFluxErr"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -207,12 +180,10 @@ tasks:
         - i_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (i-z) - true (i-z) / cModel (i-z) err"
@@ -220,19 +191,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "z_cModelFlux"
       axisActions.yAction.color1_flux2: "y_cModelFlux"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -242,12 +210,10 @@ tasks:
         - y_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (z-y) - true (z-y) (mmag)"
@@ -255,12 +221,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "z_cModelFlux"
@@ -269,7 +233,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "y_cModelFluxErr"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -279,12 +242,10 @@ tasks:
         - z_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "cModel (z-y) - true (z-y) / cModel (z-y) err"
@@ -292,19 +253,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_gmr_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "g_gaap0p7Flux"
       axisActions.yAction.color1_flux2: "r_gaap0p7Flux"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -314,12 +272,10 @@ tasks:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (g-r) - true (g-r) (mmag)"
@@ -327,12 +283,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_gmr_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "g_gaap0p7Flux"
@@ -341,7 +295,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "r_gaap0p7FluxErr"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -351,12 +304,10 @@ tasks:
         - g_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (g-r) - true (g-r) / GaAP 0.7 (g-r) err"
@@ -364,19 +315,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "r_gaap0p7Flux"
       axisActions.yAction.color1_flux2: "i_gaap0p7Flux"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -386,12 +334,10 @@ tasks:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (r-i) - true (r-i) (mmag)"
@@ -399,12 +345,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "r_gaap0p7Flux"
@@ -413,7 +357,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "i_gaap0p7FluxErr"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -423,12 +366,10 @@ tasks:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (r-i) - true (r-i) / GaAP 0.7 (r-i) err"
@@ -436,19 +377,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "i_gaap0p7Flux"
       axisActions.yAction.color1_flux2: "z_gaap0p7Flux"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -458,12 +396,10 @@ tasks:
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (i-z) - true (i-z) (mmag)"
@@ -471,12 +407,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "i_gaap0p7Flux"
@@ -485,7 +419,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "z_gaap0p7FluxErr"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -495,12 +428,10 @@ tasks:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (i-z) - true (i-z) / GaAP 0.7 (i-z) err"
@@ -508,19 +439,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "z_gaap0p7Flux"
       axisActions.yAction.color1_flux2: "y_gaap0p7Flux"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -530,12 +458,10 @@ tasks:
         - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (z-y) - true (z-y) (mmag)"
@@ -543,12 +469,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "z_gaap0p7Flux"
@@ -557,7 +481,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "y_gaap0p7FluxErr"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -567,12 +490,10 @@ tasks:
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 0.7 (z-y) - true (z-y) / GaAP 0.7 (z-y) err"
@@ -580,19 +501,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_gmr_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "g_gaap1p0Flux"
       axisActions.yAction.color1_flux2: "r_gaap1p0Flux"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -602,12 +520,10 @@ tasks:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (g-r) - true (g-r) (mmag)"
@@ -615,12 +531,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_gmr_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "g_gaap1p0Flux"
@@ -629,7 +543,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "r_gaap1p0FluxErr"
       axisActions.yAction.color2_flux1: "g_trueFlux"
       axisActions.yAction.color2_flux2: "r_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -639,12 +552,10 @@ tasks:
         - g_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (g-r) - true (g-r) / GaAP 1.0 (g-r) err"
@@ -652,19 +563,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "r_gaap1p0Flux"
       axisActions.yAction.color1_flux2: "i_gaap1p0Flux"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -674,12 +582,10 @@ tasks:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (r-i) - true (r-i) (mmag)"
@@ -687,12 +593,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_rmi_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "r_gaap1p0Flux"
@@ -701,7 +605,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "i_gaap1p0FluxErr"
       axisActions.yAction.color2_flux1: "r_trueFlux"
       axisActions.yAction.color2_flux2: "i_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -711,12 +614,10 @@ tasks:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (r-i) - true (r-i) / GaAP 1.0 (r-i) err"
@@ -724,19 +625,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "i_gaap1p0Flux"
       axisActions.yAction.color1_flux2: "z_gaap1p0Flux"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -746,12 +644,10 @@ tasks:
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (i-z) - true (i-z) (mmag)"
@@ -759,12 +655,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_imz_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "i_gaap1p0Flux"
@@ -773,7 +667,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "z_gaap1p0FluxErr"
       axisActions.yAction.color2_flux1: "i_trueFlux"
       axisActions.yAction.color2_flux2: "z_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -783,12 +676,10 @@ tasks:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (i-z) - true (i-z) / GaAP 1.0 (i-z) err"
@@ -796,19 +687,16 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiff
       axisActions.yAction.color1_flux1: "z_gaap1p0Flux"
       axisActions.yAction.color1_flux2: "y_gaap1p0Flux"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
@@ -818,12 +706,10 @@ tasks:
         - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (z-y) - true (z-y) (mmag)"
@@ -831,12 +717,10 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
   plot_red_galaxy_zmy_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      axisActions.xAction: MagColumnNanoJansky
       axisActions.xAction.column: "i_trueFlux"
       axisActions.yAction: ColorDiffPull
       axisActions.yAction.color1_flux1: "z_gaap1p0Flux"
@@ -845,7 +729,6 @@ tasks:
       axisActions.yAction.color1_flux2_err: "y_gaap1p0FluxErr"
       axisActions.yAction.color2_flux1: "z_trueFlux"
       axisActions.yAction.color2_flux2: "y_trueFlux"
-      axisActions.magAction: MagColumnNanoJansky
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
@@ -855,12 +738,10 @@ tasks:
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      sourceSelectorActions.sourceSelector.band: "i"
+      selectorActions.remove: ["catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       axisLabels:
         x: "True i (mag)"
         y: "GaAP 1.0 (z-y) - true (z-y) / GaAP 1.0 (z-y) err"
@@ -868,4 +749,3 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
-        from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
