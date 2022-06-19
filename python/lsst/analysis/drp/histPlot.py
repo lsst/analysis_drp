@@ -219,11 +219,14 @@ class HistPlotTask(pipeBase.PipelineTask):
                 plotDf[f"p{i}_{hist}"] = np.array(action(catPlot))
 
         # Gather useful information about the plot
-        try:
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+            SNFlux = "N/A"
+
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.summaryStatsColumn, skymap, plotInfo)
 

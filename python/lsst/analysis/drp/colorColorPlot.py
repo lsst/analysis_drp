@@ -121,14 +121,16 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
-        # Get the S/N cut used
-        try:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Make the plot
         fig = self.colorColorPlot(plotDf, plotInfo)
 

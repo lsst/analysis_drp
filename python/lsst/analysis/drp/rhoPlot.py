@@ -305,15 +305,17 @@ class RhoPlotTask(pipeBase.PipelineTask):
         catPlot.loc[:, "sourceType"] = sourceTypes
 
         # Get the S/N cut used
-        try:
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         rhoStat = self.config.rhoStatisticsAction(catPlot)
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, None, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, None, SN, SNFlux)
 
         # Make the plot(s)
         figDict = self.rhoPlot(rhoStat, plotInfo)

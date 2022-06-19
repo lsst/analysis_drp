@@ -119,24 +119,22 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                    self.config.axisLabels["y"]: self.config.axisActions.yAction(catPlot),
                    self.config.axisLabels["mag"]: self.config.axisActions.magAction(catPlot)}
 
-        try:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             for col in self.config.selectorActions.catSnSelector.columns:
                 columns[col] = catPlot[col]
-        except AttributeError:
-            pass
-
-        # Get the S/N cut used
-        try:
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         plotDf = pd.DataFrame(columns)
 
         xs = plotDf[self.config.axisLabels["x"]].values
         ys = plotDf[self.config.axisLabels["y"]].values
 
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
         fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
 

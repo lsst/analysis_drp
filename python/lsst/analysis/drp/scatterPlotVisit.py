@@ -166,14 +166,16 @@ class ScatterPlotVisitTask(ScatterPlotWithTwoHistsTask):
         useForStats[highSnMask] = 1
         plotDf.loc[:, "useForStats"] = useForStats
 
-        # Get the S/N cut used
-        try:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, dataId["band"], plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, dataId["band"], plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStatsVisit(plotDf, self.config.axisLabels["y"], visitSummaryTable,
                                              plotInfo)

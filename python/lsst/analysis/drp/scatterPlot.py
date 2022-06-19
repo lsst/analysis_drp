@@ -278,13 +278,15 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         plotDf.loc[:, "useForStats"] = useForStats
 
         # Get the S/N cut used
-        try:
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = {} if skymap is None else generateSummaryStats(
             plotDf, self.config.axisLabels["y"], skymap, plotInfo)

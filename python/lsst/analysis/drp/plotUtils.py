@@ -31,7 +31,7 @@ from lsst.geom import Box2D, SpherePoint, degrees
 null_formatter = matplotlib.ticker.NullFormatter()
 
 
-def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
+def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux):
     """Parse plot info from the dataId
 
     Parameters
@@ -44,7 +44,7 @@ def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN):
     -------
     plotInfo : `dict`
     """
-    plotInfo = {"run": runName, "tractTableType": tableName, "plotName": plotName, "SN": SN}
+    plotInfo = {"run": runName, "tractTableType": tableName, "plotName": plotName, "SN": SN, "SNFlux": SNFlux}
 
     for dataInfo in dataId:
         plotInfo[dataInfo.name] = dataId[dataInfo.name]
@@ -263,7 +263,13 @@ def addPlotInfo(fig, plotInfo):
         dataIdText += f", Visit: {plotInfo['visit']}"
 
     bandsText = f", Bands: {''.join(plotInfo['bands'].split(' '))}"
-    SNText = f", S/N: {plotInfo['SN']}"
+    if isinstance(plotInfo["SN"], str):
+        SNText = f", S/N: {plotInfo['SN']}"
+    else:
+        if np.abs(plotInfo["SN"]) > 1e4:
+            SNText = f", S/N > {plotInfo['SN']:0.1g} ({plotInfo['SNFlux']})"
+        else:
+            SNText = f", S/N > {plotInfo['SN']:0.1f} ({plotInfo['SNFlux']})"
     infoText = f"\n{run}{datasetsUsed}{tableType}{dataIdText}{bandsText}{SNText}"
     fig.text(0.01, 0.98, infoText, fontsize=7, transform=fig.transFigure, alpha=0.6, ha="left", va="top")
 
