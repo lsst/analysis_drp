@@ -204,14 +204,16 @@ class SkyPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
-        # Get the S/N cut used
-        try:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
             SN = self.config.selectorActions.catSnSelector.threshold
-        except AttributeError:
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.axisLabels["z"], skymap, plotInfo)
         # Make the plot
@@ -287,24 +289,45 @@ class SkyPlotTask(pipeBase.PipelineTask):
         colorValsStars = colorValsStars[ids]
 
         # Calculate some statistics
+        snForStats = self.config.statisticSelectorActions.statSelector.threshold
+        snBands = "".join(self.config.statisticSelectorActions.statSelector.bands)
+        snFluxType = self.config.statisticSelectorActions.statSelector.fluxType
+        if len(snBands) > 0:
+            if "psf" in snFluxType:
+                snText = "S/N$_{psf}$" + "_{}>".format(snBands)
+            elif "cModel" in snFluxType:
+                snText = "S/N$_{cModel}$" + "_{}>".format(snBands)
+            else:
+                snText = "S/N[{}_{}]>".format(snBands, snFluxType)
+        else:
+            if "psf" in snFluxType:
+                snText = "S/N$_{psf}>$"
+            elif "cModel" in snFluxType:
+                snText = "S/N_${cModel}>$"
+            else:
+                snText = "S/N[{}]>".format(snFluxType)
+        if np.abs(snForStats) > 1e4:
+            snText += "{:0.1g} stats:\n".format(snForStats)
+        else:
+            snText += "{:0.1f} stats:\n".format(snForStats)
+        boxLoc = 0.72
         if np.any(catPlot["sourceType"] == 2):
             statGals = ((catPlot["useForStats"] == 1) & galaxies)
             statGalMed = np.nanmedian(catPlot.loc[statGals, zCol])
             statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit")
 
-            galStatsText = ("Median: {:0.2f}\n".format(statGalMed) + r"$\sigma_{MAD}$: "
-                            + "{:0.2f}\n".format(statGalMad) + r"n$_{points}$: "
-                            + "{}".format(len(xsGalaxies)))
+            galStatsText = ("{}".format(snText)
+                            + "Median: {:0.2f}\n".format(statGalMed)
+                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statGalMad)
+                            + r"n$_{points}$: " + "{}".format(sum(statGals)))
             # Add statistics
             bbox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
             # Check if plotting stars and galaxies, if so move the
             # text box so that both can be seen. Needs to be
             # > 2 becuase not being plotted points are assigned 0
             if len(list(set(catPlot["sourceType"].values))) > 2:
-                boxLoc = 0.63
-            else:
-                boxLoc = 0.8
-            ax.text(boxLoc, 0.91, galStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+                boxLoc -= 0.17
+            ax.text(boxLoc, 0.91, galStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 1):
 
@@ -312,12 +335,13 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statStarMed = np.nanmedian(catPlot.loc[statStars, zCol])
             statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit")
 
-            starStatsText = ("Median: {:0.2f}\n".format(statStarMed) + r"$\sigma_{MAD}$: "
-                             + "{:0.2f}\n".format(statStarMad) + r"n$_{points}$: "
-                             + "{}".format(len(xsStars)))
+            starStatsText = ("{}".format(snText)
+                             + "Median: {:0.2f}\n".format(statStarMed)
+                             + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statStarMad)
+                             + r"n$_{points}$: " + "{}".format(sum(statStars)))
             # Add statistics
             bbox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
-            ax.text(0.8, 0.91, starStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            ax.text(boxLoc, 0.90, starStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 10):
 
@@ -325,11 +349,12 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
             statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
 
-            allStatsText = ("Median: {:0.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
-                            + "{:0.2f}\n".format(statAllMad) + r"n$_{points}$: "
-                            + "{}".format(len(catPlot)))
+            allStatsText = ("{}".format(snText)
+                            + "Median: {:0.2f}\n".format(statAllMed)
+                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statAllMad)
+                            + r"n$_{points}$: " + "{}".format(sum(statAll)))
             bbox = dict(facecolor="purple", alpha=0.2, edgecolor="none")
-            ax.text(0.8, 0.91, allStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            ax.text(boxLoc, 0.91, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 9):
 
@@ -337,11 +362,12 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
             statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
 
-            allStatsText = ("Median: {:0.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
-                            + "{:0.2f}\n".format(statAllMad) + r"n$_{points}$: "
-                            + "{}".format(len(catPlot)))
+            allStatsText = ("{}".format(snText)
+                            + "Median: {:0.2f}\n".format(statAllMed)
+                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statAllMad)
+                            + r"n$_{points}$: " + "{}".format(sum(statAll)))
             bbox = dict(facecolor="green", alpha=0.2, edgecolor="none")
-            ax.text(0.8, 0.91, allStatsText, transform=fig.transFigure, fontsize=8, bbox=bbox)
+            ax.text(boxLoc, 0.91, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         toPlotList = []
         if np.any(catPlot["sourceType"] == 1):
@@ -422,7 +448,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
                 plotOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=7, vmin=vmin, vmax=vmax,
                                      edgecolor="white", linewidths=0.2)
 
-            cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.77])
+            cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.76])
             plt.colorbar(plotOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
             text = cax.text(0.5, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
@@ -452,7 +478,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             ax.invert_xaxis()
 
         # Add useful information to the plot
-        plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85)
+        plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85, top=0.87)
         fig = plt.gcf()
         fig = addPlotInfo(fig, plotInfo)
 
