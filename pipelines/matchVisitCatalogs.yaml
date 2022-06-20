@@ -1,0 +1,15 @@
+description: |
+    Match visit level catalogs with reference catalogs for QA.
+    For visit level tasks the bands needs to be set to [""] to allow the code to be reused between
+    the coadd level tables, which have band_ prepended to their column names, and the visit level
+    tables which do not.
+parameters:
+  band: i
+tasks:
+  match_astromRefCat_visit:
+    class: lsst.analysis.drp.catalogMatch.CatalogMatchVisitTask
+    config:
+      selectorActions.flagSelector: VisitPlotFlagSelector
+      sourceSelectorActions.sourceSelector.band: ""
+      python: |
+        from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector

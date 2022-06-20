@@ -1,0 +1,7 @@
+description: |
+    Match coadd level catalogs with reference catalogs for QA. 
+parameters:
+  band: i
+tasks:
+  match_astromRefCat_objectTable:
+    class: lsst.analysis.drp.catalogMatch.CatalogMatchTask
