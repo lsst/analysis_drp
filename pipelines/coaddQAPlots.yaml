@@ -2,66 +2,66 @@ description: Make coadd plots for QA
 tasks:
   # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
   # This plot shows the on sky distribution of these values for stars.
-  plot_CircAp12_sub_PSF_meas_sky_stars:
+  plot_CircAp12_sub_PSF_sky_stars:
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_stars_i
+      connections.plotName: CircAp12_sub_PSF_stars_i
 
-  plot_CircAp12_sub_PSF_meas_sky_gals:
+  plot_CircAp12_sub_PSF_sky_gals:
     # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_gals_i
+      connections.plotName: CircAp12_sub_PSF_gals_i
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
-  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_stars:
+  plot_CircAp12_sub_PSF_calib_psf_used_sky_stars:
     # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars that were selected as
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
+      connections.plotName: CircAp12_sub_PSF_calib_psf_used_stars_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       fixAroundZero: True
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector
 
-  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_gals:
+  plot_CircAp12_sub_PSF_calib_psf_used_sky_gals:
     # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies that were selected as
     # having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
+      connections.plotName: CircAp12_sub_PSF_calib_psf_used_gals_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
 
-  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_unknown:
+  plot_CircAp12_sub_PSF_calib_psf_used_sky_unknown:
     # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for objects of unknown classification
     # that were selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unknowns_i
+      connections.plotName: CircAp12_sub_PSF_calib_psf_used_unknowns_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector, UnknownIdentifier
 
-  plot_PSFluxSN_meas_sky_all:
+  plot_PSFFluxSN_sky_all:
     # Make a plot showing the signal to noise ratio for the PSF flux.
     # This plot shows the on sky distribution of these values for all objects.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: PSFFluxSN_meas_all_i
+      connections.plotName: PSFFluxSN_all_i
       axisActions.zAction: DivideColumns
       axisActions.zAction.colA.column: "i_psfFlux"
       axisActions.zAction.colB.column: "i_psfFluxErr"
@@ -70,98 +70,98 @@ tasks:
         from lsst.pipe.tasks.dataFrameActions import DivideColumns
         config.axisLabels.update({"z": "S/N = psfFlux/psfFluxErr"})
 
-  plot_Kron_sub_PSFmag_meas_sky_galaxies:
+  plot_Kron_sub_PSFmag_sky_galaxies:
     # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: Kron_sub_PSF_meas_galaxies_i
+      connections.plotName: Kron_sub_PSF_galaxies_i
       axisActions.zAction.col1: "i_kronFlux"
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
         config.axisLabels.update({"z": "Kron - PSF (mmag)"})
 
-  plot_Kron_sub_PSFmag_meas_sky_stars:
+  plot_Kron_sub_PSFmag_sky_stars:
     # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: Kron_sub_PSF_meas_stars_i
+      connections.plotName: Kron_sub_PSF_stars_i
       axisActions.zAction.col1: "i_kronFlux"
       fixAroundZero: True
       python: |
         config.axisLabels.update({"z": "Kron - PSF (mmag)"})
 
-  plot_CModel_sub_PSFmag_meas_sky_galaxies:
+  plot_CModel_sub_PSFmag_sky_galaxies:
     # Make a plot showing the difference between the cmodel magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for galaxies.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CModel_sub_PSF_meas_galaxies_i
+      connections.plotName: CModel_sub_PSF_galaxies_i
       axisActions.zAction.col1: "i_cModelFlux"
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
         config.axisLabels.update({"z": "CModel - PSF (mmag)"})
 
-  plot_CModel_sub_PSFmag_meas_sky_stars:
+  plot_CModel_sub_PSFmag_sky_stars:
     # Make a plot showing the difference between the cmodel magnitude and the PSF magnitude.
     # This plot shows the on sky distribution of these values for stars.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CModel_sub_PSF_meas_stars_i
+      connections.plotName: CModel_sub_PSF_stars_i
       axisActions.zAction.col1: "i_cModelFlux"
       fixAroundZero: True
       python: |
         config.axisLabels.update({"z": "CModel - PSF (mmag)"})
 
-  plot_CircAp12_sub_PSF_meas_calib_psf_used_stars_scatter:
+  plot_CircAp12_sub_PSF_calib_psf_used_stars_scatter:
     # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
     # magnitude for stars. These objects were all selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
+      connections.plotName: CircAp12_sub_PSF_calib_psf_used_stars_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector
 
-  plot_CircAp12_sub_PSF_meas_stars_scatter:
+  plot_CircAp12_sub_PSF_stars_scatter:
     # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
     # magnitude for stars.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_stars_i
+      connections.plotName: CircAp12_sub_PSF_stars_i
 
-  plot_CircAp12_sub_PSF_meas_calib_psf_used_gals_scatter:
+  plot_CircAp12_sub_PSF_calib_psf_used_gals_scatter:
     # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
     # magnitude for galaxies. These objects were all selected as having the flag
     # calib_psf_used = True.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
+      connections.plotName: CircAp12_sub_PSF_calib_psf_used_gals_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
 
-  plot_CircAp12_sub_PSF_meas_gals_scatter:
+  plot_CircAp12_sub_PSF_gals_scatter:
     # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
     # magnitude for galaxies.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: CircAp12_sub_PSF_meas_gals_i
+      connections.plotName: CircAp12_sub_PSF_gals_i
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
-  plot_PsfFluxSN_meas_stars_scatter:
+  plot_PsfFluxSN_stars_scatter:
     # Make a plot showing the signal to noise ratio for the PSF flux.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: PsfFluxSN_meas_stars_i
+      connections.plotName: PsfFluxSN_stars_i
       selectorActions.catSnSelector.threshold: 5
       highSnStatisticSelectorActions: None
       lowSnStatisticSelectorActions: None
@@ -175,11 +175,11 @@ tasks:
         config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
                                                             config.axisActions.yAction.colB.column)})
 
-  plot_CModelFluxSN_meas_stars_scatter:
+  plot_CModelFluxSN_stars_scatter:
     # Make a plot showing the signal to noise ratio for the CModel flux.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
-      connections.plotName: CModelFluxSN_meas_stars_i
+      connections.plotName: CModelFluxSN_stars_i
       selectorActions.catSnSelector.threshold: 5
       highSnStatisticSelectorActions: None
       lowSnStatisticSelectorActions: None
@@ -193,13 +193,13 @@ tasks:
         config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
                                                             config.axisActions.yAction.colB.column)})
 
-  plot_PsfSN_sub_CModelSN_meas_scatter_stars:
+  plot_PsfSN_sub_CModelSN_scatter_stars:
     # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
     # flux vs. CModel flux for stars only.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
+      connections.plotName: PsfSN_sub_CModelSN_stars_i
       axisActions.yAction: SnDiffCalculator
-      connections.plotName: PsfSN_sub_CModelSN_meas_stars_i
       selectorActions.catSnSelector.threshold: 5
       xLims: (17.0, 28.0)
       yLims: (-10.0, 60)
@@ -209,13 +209,13 @@ tasks:
         from lsst.analysis.drp.calcFunctors import SnDiffCalculator
         config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
 
-  plot_PsfSN_sub_CModelSN_meas_scatter_gals:
+  plot_PsfSN_sub_CModelSN_scatter_gals:
     # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
     # flux vs. CModel flux for stars only.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
+      connections.plotName: PsfSN_sub_CModelSN_gals_i
       axisActions.yAction: SnDiffCalculator
-      connections.plotName: PsfSN_sub_CModelSN_meas_gals_i
       selectorActions.catSnSelector.threshold: 5
       xLims: (17.0, 28.0)
       yLims: (-3000.0, 500)
@@ -227,13 +227,13 @@ tasks:
         from lsst.analysis.drp.calcFunctors import SnDiffCalculator
         config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
 
-  plot_PercentDiff_PsfSN_CModelSN_meas_scatter_stars:
+  plot_PercentDiff_PsfSN_CModelSN_scatter_stars:
     # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
     # flux vs. CModel flux for stars only.
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
+      connections.plotName: PercentDiff_PsfSN_CModelSN_stars_i
       axisActions.yAction: SnPercentDiffCalculator
-      connections.plotName: PercentDiff_PsfSN_CModelSN_meas_stars_i
       selectorActions.catSnSelector.threshold: 5
       highSnStatisticSelectorActions: None
       lowSnStatisticSelectorActions: None
@@ -260,7 +260,7 @@ tasks:
         config.axisLabels.update({"z": "Sky Object i_ap09Flux (nJy)"})
 
   histPlot_skyObject:
-    # Make a plot showing histograms of the PSFlux and 9-pixel radius circular aperture flux.
+    # Make a plot showing histograms of the PSFFlux and 9-pixel radius circular aperture flux.
     # The left panel histograms show flux in units of nJy.
     # The right panel histograms show the equivalent sigma flux values (flux/fluxErr)
     class: lsst.analysis.drp.histPlot.HistPlotTask
