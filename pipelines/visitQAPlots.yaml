@@ -177,12 +177,12 @@ tasks:
       connections.plotName: skyObject
       axisActions.zAction: SingleColumnAction
       axisActions.zAction.column: "ap09Flux"
-      selectorActions.flagSelector: FlagSelector
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       selectorActions.flagSelector.selectWhenTrue: ["sky_source"]
+      selectorActions.flagSelector.selectWhenFalse: []
       sourceSelectorActions: None
       statisticSelectorActions.statSelector.threshold: -1e12
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector
         from lsst.pipe.tasks.dataFrameActions import SingleColumnAction
         config.axisLabels.update({"z": "Sky Object: ap09Flux (nJy)"})
 
@@ -196,7 +196,7 @@ tasks:
       axisActions.zAction.col2: "coord_ra_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions: None
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"z": "$RA_{target} - RA_{ref}$ (marcsec)"})
@@ -211,7 +211,7 @@ tasks:
       axisActions.zAction.col2: "coord_dec_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions: None
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"z": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
@@ -224,7 +224,7 @@ tasks:
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_ra_target"
       axisActions.yAction.col2: "coord_ra_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions: None
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"y": "$RA_{target} - RA_{ref}$ (marcsec)"})
@@ -237,7 +237,7 @@ tasks:
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_dec_target"
       axisActions.yAction.col2: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions: None
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"y": "$Dec_{target} - Dec_{ref}$ (marcsec)"})

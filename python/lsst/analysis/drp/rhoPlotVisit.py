@@ -101,8 +101,9 @@ class RhoPlotVisitTaskConfig(RhoPlotTask.ConfigClass, pipelineConnections=RhoPlo
 
     def setDefaults(self):
         super().setDefaults()
+        self.selectorActions.plotFlagSelector = VisitPlotFlagSelector
+        self.selectorActions.catSnSelector.bands = [""]
         self.sourceSelectorActions.sourceSelector.band = ""
-        self.selectorActions.sourceSelector = VisitPlotFlagSelector
 
         self.rhoStatisticsAction.treecorr.min_sep = 0.01
         self.rhoStatisticsAction.treecorr.max_sep = 100

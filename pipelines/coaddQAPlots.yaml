@@ -77,6 +77,7 @@ tasks:
     config:
       connections.plotName: Kron_sub_PSF_galaxies_i
       axisActions.zAction.col1: "i_kronFlux"
+      selectorActions.flagSelector.selectWhenFalse: ["i_kronFlux_flag"]
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
@@ -89,6 +90,7 @@ tasks:
     config:
       connections.plotName: Kron_sub_PSF_stars_i
       axisActions.zAction.col1: "i_kronFlux"
+      selectorActions.flagSelector.selectWhenFalse: ["i_kronFlux_flag"]
       fixAroundZero: True
       python: |
         config.axisLabels.update({"z": "Kron - PSF (mmag)"})
@@ -100,6 +102,7 @@ tasks:
     config:
       connections.plotName: CModel_sub_PSF_galaxies_i
       axisActions.zAction.col1: "i_cModelFlux"
+      selectorActions.flagSelector.selectWhenFalse: ["i_cModel_flag"]
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
@@ -112,6 +115,7 @@ tasks:
     config:
       connections.plotName: CModel_sub_PSF_stars_i
       axisActions.zAction.col1: "i_cModelFlux"
+      selectorActions.flagSelector.selectWhenFalse: ["i_cModel_flag"]
       fixAroundZero: True
       python: |
         config.axisLabels.update({"z": "CModel - PSF (mmag)"})
@@ -180,6 +184,7 @@ tasks:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       connections.plotName: CModelFluxSN_stars_i
+      selectorActions.flagSelector.selectWhenFalse: ["i_cModel_flag"]
       selectorActions.catSnSelector.threshold: 5
       highSnStatisticSelectorActions: None
       lowSnStatisticSelectorActions: None
@@ -249,14 +254,12 @@ tasks:
       connections.plotName: skyObject_i
       axisActions.zAction: SingleColumnAction
       axisActions.zAction.column: "i_ap09Flux"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenTrue: ["sky_object"]
       selectorActions.flagSelector.selectWhenFalse: ["i_pixelFlags_edge"]
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       sourceSelectorActions: None
       statisticSelectorActions.statSelector.threshold: -1e12
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector
         config.axisLabels.update({"z": "Sky Object i_ap09Flux (nJy)"})
 
   histPlot_skyObject:
@@ -313,14 +316,11 @@ tasks:
       axisLabels: {"x": "g - r CModel (mag)",
                    "y": "r - i CModel (mag)",
                    "z": "i_cModelMag (mag)"}
-      selectorActions.coaddSelector: FlagSelector
-      selectorActions.coaddSelector.selectWhenFalse: ["g_cModel_flag", "r_cModel_flag", "i_cModel_flag"]
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.plotFlagSelector.bands: ["g", "r", "i"]
+      selectorActions.flagSelector.selectWhenFalse: ["g_cModel_flag", "r_cModel_flag", "i_cModel_flag"]
       selectorActions.catSnSelector.fluxType: "cModelFlux"
       selectorActions.catSnSelector.threshold: 50
       selectorActions.catSnSelector.bands: ["g", "r", "i"]
-      python: >
-        from lsst.analysis.drp.dataSelectors import FlagSelector
 
   plot_ri_gr_psf:
     # Make a color color plot of gri in PSF magnitudes.
@@ -337,7 +337,7 @@ tasks:
       axisLabels: {"x": "g - r PSF (mag)",
                    "y": "r - i PSF (mag)",
                    "z": "i_PsfMag (mag)"}
-      selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.plotFlagSelector.bands: ["g", "r", "i"]
       selectorActions.catSnSelector.threshold: 50
       selectorActions.catSnSelector.bands: ["g", "r", "i"]
 
@@ -351,7 +351,7 @@ tasks:
       axisActions.zAction.col2: "coord_ra_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["flagSelector", "catSnSelector"]
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"z": "$RA_{target} - RA_{ref}$ (marcsec)"})
@@ -366,7 +366,7 @@ tasks:
       axisActions.zAction.col2: "coord_dec_ref"
       axisActions.xAction.column: "coord_ra_ref"
       axisActions.yAction.column: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["flagSelector", "catSnSelector"]
       python: |
         from lsst.analysis.drp.calcFunctors import AstromDiff
         config.axisLabels.update({"z": "$Dec_{target} - Dec_{ref}$ (marcsec)"})
@@ -379,7 +379,7 @@ tasks:
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_ra_target"
       axisActions.yAction.col2: "coord_ra_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["flagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "psfFlux"
       lowSnStatisticSelectorActions.statSelector.fluxType: "psfFlux"
       python: |
@@ -394,7 +394,7 @@ tasks:
       axisActions.yAction: AstromDiff
       axisActions.yAction.col1: "coord_dec_target"
       axisActions.yAction.col2: "coord_dec_ref"
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["flagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "psfFlux"
       lowSnStatisticSelectorActions.statSelector.fluxType: "psfFlux"
       python: |

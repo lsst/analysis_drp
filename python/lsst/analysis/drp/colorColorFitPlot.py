@@ -62,7 +62,9 @@ class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": dataSelectors.FlagSelector,
+                 "plotFlagSelector": dataSelectors.CoaddPlotFlagSelector,
+                 "catSnSelector": dataSelectors.SnSelector},
     )
 
     stellarLocusFitDict = pexConfig.DictField(

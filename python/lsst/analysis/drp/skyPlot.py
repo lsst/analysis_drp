@@ -12,7 +12,7 @@ from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
 from .calcFunctors import MagDiff
-from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
+from .dataSelectors import FlagSelector, SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
@@ -64,7 +64,8 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": CoaddPlotFlagSelector,
+        default={"flagSelector": FlagSelector,
+                 "plotFlagSelector": CoaddPlotFlagSelector,
                  "catSnSelector": SnSelector},
     )
 
@@ -94,7 +95,8 @@ class SkyPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=SkyPlot
         self.axisActions.zAction = MagDiff
         self.axisActions.zAction.col1 = "i_ap12Flux"
         self.axisActions.zAction.col2 = "i_psfFlux"
-        self.selectorActions.flagSelector.bands = ["i"]
+        self.selectorActions.flagSelector.selectWhenFalse = ["i_ap12Flux_flag"]
+        self.selectorActions.plotFlagSelector.bands = ["i"]
         self.axisLabels = {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
                            "z": "{} - {} (mmag)".format(self.axisActions.zAction.col1.removesuffix("Flux"),
                                                         self.axisActions.zAction.col2.removesuffix("Flux"))}

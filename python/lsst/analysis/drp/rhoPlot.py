@@ -103,7 +103,7 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={
-            "flagSelector": dataSelectors.CoaddPlotFlagSelector,
+            "plotFlagSelector": dataSelectors.CoaddPlotFlagSelector,
             "sourceSelector": dataSelectors.StarIdentifier,
         },
     )
@@ -195,7 +195,7 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
         self.rhoStatisticsAction.colPsfYy = "i_iyyPSF"
         self.rhoStatisticsAction.colPsfXy = "i_ixyPSF"
 
-        self.selectorActions.flagSelector.bands = ["i"]
+        self.selectorActions.plotFlagSelector.bands = ["i"]
 
         _yLabels = {
             0: r"$\rho_{0}(\theta) = \langle \frac{\delta T}{T}, \frac{\delta T}{T}\rangle$",

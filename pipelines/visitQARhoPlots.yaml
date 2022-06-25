@@ -8,7 +8,7 @@ tasks:
       rhoStatisticsAction.treecorr.nbins: 21
       rhoStatisticsAction.treecorr.min_sep: 0.01
       rhoStatisticsAction.treecorr.max_sep: 80
-      selectorActions.flagSelector: VisitPlotFlagSelector
+      selectorActions.plotFlagSelector: VisitPlotFlagSelector
     python: |
       from lsst.analysis.drp.calcFunctors import CalcRhoStatistics
       from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector

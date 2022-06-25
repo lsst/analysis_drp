@@ -1,4 +1,3 @@
-
 description: |
   Make red galaxy truth plots.
 instrument: lsst.obs.lsst.LsstCamImSim
@@ -18,13 +17,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_cModel_flag
         - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
@@ -34,7 +32,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_gmr_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -50,13 +48,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_cModel_flag
         - g_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
@@ -66,7 +63,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -80,13 +77,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_cModel_flag
         - i_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
@@ -96,7 +92,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -112,13 +108,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_cModel_flag
         - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
@@ -128,7 +123,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -142,13 +137,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_cModel_flag
         - z_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
@@ -158,7 +152,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -174,13 +168,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_cModel_flag
         - i_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
@@ -190,7 +183,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_cmodel_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -204,13 +197,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_cModel_flag
         - y_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
@@ -220,7 +212,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_cmodel_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -236,13 +228,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "cmodel_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_cModel_flag
         - z_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
@@ -252,7 +243,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_gmr_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -266,13 +257,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
@@ -282,7 +272,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_gmr_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -298,13 +288,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
         - g_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
@@ -314,7 +303,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -328,13 +317,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
@@ -344,7 +332,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -360,13 +348,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
@@ -376,7 +363,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -390,13 +377,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
@@ -406,7 +392,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -422,13 +408,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
@@ -438,7 +423,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_gaap0p7_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -452,13 +437,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
         - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
@@ -468,7 +452,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_gaap0p7_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -484,13 +468,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap0p7_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
@@ -500,7 +483,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_gmr_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -514,13 +497,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_gmr_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
@@ -530,7 +512,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_gmr_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -546,13 +528,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_gmr_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
         - g_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
@@ -562,7 +543,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -576,13 +557,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_rmi_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
@@ -592,7 +572,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_rmi_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -608,13 +588,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_rmi_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
         - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
@@ -624,7 +603,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -638,13 +617,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_imz_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
@@ -654,7 +632,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_imz_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -670,13 +648,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_imz_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
@@ -686,7 +663,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_gaap1p0_residual:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -700,13 +677,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_zmy_residual"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
         - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
@@ -716,7 +692,7 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 
   plot_red_galaxy_zmy_gaap1p0_pull:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
@@ -732,13 +708,12 @@ tasks:
       axisActions.magAction.column: "i_trueFlux"
       connections.plotName: "gaap1p0_redgals_zmy_pulls"
       connections.catPlot: "matched_true_red_galaxies"
-      selectorActions.flagSelector: FlagSelector
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
         - z_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
-      selectorActions.remove: ["catSnSelector"]
+      selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
       highSnStatisticSelectorActions.statSelector.threshold: 1500
       lowSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
@@ -748,4 +723,4 @@ tasks:
         mag: "True i (mag)"
       python: |
         from lsst.analysis.drp.calcFunctors import ColorDiffPull
-        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier

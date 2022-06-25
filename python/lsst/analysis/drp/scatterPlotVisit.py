@@ -39,7 +39,8 @@ class ScatterPlotVisitConfig(ScatterPlotWithTwoHistsTask.ConfigClass,
         self.axisActions.yAction = MagDiff
         self.axisActions.yAction.col1 = "ap12Flux"
         self.axisActions.yAction.col2 = "psfFlux"
-        self.selectorActions.flagSelector = VisitPlotFlagSelector
+        self.selectorActions.plotFlagSelector = VisitPlotFlagSelector
+        self.selectorActions.flagSelector.selectWhenFalse = ["ap12Flux_flag"]
         self.selectorActions.catSnSelector.bands = [""]
         self.selectorActions.catSnSelector.threshold = 10
         self.sourceSelectorActions.sourceSelector.band = ""

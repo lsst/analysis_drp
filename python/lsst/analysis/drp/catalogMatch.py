@@ -127,7 +127,7 @@ class CatalogMatchConfig(pipeBase.PipelineTaskConfig, pipelineConnections=Catalo
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"plotFlagSelector": dataSelectors.CoaddPlotFlagSelector},
     )
 
     sourceSelectorActions = ConfigurableActionStructField(

@@ -36,7 +36,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
 from .calcFunctors import MagDiff
-from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
+from .dataSelectors import FlagSelector, SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
 from .statistics import sigmaMad
 
@@ -121,7 +121,8 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": CoaddPlotFlagSelector,
+        default={"flagSelector": FlagSelector,
+                 "plotFlagSelector": CoaddPlotFlagSelector,
                  "catSnSelector": SnSelector},
     )
 
@@ -183,7 +184,8 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         self.axisActions.yAction = MagDiff
         self.axisActions.yAction.col1 = "i_ap12Flux"
         self.axisActions.yAction.col2 = "i_psfFlux"
-        self.selectorActions.flagSelector.bands = ["i"]
+        self.selectorActions.flagSelector.selectWhenFalse = ["i_ap12Flux_flag", "i_cModel_flag"]
+        self.selectorActions.plotFlagSelector.bands = ["i"]
         self.selectorActions.catSnSelector.fluxType = "psfFlux"
         self.highSnStatisticSelectorActions.statSelector.fluxType = "cModelFlux"
         self.highSnStatisticSelectorActions.statSelector.threshold = 2700

@@ -9,7 +9,7 @@ tasks:
   match_astromRefCat_visit:
     class: lsst.analysis.drp.catalogMatch.CatalogMatchVisitTask
     config:
-      selectorActions.flagSelector: VisitPlotFlagSelector
+      selectorActions.plotFlagSelector: VisitPlotFlagSelector
       sourceSelectorActions.sourceSelector.band: ""
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector

@@ -67,7 +67,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
         config = ScatterPlotWithTwoHistsTaskConfig(
             axisLabels={"x": "mag", "y": "mag meas - ref", "mag": "mag"},
         )
-        config.selectorActions.flagSelector.bands = ["i"]
+        config.selectorActions.plotFlagSelector.bands = ["i"]
         config.axisActions.yAction = MagDiff(col1="refcat_flux", col2="refcat_flux")
         config.nonBandColumnPrefixes.append("refcat")
         config.selectorActions.catSnSelector.threshold = -1e12
