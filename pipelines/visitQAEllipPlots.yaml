@@ -14,7 +14,7 @@ tasks:
       connections.plotName: e1_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
-        config.axisLabels.update({"y": "E1: (ixx - iyy)/(ixx + iyy)"})
+        config.axisLabels.update({"y": "E1: (i$_{xx}$ - i$_{yy}$)/(i$_{xx}$ + i$_{yy}$)"})
 
   plot_e1_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E1
@@ -26,7 +26,7 @@ tasks:
       connections.plotName: e1_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
-        config.axisLabels.update({"z": "E1: (ixx - iyy)/(ixx + iyy)"})
+        config.axisLabels.update({"z": "E1: (i$_{xx}$ - i$_{yy}$)/(i$_{xx}$ + i$_{yy}$)"})
 
   plot_e2_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E2 for
@@ -40,7 +40,7 @@ tasks:
       connections.plotName: e2_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
-        config.axisLabels.update({"y": "E2: 2ixy/(ixx + iyy)"})
+        config.axisLabels.update({"y": "E2: 2i$_{xy}$/(i$_{xx}$ + i$_{yy}$)"})
 
   plot_e2_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E2
@@ -53,7 +53,7 @@ tasks:
       connections.plotName: e2_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
-        config.axisLabels.update({"z": "E2: 2ixy/(ixx + iyy)"})
+        config.axisLabels.update({"z": "E2: 2i$_{xy}$/(i$_{xx}$ + i$_{yy}$)"})
 
   plot_shapeSize_scatter_visit:
     # Plot a scatter plot of the values of (ixx*iyy - ixy^2)^(1/4) a measurement of
@@ -67,11 +67,11 @@ tasks:
       connections.plotName: shape_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
-        config.axisLabels.update({"y": "Shape: (ixx*iyy - ixy^2)^(1/4)"})
+        config.axisLabels.update({"y": "Shape: (i$_{xx}$*i$_{yy}$ - i$_{xy}^2$)$^{1/4}$"})
 
   plot_shapeSize_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
-    # measurement defined by (ixx*iyy - ixy^2)^(1/4)
+    # measurement defined by (ixx*iyy - i_xy^2)^(1/4)
     class: lsst.analysis.drp.skyPlotVisit.SkyPlotVisitTask
     config:
       axisActions.zAction: CalcShapeSize
@@ -81,7 +81,7 @@ tasks:
       connections.plotName: shape_ixx
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
-        config.axisLabels.update({"z": "Shape: (ixx*iyy - ixy^2)^(1/4)"})
+        config.axisLabels.update({"z": "Shape: (i$_{xx}$*i$_{yy}$ - i$_{xy}^2$)$^{1/4}$"})
 
   plot_e1PSF_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E1 for the PSF
@@ -94,7 +94,7 @@ tasks:
       connections.plotName: e1_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
-        config.axisLabels.update({"y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"})
+        config.axisLabels.update({"y": "E1: (i$_{xx}$PSF - i$_{yy}$PSF)/(i$_{xx}$PSF + i$_{yy}$PSF)"})
 
   plot_e1PSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E1 for the PSF
@@ -106,7 +106,7 @@ tasks:
       connections.plotName: e1_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
-        config.axisLabels.update({"z": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"})
+        config.axisLabels.update({"z": "E1: (i$_{xx}$PSF - i$_{yy}$PSF)/(i$_{xx}$PSF + i$_{yy}$PSF)"})
 
   plot_e2PSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of E2 for the PSF
@@ -119,7 +119,7 @@ tasks:
       connections.plotName: e2_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
-        config.axisLabels.update({"z": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"})
+        config.axisLabels.update({"z": "E2: 2i$_{xy}$PSF/(i$_{xx}$PSF + i$_{yy}$PSF)"})
 
   plot_e2PSF_scatter_visit:
     # Make a scatter plot with collapsed histograms for the axes showing E2 for the PSF
@@ -133,7 +133,7 @@ tasks:
       connections.plotName: e2_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
-        config.axisLabels.update({"y": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"})
+        config.axisLabels.update({"y": "E2: 2i$_{xy}$PSF/(i$_{xx}$PSF + i$_{yy}$PSF)"})
 
   plot_ellipResids_quiver_visit:
     # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
@@ -154,7 +154,7 @@ tasks:
       connections.plotName: Ediff_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
-        config.axisLabels.update({"z": "E Difference (eMEAS - ePSF)"})
+        config.axisLabels.update({"z": "E Difference (e$_{MEAS}$ - e$_{PSF}$)"})
 
   plot_shapeSizePSF_scatter_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
@@ -168,7 +168,7 @@ tasks:
       connections.plotName: shape_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
-        config.axisLabels.update({"y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"})
+        config.axisLabels.update({"y": "Shape: (i$_{xx}$PSF*i$_{yy}$PSF - i$_{xy}$PSF^2$)$^{1/4}$"})
 
   plot_shapeSizePSF_sky_visit:
     # Make a sky plot showing the on-sky distribution of the values of a shape
@@ -182,7 +182,7 @@ tasks:
       connections.plotName: shape_ixxPSF
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
-        config.axisLabels.update({"z": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"})
+        config.axisLabels.update({"z": "Shape: (i$_{xx}$PSF*i$_{yy}$PSF - i$_{xy}$PSF$^2$)$^{1/4}$"})
 
   plot_shapeSizeDiff_scatter_visit:
     # Calculates the difference between the shapes calculated from CModel and the PSF
@@ -202,7 +202,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"y": "Shape Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"y": "Shape Difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_shapeSizeFractionalDiff_scatter_visit:
     class: lsst.analysis.drp.scatterPlotVisit.ScatterPlotVisitTask
@@ -220,7 +220,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import FractionalDifferenceColumns
-        config.axisLabels.update({"y": "Fractional shape difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"y": "Fractional shape difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_E1Diff_scatter_visit:
     # Plots the difference between the calculated E1 for CModel and the PSF against
@@ -238,7 +238,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"y": "E1 Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"y": "E1 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_E2Diff_scatter_visit:
     # Plots the difference between the calculated E2 for CModel and the PSF against
@@ -256,7 +256,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"y": "E2 Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"y": "E2 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_E1Diff_sky_visit:
     # Plots the on-sky distribution of the differences between E1 calculated for the PSF
@@ -274,7 +274,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE1
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"z": "E1 Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"z": "E1 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_E2Diff_sky_visit:
     # Plots the on-sky distribution of the differences between E2 calculated for the PSF
@@ -294,7 +294,7 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcE2
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"z": "E2 Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"z": "E2 Difference (i$_{xx}$ - i$_{xx}$PSF)"})
 
   plot_ShapeDiff_sky_visit:
     # Plots the on-sky distribution of the difference between the sizes calculated
@@ -314,4 +314,4 @@ tasks:
       python: |
         from lsst.analysis.drp.calcFunctors import CalcShapeSize
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
-        config.axisLabels.update({"z": "Size Difference (ixx - ixxPSF)"})
+        config.axisLabels.update({"z": "Size Difference (i$_{xx}$ - i$_{xx}$PSF)"})
