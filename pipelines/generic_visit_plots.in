@@ -1,6 +1,7 @@
 imports:
   - "$ANALYSIS_DRP_DIR/pipelines/visitQAEllipPlots.yaml"
   - "$ANALYSIS_DRP_DIR/pipelines/visitQAPlots.yaml"
+  - "$ANALYSIS_DRP_DIR/pipelines/visitQARhoPlots.yaml"
   - "$ANALYSIS_DRP_DIR/pipelines/matchVisitCatalogs.yaml"
 
 description: |
