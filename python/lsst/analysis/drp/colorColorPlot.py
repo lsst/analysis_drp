@@ -51,7 +51,8 @@ class ColorColorPlotConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector,
+                 "catSnSelector": dataSelectors.SnSelector},
     )
 
 
@@ -122,7 +123,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
 
         # Get the S/N cut used
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
         except AttributeError:
             SN = "N/A"
 

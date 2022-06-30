@@ -197,7 +197,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
 
         # Get the S/N cut used
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
         except AttributeError:
             SN = "N/A"
 

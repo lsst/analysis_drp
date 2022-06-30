@@ -13,10 +13,10 @@ tasks:
       axisActions.yAction.colYy: "iyy"
       connections.plotName: e1_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1: (ixx - iyy)/(ixx + iyy)"}
       python: |
@@ -32,10 +32,10 @@ tasks:
       axisActions.zAction.colYy: "iyy"
       connections.plotName: e1_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1: (ixx - iyy)/(ixx + iyy)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -52,10 +52,10 @@ tasks:
       axisActions.yAction.colXy: "ixy"
       connections.plotName: e2_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2: 2ixy/(ixx + iyy)"}
       python: |
@@ -72,10 +72,10 @@ tasks:
       axisActions.zAction.colXy: "ixy"
       connections.plotName: e2_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2: 2ixy/(ixx + iyy)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -92,10 +92,10 @@ tasks:
       axisActions.yAction.colXy: "ixy"
       connections.plotName: shape_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
       python: |
@@ -113,10 +113,10 @@ tasks:
       axisActions.zAction.colXy: "ixy"
       connections.plotName: shape_ixx
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Shape: (ixx*iyy - ixy^2)^(1/4)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -132,10 +132,10 @@ tasks:
       axisActions.yAction.colYy: "iyyPSF"
       connections.plotName: e1_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
       python: |
@@ -151,10 +151,10 @@ tasks:
       axisActions.zAction.colYy: "iyyPSF"
       connections.plotName: e1_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
                    "z": "E1: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
       python: |
@@ -171,10 +171,10 @@ tasks:
       axisActions.zAction.colXy: "ixyPSF"
       connections.plotName: e2_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -191,10 +191,10 @@ tasks:
       axisActions.yAction.colXy: "ixyPSF"
       connections.plotName: e2_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2: 2ixyPSF/(ixxPSF + iyyPSF)"}
       python: |
@@ -219,10 +219,10 @@ tasks:
       axisActions.zAction.colB.halvePhaseAngle: False
       connections.plotName: Ediff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, SnSelector
@@ -239,10 +239,10 @@ tasks:
       axisActions.yAction.colXy: "ixyPSF"
       connections.plotName: shape_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
       python: |
@@ -260,10 +260,10 @@ tasks:
       axisActions.zAction.colXy: "ixyPSF"
       connections.plotName: shape_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)",
                    "z": "Shape: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
       python: |
@@ -286,10 +286,10 @@ tasks:
       axisActions.yAction.colB.colXy: "ixyPSF"
       connections.plotName: shapeDiff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Shape Difference (ixx - ixxPSF)"}
       python: |
@@ -311,10 +311,10 @@ tasks:
       axisActions.yAction.colB.colXy: "ixyPSF"
       connections.plotName: shapeFractionDiff_sizePSF_scatter
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Fractional shape difference (ixx - ixxPSF)"}
       python: |
@@ -336,10 +336,10 @@ tasks:
       axisActions.yAction.colB.colYy: "iyyPSF"
       connections.plotName: E1Diff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1 Difference (ixx - ixxPSF)"}
       python: |
@@ -361,10 +361,10 @@ tasks:
       axisActions.yAction.colB.colYy: "iyyPSF"
       connections.plotName: E2Diff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2 Difference (ixx - ixxPSF)"}
       python: |
@@ -386,10 +386,10 @@ tasks:
       axisActions.zAction.colB.colYy: "iyyPSF"
       connections.plotName: E1Diff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1 Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -412,10 +412,10 @@ tasks:
       axisActions.zAction.colB.colXy: "ixyPSF"
       connections.plotName: E2Diff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2 Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector
@@ -438,10 +438,10 @@ tasks:
       axisActions.zAction.colB.colXy: "ixyPSF"
       connections.plotName: ShapeSizeDiff_ixxPSF
       selectorActions.flagSelector: VisitPlotFlagSelector
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: [""]
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 10
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: [""]
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 10
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Size Difference (ixx - ixxPSF)"}
       python: |
         from lsst.analysis.drp.dataSelectors import VisitPlotFlagSelector, GalaxyIdentifier, SnSelector

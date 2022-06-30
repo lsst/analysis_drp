@@ -19,9 +19,9 @@ tasks:
       connections.plotName: E1Diff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1 Difference (e1 - e1_PSF)"}
@@ -47,9 +47,9 @@ tasks:
       connections.plotName: E2Diff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2 Difference (e2 - e2_PSF)"}
@@ -75,9 +75,9 @@ tasks:
       connections.plotName: ShapeSizeFractionDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Fractional size residuals (S/S_PSF - 1)"}
@@ -102,9 +102,9 @@ tasks:
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E1 Difference (e1 - e1_PSF)"}
       python: |
@@ -130,9 +130,9 @@ tasks:
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E2 Difference (e2 - e2_PSF)"}
       python: |
@@ -158,9 +158,9 @@ tasks:
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Fractional Size Residual (S/S_PSF - 1)"}
       python: |
@@ -186,9 +186,9 @@ tasks:
       connections.plotName: E1Diff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1 Difference (e1 - e1_PSF)"}
@@ -217,9 +217,9 @@ tasks:
       connections.plotName: E2Diff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2 Difference (e2 - e2_PSF)"}
@@ -248,9 +248,9 @@ tasks:
       connections.plotName: ShapeSizeFractionDiff_magDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
                    "y": "Fractional size residuals (S/S_PSF - 1)"}
@@ -277,9 +277,9 @@ tasks:
       connections.plotName: ShapeSizeDiff_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Size Residuals (S - S_PSF)"}
@@ -309,9 +309,9 @@ tasks:
       connections.plotName: ShapeSizeDiff_magDiff_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "CModel - PSF Magnitude (mmag)", "mag": "PSF Magnitude (mag)",
                    "y": "Size Residuals (S - S_PSF)"}
@@ -338,9 +338,9 @@ tasks:
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Size Residuals (S - S_PSF)"}
       python: |
@@ -368,9 +368,9 @@ tasks:
       fixAroundZero: True
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "E Difference (eMEAS - ePSF)"}
       python: |
@@ -389,9 +389,9 @@ tasks:
       connections.plotName: e1_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1: (ixx - iyy)/(ixx + iyy)"}
@@ -411,9 +411,9 @@ tasks:
       connections.plotName: e2_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2: 2ixy/(ixx + iyy)"}
@@ -433,9 +433,9 @@ tasks:
       connections.plotName: ShapeSize_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Size S: (ixx*iyy - ixy^2)^(1/4)"}
@@ -454,9 +454,9 @@ tasks:
       connections.plotName: e1PSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E1_PSF: (ixxPSF - iyyPSF)/(ixxPSF + iyyPSF)"}
@@ -476,9 +476,9 @@ tasks:
       connections.plotName: e2PSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "E2_PSF: 2ixyPSF/(ixxPSF + iyyPSF)"}
@@ -498,9 +498,9 @@ tasks:
       connections.plotName: ShapeSizePSF_scatter_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "PSF Magnitude (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "PSF Size S_PSF: (ixxPSF*iyyPSF - ixyPSF^2)^(1/4)"}
