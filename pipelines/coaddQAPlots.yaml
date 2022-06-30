@@ -11,9 +11,9 @@ tasks:
       connections.plotName: CircAp12_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -31,9 +31,9 @@ tasks:
       connections.plotName: CircAp12_sub_PSF_meas_gals_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -54,9 +54,9 @@ tasks:
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -77,9 +77,9 @@ tasks:
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -101,9 +101,9 @@ tasks:
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -122,9 +122,9 @@ tasks:
       connections.plotName: PSFFluxSN_meas_all_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions: None
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Circular Ap 12 - PSF (mmag) (Meas)"}
       python: |
@@ -142,9 +142,9 @@ tasks:
       connections.plotName: Kron_sub_PSF_meas_galaxies_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PSF (mmag) (Meas)"}
       python: |
@@ -162,9 +162,9 @@ tasks:
       connections.plotName: Kron_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "Kron - PSF (mmag) (Meas)"}
@@ -183,9 +183,9 @@ tasks:
       connections.plotName: CModel_sub_PSF_meas_galaxies_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PSF (mmag) (Meas)"}
       python: |
@@ -203,9 +203,9 @@ tasks:
       connections.plotName: CModel_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       fixAroundZero: True
       axisLabels: {"x": "R.A. (Degrees)", "y": "Dec. (Degrees)", "z": "CModel - PSF (mmag) (Meas)"}
@@ -226,9 +226,9 @@ tasks:
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
@@ -248,9 +248,9 @@ tasks:
       connections.plotName: CircAp12_sub_PSF_meas_stars_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: StarIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
@@ -273,9 +273,9 @@ tasks:
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
@@ -295,9 +295,9 @@ tasks:
       connections.plotName: CircAp12_sub_PSF_meas_gals_i
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 100
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 100
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       axisLabels: {"x": "Circ Ap 12 (mag)", "mag": "PSF Magnitude (mag)",
                    "y": "Circular Ap 12 - PSF (mmag) (Meas)"}
@@ -381,10 +381,10 @@ tasks:
       selectorActions.coaddSelector.selectWhenFalse: ["g_cModel_flag", "r_cModel_flag", "i_cModel_flag"]
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "cModelFlux"
-      selectorActions.SnSelector.threshold: 50
-      selectorActions.SnSelector.bands: ["g", "r", "i"]
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "cModelFlux"
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands: ["g", "r", "i"]
       python: >
         from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
 
@@ -405,10 +405,10 @@ tasks:
                    "z": "i_PsfMag (mag)"}
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.fluxType: "psfFlux"
-      selectorActions.SnSelector.threshold: 50
-      selectorActions.SnSelector.bands: ["g", "r", "i"]
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.fluxType: "psfFlux"
+      selectorActions.catSnSelector.threshold: 50
+      selectorActions.catSnSelector.bands: ["g", "r", "i"]
       python: >
        from lsst.analysis.drp.dataSelectors import FlagSelector, CoaddPlotFlagSelector, SnSelector
 

@@ -220,7 +220,7 @@ class HistPlotTask(pipeBase.PipelineTask):
 
         # Gather useful information about the plot
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
         except AttributeError:
             SN = "N/A"
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)

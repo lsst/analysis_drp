@@ -120,14 +120,14 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                    self.config.axisLabels["mag"]: self.config.axisActions.magAction(catPlot)}
 
         try:
-            for col in self.config.selectorActions.SnSelector.columns:
+            for col in self.config.selectorActions.catSnSelector.columns:
                 columns[col] = catPlot[col]
         except AttributeError:
             pass
 
         # Get the S/N cut used
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
         except AttributeError:
             SN = "N/A"
 
@@ -235,9 +235,9 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         medMag = np.median(mags)
 
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
             SNBand = self.config.axisLabels["mag"][0]
-            SNFlux = self.config.selectorActions.SnSelector.fluxType
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
             SNs = catPlot[SNBand + "_" + SNFlux]/catPlot[SNBand + "_" + SNFlux + "Err"]
             ids = (SNs < SN + 10.0)
             medMag = np.nanmedian(mags[ids])

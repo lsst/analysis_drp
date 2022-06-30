@@ -20,10 +20,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
@@ -55,10 +55,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
@@ -89,10 +89,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
@@ -122,10 +122,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
@@ -157,10 +157,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
@@ -192,10 +192,10 @@ tasks:
       lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector: SnSelector
+      selectorActions.catSnSelector.bands: ["i"]
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
