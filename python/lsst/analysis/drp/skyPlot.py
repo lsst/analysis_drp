@@ -12,7 +12,8 @@ from lsst.pipe.tasks.dataFrameActions import CoordColumn, SingleColumnAction
 from lsst.skymap import BaseSkyMap
 
 from .calcFunctors import MagDiff
-from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
+from .dataSelectors import (SnSelector, CoaddPlotFlagSelector, StarIdentifier, GalaxyIdentifier,
+                            UnknownIdentifier)
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, extremaSort
 
 import pandas as pd
@@ -269,9 +270,10 @@ class SkyPlotTask(pipeBase.PipelineTask):
         redPurple = mkColormap(["indigo", "lemonchiffon", "firebrick"])
         orangeBlue = mkColormap(["darkOrange", "thistle", "midnightblue"])
 
-        # Need to separate stars and galaxies
+        # Need to separate stars, galaxies, and unknowns
         stars = (catPlot["sourceType"] == 1)
         galaxies = (catPlot["sourceType"] == 2)
+        unknowns = (catPlot["sourceType"] == 9)
 
         xCol = self.config.axisLabels["x"]
         yCol = self.config.axisLabels["y"]
@@ -313,76 +315,128 @@ class SkyPlotTask(pipeBase.PipelineTask):
             snText += "{:0.1g} stats:\n".format(snForStats)
         else:
             snText += "{:0.1f} stats:\n".format(snForStats)
-        boxLoc = 0.72
-        if np.any(catPlot["sourceType"] == 2):
-            statGals = ((catPlot["useForStats"] == 1) & galaxies)
-            statGalMed = np.nanmedian(catPlot.loc[statGals, zCol])
-            statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit")
 
-            galStatsText = ("{}".format(snText)
-                            + "Median: {:0.2f}\n".format(statGalMed)
-                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statGalMad)
-                            + r"n$_{points}$: " + "{}".format(sum(statGals)))
-            # Add statistics
-            bbox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="none")
-            # Check if plotting stars and galaxies, if so move the
-            # text box so that both can be seen. Needs to be
-            # > 2 becuase not being plotted points are assigned 0
-            if len(list(set(catPlot["sourceType"].values))) > 2:
-                boxLoc -= 0.17
-            ax.text(boxLoc, 0.91, galStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
+        # Determine which source selector identifiers are in play
+        hasStarSelector = False
+        hasGalaxySelector = False
+        hasUnknownSelector = False
+        nSourceSelector = 0
+        for selector in self.config.sourceSelectorActions:
+            if isinstance(selector, StarIdentifier):
+                hasStarSelector = True
+                nSourceSelector += 1
+            if isinstance(selector, GalaxyIdentifier):
+                hasGalaxySelector = True
+                nSourceSelector += 1
+            if isinstance(selector, UnknownIdentifier):
+                hasUnknownSelector = True
+                nSourceSelector += 1
 
-        if np.any(catPlot["sourceType"] == 1):
+        xBoxLoc = 0.74
+        yBoxLoc = 0.90
 
+        if np.any(catPlot["sourceType"] == 1) or hasStarSelector:
             statStars = ((catPlot["useForStats"] == 1) & stars)
-            statStarMed = np.nanmedian(catPlot.loc[statStars, zCol])
-            statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit")
-
-            starStatsText = ("{}".format(snText)
+            if sum(statStars) > 0:
+                statStarMed = np.nanmedian(catPlot.loc[statStars, zCol])
+                statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit")
+                snTextStr = snText
+            else:  # No data to plot
+                statStarMed = np.nan
+                statStarMad = np.nan
+                snTextStr = "No Data:\n"
+            starStatsText = ("{}".format(snTextStr)
                              + "Median: {:0.2f}\n".format(statStarMed)
                              + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statStarMad)
-                             + r"n$_{points}$: " + "{}".format(sum(statStars)))
+                             + r"n$_{stars}$: " + "{}".format(sum(statStars)))
             # Add statistics
-            bbox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="none")
-            ax.text(boxLoc, 0.90, starStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
+            bbox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="darkgreen")
+            # Check if plotting stars and galaxies, if so move the
+            # text box so that both can be seen.
+            if hasGalaxySelector:
+                xBoxLoc += 0.1
+            ax.text(xBoxLoc, yBoxLoc, starStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
+
+        if np.any(catPlot["sourceType"]) == 2 or hasGalaxySelector:
+            statGals = ((catPlot["useForStats"] == 1) & galaxies)
+            if sum(statGals) > 0:
+                statGalMed = np.nanmedian(catPlot.loc[statGals, zCol])
+                statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit")
+                snTextStr = snText
+            else:  # No data to plot
+                statGalMed = np.nan
+                statGalMad = np.nan
+                snTextStr = "No Data:\n"
+            galStatsText = ("{}".format(snTextStr)
+                            + "Median: {:0.2f}\n".format(statGalMed)
+                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statGalMad)
+                            + r"n$_{galaxies}$: " + "{}".format(sum(statGals)))
+            # Add statistics
+            bbox = dict(facecolor="lemonchiffon", alpha=0.5, edgecolor="firebrick")
+            # Check if plotting stars and galaxies, if so move the
+            # text box so that both can be seen.
+            if hasStarSelector:
+                xOffset = 0.17 if sum(statGals) > 0 else 0.11
+                xBoxLoc -= xOffset
+            ax.text(xBoxLoc, yBoxLoc, galStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         if np.any(catPlot["sourceType"] == 10):
-
             statAll = (catPlot["useForStats"] == 1)
-            statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
-            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
-
-            allStatsText = ("{}".format(snText)
+            if sum(statAll) > 0:
+                statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
+                statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+                snTextStr = snText
+            else:  # No data to plot
+                statAllMed = np.nan
+                statAllMad = np.nan
+                snTextStr = "No Data:\n"
+            allStatsText = ("{}".format(snTextStr)
                             + "Median: {:0.2f}\n".format(statAllMed)
                             + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statAllMad)
                             + r"n$_{points}$: " + "{}".format(sum(statAll)))
             bbox = dict(facecolor="purple", alpha=0.2, edgecolor="none")
-            ax.text(boxLoc, 0.91, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
+            ax.text(xBoxLoc, yBoxLoc, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
-        if np.any(catPlot["sourceType"] == 9):
-
-            statAll = (catPlot["useForStats"] == 1)
-            statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
-            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
-
-            allStatsText = ("{}".format(snText)
-                            + "Median: {:0.2f}\n".format(statAllMed)
-                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statAllMad)
-                            + r"n$_{points}$: " + "{}".format(sum(statAll)))
-            bbox = dict(facecolor="green", alpha=0.2, edgecolor="none")
-            ax.text(boxLoc, 0.91, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
+        if np.any(catPlot["sourceType"] == 9) or hasUnknownSelector:
+            # and not (hasStarSelector or hasGalaxySelector)):
+            statUnk = ((catPlot["useForStats"] == 1) & unknowns)
+            if sum(statUnk) > 0:
+                statUnkMed = np.nanmedian(catPlot.loc[statUnk, zCol])
+                statUnkMad = sigmaMad(catPlot.loc[statUnk, zCol], nan_policy="omit")
+                snTextStr = snText
+            else:  # No data to plot
+                statUnkMed = np.nan
+                statUnkMad = np.nan
+                snTextStr = "No Data:\n"
+            allStatsText = ("{}".format(snTextStr)
+                            + "Median: {:0.2f}\n".format(statUnkMed)
+                            + r"$\sigma_{MAD}$: " + "{:0.2f}\n".format(statUnkMad)
+                            + r"n$_{unknkown}$: " + "{}".format(sum(statUnk)))
+            bbox = dict(facecolor="green", alpha=0.2, edgecolor="indigo")
+            # Check if also plotting stars and galaxies, if so move the
+            # text box so that both can be seen.
+            if hasStarSelector or hasGalaxySelector:
+                xOffset = 0.17 if sum(statUnk) > 0 else 0.11
+                xBoxLoc -= xOffset
+            ax.text(xBoxLoc, yBoxLoc, allStatsText, transform=fig.transFigure, fontsize=6, bbox=bbox)
 
         toPlotList = []
+        # Can only do binned plotting for one source type if more than one is
+        # being plotted.  Prioritize on stars then galaxies (then unknown).
         if np.any(catPlot["sourceType"] == 1):
-            toPlotList.append((xsStars, ysStars, colorValsStars, blueGreen, "Stars"))
+            doBinning = True
+            toPlotList.append((xsStars, ysStars, colorValsStars, blueGreen, "Stars", doBinning))
         if np.any(catPlot["sourceType"] == 2):
-            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, redPurple, "Galaxies"))
+            doBinning = True if not hasStarSelector else False
+            toPlotList.append((xsGalaxies, ysGalaxies, colorValsGalaxies, redPurple, "Galaxies", doBinning))
         if np.any(catPlot["sourceType"] == 10):
+            doBinning = True
             ids = extremaSort(catPlot[zCol].values)
             toPlotList.append((catPlot[xCol].values[ids], catPlot[yCol].values[ids],
-                               catPlot[zCol].values[ids], orangeBlue, "All"))
+                               catPlot[zCol].values[ids], orangeBlue, "All", doBinning))
         if np.any(catPlot["sourceType"] == 9):
-            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown"))
+            doBinning = True if nSourceSelector == 1 else False
+            toPlotList.append((catPlot[xCol], catPlot[yCol], catPlot[zCol], "viridis", "Unknown", doBinning))
 
         # Corner plot of patches showing summary stat in each
         if self.config.plotOutlines:
@@ -409,7 +463,8 @@ class SkyPlotTask(pipeBase.PipelineTask):
                     ax.annotate(dataId, (cenX, cenY), color="k", fontsize=5, ha="center", va="center",
                                 path_effects=[pathEffects.withStroke(linewidth=2, foreground="w")])
 
-        for (i, (xs, ys, colorVals, cmap, label)) in enumerate(toPlotList):
+        xColorAx = 0.87 if len(toPlotList) == 0 else 0.84
+        for (i, (xs, ys, colorVals, cmap, label, doBinning)) in enumerate(toPlotList):
             if "tract" not in sumStats.keys() or not self.config.plotOutlines:
                 minRa = np.min(xs)
                 maxRa = np.max(xs)
@@ -434,7 +489,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             binnedStats, xEdges, yEdges, binNums = binned_statistic_2d(xs, ys, colorVals, statistic="median",
                                                                        bins=(xBinEdges, yBinEdges))
 
-            if len(xs) > 5000:
+            if len(xs) > 5000 and doBinning:
                 s = 500/(len(xs)**0.5)
                 lw = (s**0.5) / 10
                 plotOut = ax.imshow(binnedStats.T, cmap=cmap,
@@ -451,7 +506,8 @@ class SkyPlotTask(pipeBase.PipelineTask):
                 plotOut = ax.scatter(xs, ys, c=colorVals, cmap=cmap, s=7, vmin=vmin, vmax=vmax,
                                      edgecolor="white", linewidths=0.2)
 
-            cax = fig.add_axes([0.87 + i*0.04, 0.11, 0.04, 0.76])
+            xColorAx += i*0.04 if len(xs) > 0 else xColorAx
+            cax = fig.add_axes([xColorAx, 0.11, 0.04, 0.76])
             plt.colorbar(plotOut, cax=cax, extend="both")
             colorBarLabel = "{}: {}".format(self.config.axisLabels["z"], label)
             text = cax.text(0.5, 0.5, colorBarLabel, color="k", rotation="vertical", transform=cax.transAxes,
@@ -471,7 +527,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
         plt.draw()
 
         # Find some useful axis limits
-        lenXs = [len(xs) for (xs, _, _, _, _) in toPlotList]
+        lenXs = [len(xs) for (xs, _, _, _, _, _) in toPlotList]
         if lenXs != [] and np.max(lenXs) > 1000:
             padRa = (maxRa - minRa)/10
             padDec = (maxDec - minDec)/10
@@ -481,7 +537,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             ax.invert_xaxis()
 
         # Add useful information to the plot
-        plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.85, top=0.87)
+        plt.subplots_adjust(wspace=0.0, hspace=0.0, right=0.83, top=0.87)
         fig = plt.gcf()
         fig = addPlotInfo(fig, plotInfo)
 
