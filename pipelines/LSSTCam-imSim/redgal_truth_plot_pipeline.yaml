@@ -50,7 +50,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - g_cModel_flag
-        - g_cModel_flag
+        - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -79,7 +79,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_cModel_flag
-        - i_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -110,7 +109,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_cModel_flag
-        - r_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -140,7 +138,6 @@ tasks:
       selectorActions.flagSelector.selectWhenFalse:
         - i_cModel_flag
         - z_cModel_flag
-        - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "cModelFlux"
@@ -170,8 +167,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - i_cModel_flag
-        - i_cModel_flag
-        - i_cModel_flag
+        - z_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: cModelFlux
@@ -230,7 +226,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - z_cModel_flag
-        - z_cModel_flag
+        - y_cModel_flag
         - i_cModel_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -290,7 +286,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
-        - g_gaapFlux_flag
+        - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -319,7 +315,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
-        - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -350,7 +345,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
-        - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -380,7 +374,6 @@ tasks:
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - z_gaapFlux_flag
-        - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap0p7Flux"
@@ -410,8 +403,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
-        - i_gaapFlux_flag
-        - i_gaapFlux_flag
+        - z_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap0p7Flux
@@ -470,7 +462,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
-        - z_gaapFlux_flag
+        - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -530,7 +522,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - g_gaapFlux_flag
-        - g_gaapFlux_flag
+        - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -559,7 +551,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
-        - i_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -590,7 +581,6 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - r_gaapFlux_flag
-        - r_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
@@ -620,7 +610,6 @@ tasks:
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
         - z_gaapFlux_flag
-        - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: "gaap1p0Flux"
@@ -650,8 +639,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - i_gaapFlux_flag
-        - i_gaapFlux_flag
-        - i_gaapFlux_flag
+        - z_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
       highSnStatisticSelectorActions.statSelector.fluxType: gaap1p0Flux
@@ -710,7 +698,7 @@ tasks:
       connections.catPlot: "matched_true_red_galaxies"
       selectorActions.flagSelector.selectWhenFalse:
         - z_gaapFlux_flag
-        - z_gaapFlux_flag
+        - y_gaapFlux_flag
         - i_gaapFlux_flag
       sourceSelectorActions.sourceSelector: GalaxyIdentifier
       selectorActions.remove: ["plotFlagSelector", "catSnSelector"]
