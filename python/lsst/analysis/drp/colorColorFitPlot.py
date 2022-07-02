@@ -140,8 +140,15 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         ys = plotDf[self.config.axisLabels["y"]].values
 
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
-        fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
-        fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
+        if len(plotDf) == 0:
+            fig = plt.Figure()
+            noDataText = ("No data to plot after selectors applied\n(do you have all three of "
+                          "the bands required: {}?)".format(bands))
+            fig.text(0.5, 0.5, noDataText, ha="center", va="center")
+            fig = addPlotInfo(fig, plotInfo)
+        else:
+            fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
+            fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
 
         return pipeBase.Struct(colorColorFitPlot=fig)
 
