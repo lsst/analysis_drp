@@ -135,7 +135,14 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
         # Get useful information about the plot
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Make the plot
-        fig = self.colorColorPlot(plotDf, plotInfo)
+        if len(plotDf) == 0:
+            fig = plt.Figure()
+            noDataText = ("No data to plot after selectors applied\n(do you have all three of "
+                          "the bands required: {}?)".format(bands))
+            fig.text(0.5, 0.5, noDataText, ha="center", va="center")
+            fig = addPlotInfo(fig, plotInfo)
+        else:
+            fig = self.colorColorPlot(plotDf, plotInfo)
 
         return pipeBase.Struct(colorColorPlot=fig)
 
