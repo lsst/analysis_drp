@@ -23,9 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import gridspec
-from matplotlib.patches import Rectangle
 from matplotlib.path import Path
-from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
@@ -35,11 +33,8 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
 from . import dataSelectors as dataSelectors
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap, addSummaryPlot
 from .statistics import sigmaMad
-
-cmapPatch = plt.cm.coolwarm.copy()
-cmapPatch.set_bad(color="none")
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
@@ -408,6 +403,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         yBinsOut = []
         linesForLegend = []
 
+        # Figure out what types of sources are going to be plotted
+        # then add these to a list of separate source selections
+        # to plot along with the standard colors for these
+        # source types.
         if (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
                 and not np.any(catPlot["sourceType"] == sourceTypeMapper["galaxies"])):
             toPlotList = [(xsStars.values, ysStars.values, "midnightblue", newBlues,
@@ -429,6 +428,9 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         elif np.any(catPlot["sourceType"] == sourceTypeMapper["all"]):
             toPlotList = [(catPlot[xCol].values, catPlot[yCol].values, "purple", None,
                            sourceTypeMapper["all"])]
+
+        # If the selectors return no data then make a figure with
+        # this written on it.
         else:
             toPlotList = []
             noDataFig = plt.Figure()
@@ -436,6 +438,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             noDataFig = addPlotInfo(noDataFig, plotInfo)
             return noDataFig
 
+        # Now iterate over the list of sources to plot that
+        # were made above.
         xMin = None
         for (j, (xs, ys, color, cmap, sourceType)) in enumerate(toPlotList):
             sigMadYs = sigmaMad(ys, nan_policy="omit")
@@ -664,51 +668,8 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             plt.colorbar(histIm, cax=cax, orientation="vertical", label="Number of Points Per Bin")
 
         # Corner plot of patches showing summary stat in each
-        axCorner = plt.gcf().add_subplot(gs[0, -1])
-        axCorner.yaxis.tick_right()
-        axCorner.yaxis.set_label_position("right")
-        axCorner.xaxis.tick_top()
-        axCorner.xaxis.set_label_position("top")
-        axCorner.set_aspect("equal")
-
-        patches = []
-        colors = []
-        for dataId in sumStats.keys():
-            (corners, stat) = sumStats[dataId]
-            ra = corners[0][0].asDegrees()
-            dec = corners[0][1].asDegrees()
-            xy = (ra, dec)
-            width = corners[2][0].asDegrees() - ra
-            height = corners[2][1].asDegrees() - dec
-            patches.append(Rectangle(xy, width, height))
-            colors.append(stat)
-            ras = [ra.asDegrees() for (ra, dec) in corners]
-            decs = [dec.asDegrees() for (ra, dec) in corners]
-            axCorner.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-            cenX = ra + width / 2
-            cenY = dec + height / 2
-            if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
-
-        # Set the bad color to transparent and make a masked array
-        colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapPatch)
-        collection.set_array(colors)
-        axCorner.add_collection(collection)
-
-        axCorner.set_xlabel("R.A. (deg)", fontsize=7)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=7)
-        axCorner.tick_params(axis="both", labelsize=6, length=0, pad=1.5)
-        axCorner.invert_xaxis()
-
-        # Add a colorbar
-        pos = axCorner.get_position()
-        cax = fig.add_axes([pos.x0, pos.y0 + 0.23, pos.x1 - pos.x0, 0.025])
-        plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cax.text(0.5, 0.5, "Median Value", color="k", transform=cax.transAxes, rotation="horizontal",
-                 horizontalalignment="center", verticalalignment="center", fontsize=6)
-        cax.tick_params(axis="x", labelsize=6, labeltop=True, labelbottom=False, bottom=False, top=True,
-                        pad=0.5, length=2)
+        sumPlotLoc = gs[0, -1]
+        addSummaryPlot(fig, sumPlotLoc, sumStats, self.config.axisLabels["y"])
 
         plt.draw()
         plt.subplots_adjust(wspace=0.0, hspace=0.0, bottom=0.22, left=0.21)

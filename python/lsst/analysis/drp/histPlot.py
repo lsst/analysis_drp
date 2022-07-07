@@ -3,16 +3,13 @@ import numpy as np
 import pandas as pd
 from scipy.stats import median_absolute_deviation as sigmaMad
 from matplotlib import gridspec
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
+from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, addSummaryPlot
 from . import calcFunctors  # noqa
 
 
@@ -276,21 +273,32 @@ class HistPlotTask(pipeBase.PipelineTask):
         patch is shown in the upper right corner of the resultant plot.
         """
         num_panels = len(self.config.panels)
-        self.log.info("Generating a %d-panel histogram plot.", num_panels)
+        self.log.info(f"Generating a {num_panels}-panel histogram plot.")
 
         fig = plt.figure(dpi=300)
         gs = gridspec.GridSpec(240, 240)
+        plt.subplots_adjust(left=0.07, right=0.97, bottom=0.02, top=0.98)
+
+        colors = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70",
+                  "#717581", "#92dadd"]
+        colorIndex = 0
 
         # Determine gridspec figure divisions
-        summary_block = 40  # how much space should be reserved for the summary stats block?
+        summary_height = 70  # vertical space reserved for the summary panel
+        summary_width = 45  # horizontal space reserved for the summary panel
+        summary_pad_vertical = 20  # summary panel inset vertically
+        summary_pad_horizontal = 10  # summary panel inset horizontally
+        plot_info_height = 20  # extra vertical space reserved for the plot info
         panel_pad = 8  # how much padding should be added around each panel?
+
         if num_panels <= 1:
             ncols = 1
         else:
             ncols = 2
         nrows = int(np.ceil(num_panels / ncols))
-        col_bounds = np.linspace(0 + summary_block + panel_pad, 240, ncols + 1, dtype=int)
-        row_bounds = np.linspace(0, 240, nrows + 1, dtype=int)
+
+        col_bounds = np.linspace(10, 240 - summary_width - panel_pad, ncols + 1, dtype=int)
+        row_bounds = np.linspace(plot_info_height, 240, nrows + 1, dtype=int)
         col_starts, col_stops, row_starts, row_stops = [], [], [], []
         for i in range(num_panels):
             col_starts.append(col_bounds[i % ncols] + panel_pad)
@@ -300,6 +308,16 @@ class HistPlotTask(pipeBase.PipelineTask):
                 col_stops.append(col_bounds[(i % ncols) + 1] - panel_pad)
             row_starts.append(row_bounds[i // ncols] + panel_pad)
             row_stops.append(row_bounds[(i // ncols) + 1] - (2 * panel_pad))
+
+        colLabels = [r"Median", r"$\sigma_{MAD}$", r"Number"]
+        rows = []
+        rowColors = []
+
+        # Work out how many individual lines are being plotted
+        numHists = 0
+        for panel in self.config.panels:
+            for hist, action in self.config.panels[panel].actions.items():
+                numHists += 1
 
         # panel plotting
         for i, (panel, col_start, col_stop, row_start, row_stop) in enumerate(zip(self.config.panels,
@@ -327,19 +345,34 @@ class HistPlotTask(pipeBase.PipelineTask):
                 vUppers.append(pvals[1])
                 # generate additional per-histogram statistics
                 isfinite = np.isfinite(hist_data)
-                meds.append(np.median(hist_data[isfinite]))
-                mads.append(sigmaMad(hist_data[isfinite]))
-                nums.append(np.sum(isfinite))
+                med = np.median(hist_data[isfinite])
+                sigMad = sigmaMad(hist_data[isfinite])
+                num = np.sum(isfinite)
+                meds.append(med)
+                mads.append(sigMad)
+                nums.append(num)
+                row = [f"{med:0.3g}", f"{sigMad:0.3g}", f"{num}"]
+                rows.append(row)
             vLower = np.min(vLowers)
             vUpper = np.max(vUppers)
 
             # generate plot
             ax = fig.add_subplot(gs[row_start:row_stop, col_start:col_stop])
+            # Only plot a legend if there is a label to plot
+            plotLegend = 0
             for count, (hist, hist_data, med) in enumerate(zip(hists_data.keys(), hists_data.values(), meds)):
-                col = plt.cm.tab10(count)
-                ax.hist(hist_data[np.isfinite(hist_data)], bins=self.config.panels[panel].nBins, alpha=0.7,
-                        color=col, range=(vLower, vUpper), histtype="step", lw=2)
+                if numHists > 10:
+                    col = plt.cm.tab10(count)
+                else:
+                    col = colors[colorIndex]
+                    rowColors.append(colors[colorIndex])
+                    colorIndex += 1
+                ax.hist(hist_data[np.isfinite(hist_data)], bins=self.config.panels[panel].nBins,
+                        color=col, range=(vLower, vUpper), histtype="step", lw=2,
+                        label=self.config.panels[panel].histLabels[hist])
                 ax.axvline(med, ls="--", lw=1, c=col)
+                if self.config.panels[panel].histLabels[hist] != "":
+                    plotLegend += 1
             ax.set_yscale(self.config.panels[panel].yscale)
             ax.set_xlim(vLower, vUpper)
             ax.set_xlabel(self.config.panels[panel].label, labelpad=1)
@@ -352,69 +385,48 @@ class HistPlotTask(pipeBase.PipelineTask):
                 ylims[1] *= 1.1
             ax.set_ylim(ylims[0], ylims[1])
 
-            # add histogram labels and data statistics
-            for count, (hist, med, mad, num) in enumerate(zip(hists_data.keys(), meds, mads, nums)):
-                stats = f"{med:0.1f}, {mad:0.1f}, {num}"
-                try:
-                    hist_label = self.config.panels[panel].histLabels[hist]
-                except KeyError:
-                    hist_label = hist
-                label_props = dict(xycoords="axes fraction", fontsize=7, va="top", textcoords="offset points",
-                                   c=plt.cm.tab10(count))
-                ax.annotate("\n" * count + hist_label, xy=(0, 1), ha="left", xytext=(2, -2), **label_props)
-                ax.annotate("\n" * count + stats, xy=(1, 1), ha="right", xytext=(-2, -2), **label_props)
+            # add histogram labels and (optionally) data statistics
+            if numHists > 10:
+                for count, (hist, med, mad, num) in enumerate(zip(hists_data.keys(), meds, mads, nums)):
+                    stats = f"{med:0.1f}, {mad:0.1f}, {num}"
+                    try:
+                        hist_label = self.config.panels[panel].histLabels[hist]
+                    except KeyError:
+                        hist_label = hist
+                    label_props = dict(xycoords="axes fraction", fontsize=6.5, va="top",
+                                       textcoords="offset points", c=plt.cm.tab10(count))
+                    ax.annotate("\n"*count + hist_label, xy=(0, 1), ha="left", xytext=(2, -2), **label_props)
+                    ax.annotate("\n"*count + stats, xy=(1, 1), ha="right", xytext=(-2, -2), **label_props)
+            else:
+                if plotLegend > 0:
+                    ax.legend(fontsize=6, loc="upper left")
 
-        # summary stats plot
-        axCorner = fig.add_subplot(gs[-summary_block-59:, :summary_block])
-        axCorner.set_aspect("equal")
-        axCorner.invert_xaxis()
-        patches = []
-        colors = []
-        for dataId in sumStats.keys():
-            (corners, stat) = sumStats[dataId]
-            ra = corners[0][0].asDegrees()
-            dec = corners[0][1].asDegrees()
-            xy = (ra, dec)
-            width = corners[2][0].asDegrees() - ra
-            height = corners[2][1].asDegrees() - dec
-            patches.append(Rectangle(xy, width, height))
-            colors.append(stat)
-            ras = [ra.asDegrees() for (ra, dec) in corners]
-            decs = [dec.asDegrees() for (ra, dec) in corners]
-            axCorner.plot(ras + [ras[0]], decs + [decs[0]], "k", lw=0.5)
-            cenX = ra + width / 2
-            cenY = dec + height / 2
-            if dataId != "tract":
-                axCorner.annotate(dataId, (cenX, cenY), color="k", fontsize=4, ha="center", va="center")
-        cmapUse = plt.cm.coolwarm
-        # Set the bad color to transparent and make a masked array
-        cmapUse.set_bad(color="none")
-        colors = np.ma.array(colors, mask=np.isnan(colors))
-        collection = PatchCollection(patches, cmap=cmapUse)
-        collection.set_array(colors)
-        axCorner.add_collection(collection)
-        axCorner.set_xlabel("R.A. (deg)", fontsize=7, labelpad=1)
-        axCorner.set_ylabel("Dec. (deg)", fontsize=7, labelpad=1)
-        axCorner.tick_params(labelsize=5, length=2, pad=1)
-        # add a colorbar
-        divider = make_axes_locatable(axCorner)
-        cax = divider.append_axes("top", size="14%", pad=0.05)
-        cbar = plt.colorbar(collection, cax=cax, orientation="horizontal")
-        cbar.ax.tick_params(labelsize=5, labeltop=True, labelbottom=False, top=True, bottom=False, length=2,
-                            pad=0.5)
-        cax.text(0.5, 0.4, "Median Value", color="k", rotation="horizontal", transform=cax.transAxes,
-                 horizontalalignment="center", verticalalignment="center", fontsize=7)
-        axCorner.text(0.5, 1.35, self.config.summaryStatsColumn, color="k", rotation="horizontal",
-                      transform=axCorner.transAxes, horizontalalignment="center", verticalalignment="center",
-                      fontsize=7)
+        # Add statistics key or statistics table
+        if numHists > 10:
+            # Hist stats key for per-panel statistics
+            plt.text(0.75, 0.889, "Key: Median, ${{\\sigma}}_{{MAD}}$, Number",
+                     transform=fig.transFigure, ha="right", va="bottom", fontsize=7)
+        else:
+            # Add a table
+            axTable = fig.add_subplot(gs[summary_height + 5:summary_height + 6, -summary_width - 5:])
+            axTable.axis("off")
+            statTable = axTable.table(cellText=rows, colLabels=colLabels, loc="bottom", rowColours=rowColors,
+                                      cellLoc="center")
+            for i in np.arange(len(rows)):
+                statTable[(i + 1, -1)].set_width(0.09)
+                statTable[(i + 1, -1)].set_edgecolor("white")
+                for j in [0, 1, 2]:
+                    statTable[(i + 1, j)].visible_edges = "open"
+                    if i == 0:
+                        statTable[(i, j)].visible_edges = "horizontal"
 
-        # Wrap up: add global y-axis label, hist stats key, and adjust subplots
-        plt.text((summary_block + panel_pad / 2) / 240, 0.41, "Frequency", rotation=90,
-                 transform=fig.transFigure)
-        plt.text(0.955, 0.889, "Key: med, ${{\\sigma}}_{{MAD}}$, $n_{{points}}$",
-                 transform=fig.transFigure, ha="right", va="bottom", fontsize=7)
+        # Summary stats plot
+        loc = gs[summary_pad_vertical:summary_height, -summary_width:-summary_pad_horizontal]
+        fig = addSummaryPlot(fig, loc, sumStats, self.config.summaryStatsColumn)
+
+        # Add global y-axis label, adjust plot whitespace, and add plot info
+        plt.text(0.02, 0.41, "Frequency", rotation=90, transform=fig.transFigure)
         plt.draw()
-        plt.subplots_adjust(left=0.05, right=0.99, bottom=0.02, top=0.91)
         fig = addPlotInfo(fig, plotInfo)
 
         return fig

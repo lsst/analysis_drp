@@ -396,6 +396,8 @@ class RhoPlotTask(pipeBase.PipelineTask):
             fig = addPlotInfo(fig, plotInfo)
             fig.tight_layout()
 
+            plt.subplots_adjust(top=0.87)
+
             figDict[rhoIndex] = fig
 
         return figDict

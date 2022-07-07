@@ -38,4 +38,4 @@ Dec. (deg)
 
 
 
-Median Value
+mag meas - ref
