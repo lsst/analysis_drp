@@ -155,7 +155,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
             texts_ref = set(x.strip() for x in f.readlines())
         texts_set = set(x.strip().replace(newline, newline_replace) for x in texts)
 
-        self.assertTrue(texts_set.issuperset(texts_ref))
+        self.assertGreaterEqual(texts_set, texts_ref)
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
