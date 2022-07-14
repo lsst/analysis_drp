@@ -49,14 +49,14 @@ tasks:
     # that were selected as having the flag calib_psf_used = True.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
     config:
-      connections.plotName: CircAp12_sub_PS_meas_calib_psf_used_unknowns_i
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_unknowns_i
       selectorActions.calibPointSelector: FlagSelector
       selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
       sourceSelectorActions.sourceSelector: UnknownIdentifier
       python: |
         from lsst.analysis.drp.dataSelectors import FlagSelector, UnknownIdentifier
 
-  plot_PSFluxSN_meas_sky_all:
+  plot_PSFFluxSN_meas_sky_all:
     # Make a plot showing the signal to noise ratio for the PSF flux.
     # This plot shows the on sky distribution of these values for all objects.
     class: lsst.analysis.drp.skyPlot.SkyPlotTask
@@ -260,7 +260,7 @@ tasks:
         config.axisLabels.update({"z": "Sky Object i_ap09Flux (nJy)"})
 
   histPlot_skyObject:
-    # Make a plot showing histograms of the PSFlux and 9-pixel radius circular aperture flux.
+    # Make a plot showing histograms of the PSF flux and 9-pixel radius circular aperture flux.
     # The left panel histograms show flux in units of nJy.
     # The right panel histograms show the equivalent sigma flux values (flux/fluxErr)
     class: lsst.analysis.drp.histPlot.HistPlotTask
