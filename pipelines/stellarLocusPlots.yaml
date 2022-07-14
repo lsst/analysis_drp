@@ -48,6 +48,10 @@ tasks:
                    "mag": "r CModel Magnitude (mag)"}
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
+                                                               "r_cModel_flag",
+                                                               "i_cModel_flag"]
       selectorActions.catSnSelector: SnSelector
       selectorActions.catSnSelector.fluxType: "cModelFlux"
       selectorActions.catSnSelector.threshold: 50
@@ -55,7 +59,7 @@ tasks:
       stellarLocusFitDict: {"xMin": 0.28, "xMax": 1.0, "yMin": 0.02, "yMax": 0.48,
                             "mHW": 0.52, "bHW": -0.08}
       python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
 
   plot_xFit_PSF:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
@@ -97,6 +101,10 @@ tasks:
                    "mag": "r CModel Magnitude (mag)"}
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["g", "r", "i"]
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
+                                                               "r_cModel_flag",
+                                                               "i_cModel_flag"]
       selectorActions.catSnSelector: SnSelector
       selectorActions.catSnSelector.fluxType: "psfFlux"
       selectorActions.catSnSelector.threshold: 50
@@ -104,7 +112,7 @@ tasks:
       stellarLocusFitDict: {"xMin": 1.05, "xMax": 1.55, "yMin": 0.78, "yMax": 1.62,
                             "mHW": 13.35, "bHW": -15.54}
       python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
 
   plot_yFit_PSF:
     class: lsst.analysis.drp.colorColorFitPlot.ColorColorFitPlotTask
@@ -146,6 +154,10 @@ tasks:
                    "mag": "i CModel Magnitude (mag)"}
       selectorActions.flagSelector: CoaddPlotFlagSelector
       selectorActions.flagSelector.bands: ["r", "i", "z"]
+      selectorActions.additionalFlagSelector: FlagSelector
+      selectorActions.additionalFlagSelector.selectWhenFalse: ["g_cModel_flag",
+                                                               "r_cModel_flag",
+                                                               "i_cModel_flag"]
       selectorActions.catSnSelector: SnSelector
       selectorActions.catSnSelector.fluxType: "psfFlux"
       selectorActions.catSnSelector.threshold: 50
@@ -153,4 +165,4 @@ tasks:
       stellarLocusFitDict: {"xMin": 0.82, "xMax": 2.01, "yMin": 0.37, "yMax": 0.9,
                             "mHW": 0.40, "bHW": 0.03}
       python: >
-        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector
+        from lsst.analysis.drp.dataSelectors import CoaddPlotFlagSelector, SnSelector, FlagSelector
