@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import median_absolute_deviation as sigmaMad
@@ -14,6 +15,8 @@ from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import ExtinctionCorrectedMagDiff
 from . import dataSelectors as dataSelectors
 from .plotUtils import parsePlotInfo, addPlotInfo, stellarLocusFit, perpDistance, mkColormap
+
+matplotlib.use("Agg")
 
 
 class ColorColorFitPlotConnections(pipeBase.PipelineTaskConnections,
@@ -89,7 +92,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv", "sky"]:
                         bands.append(band)
 
         bands = set(bands)
@@ -119,26 +122,31 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                    self.config.axisLabels["y"]: self.config.axisActions.yAction(catPlot),
                    self.config.axisLabels["mag"]: self.config.axisActions.magAction(catPlot)}
 
-        try:
-            for col in self.config.selectorActions.SnSelector.columns:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
+            for col in self.config.selectorActions.catSnSelector.columns:
                 columns[col] = catPlot[col]
-        except AttributeError:
-            pass
-
-        # Get the S/N cut used
-        try:
-            SN = self.config.selectorActions.SnSelector.threshold
-        except AttributeError:
+            SN = self.config.selectorActions.catSnSelector.threshold
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         plotDf = pd.DataFrame(columns)
 
         xs = plotDf[self.config.axisLabels["x"]].values
         ys = plotDf[self.config.axisLabels["y"]].values
 
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
-        fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
-        fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
+        if len(plotDf) == 0:
+            fig = plt.Figure()
+            noDataText = ("No data to plot after selectors applied\n(do you have all three of "
+                          "the bands required: {}?)".format(bands))
+            fig.text(0.5, 0.5, noDataText, ha="center", va="center")
+            fig = addPlotInfo(fig, plotInfo)
+        else:
+            fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
+            fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
 
         return pipeBase.Struct(colorColorFitPlot=fig)
 
@@ -235,9 +243,9 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         medMag = np.median(mags)
 
         try:
-            SN = self.config.selectorActions.SnSelector.threshold
+            SN = self.config.selectorActions.catSnSelector.threshold
             SNBand = self.config.axisLabels["mag"][0]
-            SNFlux = self.config.selectorActions.SnSelector.fluxType
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
             SNs = catPlot[SNBand + "_" + SNFlux]/catPlot[SNBand + "_" + SNFlux + "Err"]
             ids = (SNs < SN + 10.0)
             medMag = np.nanmedian(mags[ids])

@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -27,6 +27,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.path import Path
 from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky, SingleColumnAction
 from lsst.skymap import BaseSkyMap
@@ -34,12 +35,14 @@ from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 
-from . import dataSelectors as dataSelectors
+from .calcFunctors import MagDiff
+from .dataSelectors import SnSelector, StarIdentifier, CoaddPlotFlagSelector
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo, mkColormap
 from .statistics import sigmaMad
 
 cmapPatch = plt.cm.coolwarm.copy()
 cmapPatch.set_bad(color="none")
+matplotlib.use("Agg")
 
 
 class ScatterPlotWithTwoHistsTaskConnections(pipeBase.PipelineTaskConnections,
@@ -113,27 +116,28 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
     nonBandColumnPrefixes = pexConfig.ListField(
         doc="Column prefixes that are not bands and which should not be added to the set of bands",
         dtype=str,
-        default=["coord", "extend", "detect", "xy", "merge"],
+        default=["coord", "extend", "detect", "xy", "merge", "sky"],
     )
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": CoaddPlotFlagSelector,
+                 "catSnSelector": SnSelector},
     )
 
     highSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the high SN statistics.",
-        default={"statSelector": dataSelectors.SnSelector},
+        default={"statSelector": SnSelector},
     )
 
     lowSnStatisticSelectorActions = ConfigurableActionStructField(
         doc="Selectors to use to decide which points to use for calculating the low SN statistics.",
-        default={"statSelector": dataSelectors.SnSelector},
+        default={"statSelector": SnSelector},
     )
 
     sourceSelectorActions = ConfigurableActionStructField(
         doc="What types of sources to use.",
-        default={"sourceSelector": dataSelectors.StarIdentifier},
+        default={"sourceSelector": StarIdentifier},
     )
 
     nBins = pexConfig.Field(
@@ -149,12 +153,48 @@ class ScatterPlotWithTwoHistsTaskConfig(pipeBase.PipelineTaskConfig,
         dtype=bool,
     )
 
+    xLims = pexConfig.ListField(
+        doc="Minimum and maximum x-axis limit to force (provided as a list of [xMin, xMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    yLims = pexConfig.ListField(
+        doc="Minimum and maximum y-axis limit to force (provided as a list of [yMin, yMax]). "
+            "If `None`, limits will be computed and set based on the data.",
+        dtype=float,
+        default=None,
+        optional=True,
+    )
+
+    minPointSize = pexConfig.Field(
+        doc="When plotting points (as opposed to 2D hist bins), the minimum size they can be.  Some "
+            "relative scaling will be perfomed depending on the \"flavor\" of the set of points.",
+        default=2.0,
+        dtype=float,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.magAction.column = "i_cModelFlux"
         self.axisActions.xAction.column = "i_cModelFlux"
+        self.axisActions.yAction = MagDiff
+        self.axisActions.yAction.col1 = "i_ap12Flux"
+        self.axisActions.yAction.col2 = "i_psfFlux"
+        self.selectorActions.flagSelector.bands = ["i"]
+        self.selectorActions.catSnSelector.fluxType = "psfFlux"
+        self.highSnStatisticSelectorActions.statSelector.fluxType = "cModelFlux"
         self.highSnStatisticSelectorActions.statSelector.threshold = 2700
+        self.lowSnStatisticSelectorActions.statSelector.fluxType = "cModelFlux"
         self.lowSnStatisticSelectorActions.statSelector.threshold = 500
+        self.axisLabels = {
+            "x": self.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+            "mag": self.axisActions.magAction.column.removesuffix("Flux") + "  (mag)",
+            "y": ("{} - {} (mmag)".format(self.axisActions.yAction.col1.removesuffix("Flux"),
+                                          self.axisActions.yAction.col2.removesuffix("Flux")))
+        }
 
 
 class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
@@ -263,22 +303,23 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         plotDf.loc[:, "useForStats"] = useForStats
 
         # Get the S/N cut used
-        try:
-            SN = self.config.selectorActions.SnSelector.threshold
-        except AttributeError:
+        if hasattr(self.config.selectorActions, "catSnSelector"):
+            SN = self.config.selectorActions.catSnSelector.threshold
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = {} if skymap is None else generateSummaryStats(
             plotDf, self.config.axisLabels["y"], skymap, plotInfo)
         # Make the plot
         fig = self.scatterPlotWithTwoHists(plotDf, plotInfo, sumStats)
-
         return pipeBase.Struct(scatterPlot=fig)
 
-    def scatterPlotWithTwoHists(self, catPlot, plotInfo, sumStats, yLims=False, xLims=False):
+    def scatterPlotWithTwoHists(self, catPlot, plotInfo, sumStats):
         """Makes a generic plot with a 2D histogram and collapsed histograms of
         each axis.
 
@@ -300,14 +341,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             A dictionary where the patchIds are the keys which store the R.A.
             and dec of the corners of the patch, along with a summary
             statistic for each patch.
-        yLims : `Bool` or `tuple`, optional
-            The y axis limits to use for the plot.  If `False`, they are
-            calculated from the data.  If being given a tuple of
-            (yMin, yMax).
-        xLims : `Bool` or `tuple`, optional
-            The x axis limits to use for the plot.  If `False`, they are
-            calculated from the data.
-            If being given a tuple of (xMin, xMax).
 
         Returns
         -------
@@ -324,6 +357,11 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         of the resultant plot. The code uses the selectorActions to decide
         which points to plot and the statisticSelector actions to determine
         which points to use for the printed statistics.
+
+        The axis limits are set based on the values of `config.xLim` and
+        `config.yLims`.  If provided (as a `list` of [min, max]), those will
+        be used.  If `None` (the default), the axis limits will be computed
+        and set based on the data.
         """
         self.log.info("Plotting %s: the values of %s on a scatter plot.",
                       self.config.connections.plotName, self.config.axisLabels['y'])
@@ -405,7 +443,6 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
         ax = fig.add_subplot(gs[1:, :-1])
         binThresh = 5
 
-        yBinsOut = []
         linesForLegend = []
 
         if (np.any(catPlot["sourceType"] == sourceTypeMapper["stars"])
@@ -460,11 +497,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             medYs = np.nanmedian(ys)
             fiveSigmaHigh = medYs + 5.0*sigMadYs
             fiveSigmaLow = medYs - 5.0*sigMadYs
-            binSize = (fiveSigmaHigh - fiveSigmaLow)/101.0
+            binSize = (fiveSigmaHigh - fiveSigmaLow)/self.config.nBins
             yEdges = np.arange(fiveSigmaLow, fiveSigmaHigh, binSize)
 
             counts, xBins, yBins = np.histogram2d(xs, ys, bins=(xEdges, yEdges))
-            yBinsOut.append(yBins)
             countsYs = np.sum(counts, axis=1)
 
             ids = np.where((countsYs > binThresh))[0]
@@ -484,7 +520,7 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 sigMads = np.zeros(len(xEdgesPlot))
 
                 for (i, xEdge) in enumerate(xEdgesPlot):
-                    ids = np.where((xs < xEdge) & (xs > xEdges[i]) & (np.isfinite(ys)))[0]
+                    ids = np.where((xs < xEdge) & (xs >= xEdges[i]) & (np.isfinite(ys)))[0]
                     med = np.median(ys[ids])
                     sigMad = sigmaMad(ys[ids])
                     meds[i] = med
@@ -519,21 +555,24 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # Check which points are outside 3 sigma MAD of the median
                 # and plot these as points.
                 inside = threeSigMadPath.contains_points(np.array([xs, ys]).T)
-                ax.plot(xs[~inside], ys[~inside], ".", ms=3, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs[~inside], ys[~inside], ".", ms=self.config.minPointSize, alpha=0.3,
+                        mfc=color, mec=color, zorder=-1)
 
                 # Add some stats text
                 xPos = 0.65 - 0.4*j
-                bbox = dict(edgecolor=color, linestyle="--", facecolor="none")
-                highThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
-                statText = f"S/N > {highThresh} Stats ({magCol} < {highMags[sourceType]})\n"
-                statText += highStats[sourceType]
-                fig.text(xPos, 0.090, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    bbox = dict(edgecolor=color, linestyle="--", facecolor="none")
+                    highThresh = self.config.highSnStatisticSelectorActions.statSelector.threshold
+                    statText = f"S/N > {highThresh} Stats [{magCol} $\\lesssim$ {highMags[sourceType]}]\n"
+                    statText += highStats[sourceType]
+                    fig.text(xPos, 0.090, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
 
-                bbox = dict(edgecolor=color, linestyle=":", facecolor="none")
-                lowThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
-                statText = f"S/N > {lowThresh} Stats ({magCol} < {lowMags[sourceType]})\n"
-                statText += lowStats[sourceType]
-                fig.text(xPos, 0.020, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    bbox = dict(edgecolor=color, linestyle=":", facecolor="none")
+                    lowThresh = self.config.lowSnStatisticSelectorActions.statSelector.threshold
+                    statText = f"S/N > {lowThresh} Stats [{magCol} $\\lesssim$ {lowMags[sourceType]}]\n"
+                    statText += lowStats[sourceType]
+                    fig.text(xPos, 0.020, statText, bbox=bbox, transform=fig.transFigure, fontsize=6)
 
                 if self.config.plot2DHist:
                     histIm = ax.hexbin(xs[inside], ys[inside], gridsize=75, cmap=cmap, mincnt=1, zorder=-2)
@@ -545,29 +584,33 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
                 # numbers of sources.
                 sources = (catPlot["sourceType"] == sourceType)
                 statInfo = catPlot["useForStats"].loc[sources].values
-                highSn = (statInfo == 1)
-                lowSn = ((statInfo == 2) | (statInfo == 2))
-                if np.sum(highSn) < 100 and np.sum(highSn) > 0:
-                    ax.plot(xs[highSn], ys[highSn], marker="x", ms=4, mec="w", mew=2, ls="none")
-                    highSnLine, = ax.plot(xs[highSn], ys[highSn], color=color, marker="x", ms=4, ls="none",
-                                          label="High SN")
-                    linesForLegend.append(highSnLine)
-                    xMin = np.min(xs[highSn])
-                else:
-                    ax.axvline(float(highMags[sourceType]), color=color, ls="--")
-
-                if np.sum(lowSn) < 100 and np.sum(lowSn) > 0:
-                    ax.plot(xs[lowSn], ys[lowSn], marker="+", ms=4, mec="w", mew=2, ls="none")
-                    lowSnLine, = ax.plot(xs[lowSn], ys[lowSn], color=color, marker="+", ms=4, ls="none",
-                                         label="Low SN")
-                    linesForLegend.append(lowSnLine)
-                    if xMin is None or xMin > np.min(xs[lowSn]):
-                        xMin = np.min(xs[lowSn])
-                else:
-                    ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
+                if hasattr(self.config.highSnStatisticSelectorActions, "statSelector"):
+                    highSn = (statInfo == 1)
+                    if np.sum(highSn) < 100 and np.sum(highSn) > 0:
+                        ax.plot(xs[highSn], ys[highSn], marker="x", ms=self.config.minPointSize + 1,
+                                mec="w", mew=2, ls="none")
+                        highSnLine, = ax.plot(xs[highSn], ys[highSn], color=color, marker="x",
+                                              ms=self.config.minPointSize + 1, ls="none", label="High SN")
+                        linesForLegend.append(highSnLine)
+                        xMin = np.min(xs[highSn])
+                    else:
+                        ax.axvline(float(highMags[sourceType]), color=color, ls="--")
+                if hasattr(self.config.lowSnStatisticSelectorActions, "statSelector"):
+                    lowSn = ((statInfo == 2) | (statInfo == 2))
+                    if np.sum(lowSn) < 100 and np.sum(lowSn) > 0:
+                        ax.plot(xs[lowSn], ys[lowSn], marker="+", ms=self.config.minPointSize + 1, mec="w",
+                                mew=2, ls="none")
+                        lowSnLine, = ax.plot(xs[lowSn], ys[lowSn], color=color, marker="+",
+                                             ms=self.config.minPointSize + 1, ls="none", label="Low SN")
+                        linesForLegend.append(lowSnLine)
+                        if xMin is None or xMin > np.min(xs[lowSn]):
+                            xMin = np.min(xs[lowSn])
+                    else:
+                        ax.axvline(float(lowMags[sourceType]), color=color, ls=":")
 
             else:
-                ax.plot(xs, ys, ".", ms=5, alpha=0.3, mfc=color, mec=color, zorder=-1)
+                ax.plot(xs, ys, ".", ms=self.config.minPointSize + 3, alpha=0.3, mfc=color, mec=color,
+                        zorder=-1)
                 meds = np.array([np.nanmedian(ys)]*len(xs))
                 medLine, = ax.plot(xs, meds, color, label=f"Median: {np.nanmedian(ys):0.3g}", lw=0.8)
                 linesForLegend.append(medLine)
@@ -585,8 +628,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             plotMed = np.nanmedian(ysGalaxies)
         if len(xs) < 2:
             meds = [np.median(ys)]
-        if yLims:
-            ax.set_ylim(yLims[0], yLims[1])
+
+        if self.config.yLims is not None:
+            yLimMin = self.config.yLims[0]
+            yLimMax = self.config.yLims[1]
         else:
             numSig = 4
             yLimMin = plotMed - numSig*sigMadYs
@@ -597,10 +642,10 @@ class ScatterPlotWithTwoHistsTask(pipeBase.PipelineTask):
             numSig += 1
             yLimMin = plotMed - numSig*sigMadYs
             yLimMax = plotMed + numSig*sigMadYs
-            ax.set_ylim(yLimMin, yLimMax)
+        ax.set_ylim(yLimMin, yLimMax)
 
-        if xLims:
-            ax.set_xlim(xLims[0], xLims[1])
+        if self.config.xLims is not None:
+            ax.set_xlim(self.config.xLims[0], self.config.xLims[1])
         elif len(xs) > 2:
             if xMin is None:
                 xMin = xs1 - 2*xScale

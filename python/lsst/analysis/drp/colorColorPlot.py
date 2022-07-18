@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pathEffects
 import numpy as np
@@ -10,6 +11,8 @@ from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import ExtinctionCorrectedMagDiff
 from .plotUtils import parsePlotInfo, addPlotInfo, mkColormap
 from . import dataSelectors as dataSelectors
+
+matplotlib.use("Agg")
 
 
 class ColorColorPlotConnections(pipeBase.PipelineTaskConnections,
@@ -51,7 +54,8 @@ class ColorColorPlotConfig(pipeBase.PipelineTaskConfig,
 
     selectorActions = ConfigurableActionStructField(
         doc="Which selectors to use to narrow down the data for QA plotting.",
-        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector},
+        default={"flagSelector": dataSelectors.CoaddPlotFlagSelector,
+                 "catSnSelector": dataSelectors.SnSelector},
     )
 
 
@@ -71,7 +75,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv"]:
+                    if band not in ["coord", "extend", "detect", "xy", "merge", "ebv", "sky"]:
                         bands.append(band)
 
         bands = set(bands)
@@ -120,16 +124,25 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             mask &= np.isfinite(plotDf[col])
         plotDf = plotDf[mask]
 
-        # Get the S/N cut used
-        try:
-            SN = self.config.selectorActions.SnSelector.threshold
-        except AttributeError:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
+            SN = self.config.selectorActions.catSnSelector.threshold
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Make the plot
-        fig = self.colorColorPlot(plotDf, plotInfo)
+        if len(plotDf) == 0:
+            fig = plt.Figure()
+            noDataText = ("No data to plot after selectors applied\n(do you have all three of "
+                          "the bands required: {}?)".format(bands))
+            fig.text(0.5, 0.5, noDataText, ha="center", va="center")
+            fig = addPlotInfo(fig, plotInfo)
+        else:
+            fig = self.colorColorPlot(plotDf, plotInfo)
 
         return pipeBase.Struct(colorColorPlot=fig)
 

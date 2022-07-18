@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,6 +29,8 @@ from lsst.pipe.tasks.configurableActions import ConfigurableActionField, Configu
 from . import dataSelectors
 from .calcFunctors import CalcRhoStatistics
 from .plotUtils import addPlotInfo, parsePlotInfo
+
+matplotlib.use("Agg")
 
 __all__ = ["RhoPlotTaskConfig", "RhoPlotTask"]
 
@@ -102,7 +104,7 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
         doc="Which selectors to use to narrow down the data for QA plotting.",
         default={
             "flagSelector": dataSelectors.CoaddPlotFlagSelector,
-            "sourceSelector": dataSelectors.StarIdentifier,
+            "catSnSelector": dataSelectors.SnSelector,
         },
     )
 
@@ -167,7 +169,7 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
                 for col in action.columns:
                     columnNames.add(col)
                     band = col.split("_")[0]
-                    if band not in ("coord", "extend", "detect", "xy", "merge"):
+                    if band not in ("coord", "extend", "detect", "xy", "merge", "sky"):
                         bands.add(band)
 
         columnNames.update(self.rhoStatisticsAction.columns)
@@ -192,6 +194,8 @@ class RhoPlotTaskConfig(pipeBase.PipelineTaskConfig, pipelineConnections=RhoPlot
         self.rhoStatisticsAction.colPsfXx = "i_ixxPSF"
         self.rhoStatisticsAction.colPsfYy = "i_iyyPSF"
         self.rhoStatisticsAction.colPsfXy = "i_ixyPSF"
+
+        self.selectorActions.flagSelector.bands = ["i"]
 
         _yLabels = {
             0: r"$\rho_{0}(\theta) = \langle \frac{\delta T}{T}, \frac{\delta T}{T}\rangle$",
@@ -222,6 +226,7 @@ class RhoPlotTask(pipeBase.PipelineTask):
         inputs["runName"] = inputRefs.catPlot.datasetRef.run
         localConnections = self.config.ConnectionsClass(config=self.config)
         inputs["tableName"] = localConnections.catPlot.name
+        inputs["plotName"] = localConnections.rho0Plot.name.removeprefix("rho0Plot_")
         inputs["bands"] = bands if bands else dataId["band"]
         outputs = self.run(**inputs)
         # TODO: DM-34939 Remove the conditional butler.put
@@ -229,7 +234,7 @@ class RhoPlotTask(pipeBase.PipelineTask):
             butlerQC.put(outputs, outputRefs)
             plt.close()
 
-    def run(self, catPlot, dataId, runName, tableName, bands):
+    def run(self, catPlot, dataId, runName, tableName, plotName, bands):
         """Run the rho-statistics computation and plot them.
 
         Parameters
@@ -262,11 +267,11 @@ class RhoPlotTask(pipeBase.PipelineTask):
 
         `rhoPlot` makes six plots for six different rho-statistics.
         """
-
         # Apply the selectors to narrow down the sources to use
         mask = np.ones(len(catPlot), dtype=bool)
-        for selector in self.config.selectorActions:
-            mask &= selector(catPlot).astype(bool)
+        for actionStruct in [self.config.selectorActions, self.config.sourceSelectorActions]:
+            for selector in actionStruct:
+                mask &= selector(catPlot).astype(bool)
         catPlot = catPlot[mask]
 
         columns = {}
@@ -284,42 +289,34 @@ class RhoPlotTask(pipeBase.PipelineTask):
         for col in catPlot.columns:
             mask &= np.isfinite(catPlot[col])
         catPlot = catPlot[mask]
+        nStars = len(catPlot)
 
-        if len(catPlot) < 2:
+        if nStars < 2:
             self.log.error("Not enough sources to make Rho statistics plots")
             # TODO: DM-34939 Raise ValueError after fixing the breakage
             # in ci_hsc
             return None
 
-        # This should be unnecessary as we will always select stars
-        sourceTypes = np.zeros(len(catPlot))
-        for selector in self.config.sourceSelectorActions:
-            # The source selectors return 1 for a star and 2 for a galaxy
-            # rather than a mask this allows the information about which
-            # type of sources are being plotted to be propagated
-            sourceTypes += selector(catPlot)
-        if list(self.config.sourceSelectorActions) == []:
-            sourceTypes = [10] * len(catPlot)
-        catPlot.loc[:, "sourceType"] = sourceTypes
-
-        # Get the S/N cut used
-        try:
-            SN = self.config.selectorActions.SnSelector.threshold
-        except AttributeError:
+        # Get the S/N cut used (if any)
+        if hasattr(self.config.selectorActions, "catSnSelector"):
+            SN = self.config.selectorActions.catSnSelector.threshold
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
+            SNFlux = "N/A"
 
         rhoStat = self.config.rhoStatisticsAction(catPlot)
 
         # Get useful information about the plot
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, None, SN)
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
 
         # Make the plot(s)
-        figDict = self.rhoPlot(rhoStat, plotInfo)
+        figDict = self.rhoPlot(rhoStat, plotInfo, nStars)
 
         return pipeBase.Struct(rho0Plot=figDict[0], rho1Plot=figDict[1], rho2Plot=figDict[2],
                                rho3Plot=figDict[3], rho4Plot=figDict[4], rho5Plot=figDict[5])
 
-    def rhoPlot(self, rhoStats, plotInfo):
+    def rhoPlot(self, rhoStats, plotInfo, nStars):
         """Makes a plot for each rho-statistic in ``rhoStats``.
 
         Parameters
@@ -387,15 +384,19 @@ class RhoPlotTask(pipeBase.PipelineTask):
                 if self.config.yScale == "log" and sum(~isPositive) > 0:
                     ax.legend(loc="upper right")
 
+            starBBox = dict(facecolor="paleturquoise", alpha=0.5, edgecolor="darkblue")
+            fig.text(0.78, 0.90, "N Stars: {}".format(nStars), bbox=starBBox, fontsize=7)
+
             ax.set_ylabel(self.config.yAxisLabels[rhoIndex])
 
             units = self.config.rhoStatisticsAction.treecorr.sep_units
             ax.set_xlabel(rf"$\theta$ ({units})")
 
-            plotInfo["plotName"] = f"rho{rhoIndex}_deltaCoords"
+            plotNameOrig = plotInfo["plotName"]
+            plotInfo["plotName"] = f"rho{rhoIndex}_" + plotNameOrig
             fig = addPlotInfo(fig, plotInfo)
-            fig.tight_layout()
-
+            plotInfo["plotName"] = plotNameOrig
+            plt.subplots_adjust(top=0.87)
             figDict[rhoIndex] = fig
 
         return figDict

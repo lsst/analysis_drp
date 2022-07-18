@@ -1,0 +1,384 @@
+description: Make tier 2 and 3 coadd plots for QA
+tasks:
+  # Tier 2 coadd plots
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_stars:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
+    # This plot shows the on sky distribution of these values for stars that were selected as
+    # having the flag calib_psf_used = True.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      fixAroundZero: True
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_gals:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
+    # This plot shows the on sky distribution of these values for galaxies that were selected as
+    # having the flag calib_psf_used = True.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_sky_unknown:
+    # Make a plot showing the difference between the aperture 12 magnitude and the PSF magnitude.
+    # This plot shows the on sky distribution of these values for objects of unknown classification
+    # that were selected as having the flag calib_psf_used = True.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_unknowns_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      sourceSelectorActions.sourceSelector: UnknownIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, UnknownIdentifier
+
+  plot_Kron_sub_PSFmag_meas_sky_galaxies:
+    # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
+    # This plot shows the on sky distribution of these values for galaxies.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: Kron_sub_PSF_meas_galaxies_i
+      axisActions.zAction.col1: "i_kronFlux"
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        config.axisLabels.update({"z": "Kron - PSF (mmag)"})
+
+  plot_Kron_sub_PSFmag_meas_sky_stars:
+    # Make a plot showing the difference between the kron magnitude and the PSF magnitude.
+    # This plot shows the on sky distribution of these values for stars.
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      connections.plotName: Kron_sub_PSF_meas_stars_i
+      axisActions.zAction.col1: "i_kronFlux"
+      fixAroundZero: True
+      python: |
+        config.axisLabels.update({"z": "Kron - PSF (mmag)"})
+
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_stars_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for stars. These objects were all selected as having the flag calib_psf_used = True.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_stars_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector
+
+  plot_CircAp12_sub_PSF_meas_calib_psf_used_gals_scatter:
+    # Make a scatter plot showing the difference between the circular aperture 12 magnitude and the PSF
+    # magnitude for galaxies. These objects were all selected as having the flag
+    # calib_psf_used = True.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: CircAp12_sub_PSF_meas_calib_psf_used_gals_i
+      selectorActions.calibPointSelector: FlagSelector
+      selectorActions.calibPointSelector.selectWhenTrue: ["i_calib_psf_used"]
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
+
+  plot_PsfFluxSN_meas_stars_scatter:
+    # Make a plot showing the signal to noise ratio for the PSF flux.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: PsfFluxSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      xLims: (17.5, 28.0)
+      yLims: (-20.0, 6000)
+      python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisActions.yAction = DivideColumns
+        config.axisActions.yAction.colA.column = "i_psfFlux"
+        config.axisActions.yAction.colB.column = "i_psfFluxErr"
+        config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
+                                                            config.axisActions.yAction.colB.column)})
+
+  plot_CModelFluxSN_meas_stars_scatter:
+    # Make a plot showing the signal to noise ratio for the CModel flux.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      connections.plotName: CModelFluxSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      xLims: (17.0, 28.0)
+      yLims: (-20.0, 6000)
+      python: |
+        from lsst.pipe.tasks.dataFrameActions import DivideColumns
+        config.axisActions.yAction = DivideColumns
+        config.axisActions.yAction.colA.column = "i_cModelFlux"
+        config.axisActions.yAction.colB.column = "i_cModelFluxErr"
+        config.axisLabels.update({"y": "S/N = {}/{}".format(config.axisActions.yAction.colA.column,
+                                                            config.axisActions.yAction.colB.column)})
+
+  plot_PsfSN_sub_CModelSN_meas_scatter_stars:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnDiffCalculator
+      connections.plotName: PsfSN_sub_CModelSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      xLims: (17.0, 28.0)
+      yLims: (-10.0, 60)
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      python: |
+        from lsst.analysis.drp.calcFunctors import SnDiffCalculator
+        config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
+
+  plot_PsfSN_sub_CModelSN_meas_scatter_gals:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnDiffCalculator
+      connections.plotName: PsfSN_sub_CModelSN_meas_gals_i
+      selectorActions.catSnSelector.threshold: 5
+      xLims: (17.0, 28.0)
+      yLims: (-3000.0, 500)
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      sourceSelectorActions.sourceSelector: GalaxyIdentifier
+      python: |
+        from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
+        from lsst.analysis.drp.calcFunctors import SnDiffCalculator
+        config.axisLabels.update({"y": "S/N$_{PSF}$ - S/N$_{CModel}$"})
+
+  plot_PercentDiff_PsfSN_CModelSN_meas_scatter_stars:
+    # Make a scatter plot showing the signal to noise ratio difference for CModel vs. PSF
+    # flux vs. CModel flux for stars only.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SnPercentDiffCalculator
+      connections.plotName: PercentDiff_PsfSN_CModelSN_meas_stars_i
+      selectorActions.catSnSelector.threshold: 5
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      python: |
+        from lsst.analysis.drp.calcFunctors import SnPercentDiffCalculator
+        config.axisLabels.update({"y": "Percent Diff: S/N$_{PSF}$ - S/N$_{CModel}$"})
+
+  # Tier 2 Ellipticity coadd plots
+  plot_shapeSizeDiff_scatter:
+    # Plots the difference between the calculated determinant size
+    # for stars and that of the PSF model against PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeDiff_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "Size Residuals (S - S$_{PSF}$)"})
+
+  plot_shapeSizeDiff_magDiff_scatter:
+    # Plots the fractional difference between the calculated determinant size
+    # for stars relative to that of the PSF model against CModel - PSF magnitude
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: SubtractColumns
+      axisActions.yAction.colA: CalcShapeSize
+      axisActions.yAction.colA.colXx: "i_ixx"
+      axisActions.yAction.colA.colYy: "i_iyy"
+      axisActions.yAction.colA.colXy: "i_ixy"
+      axisActions.yAction.colB: CalcShapeSize
+      axisActions.yAction.colB.colXx: "i_ixxPSF"
+      axisActions.yAction.colB.colYy: "i_iyyPSF"
+      axisActions.yAction.colB.colXy: "i_ixyPSF"
+      highSnStatisticSelectorActions: None
+      lowSnStatisticSelectorActions: None
+      connections.plotName: ShapeSizeDiff_magDiff_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize, MagDiff
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisActions.xAction = MagDiff
+        config.axisActions.xAction.col1 = "i_cModelFlux"
+        config.axisActions.xAction.col2 = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.col1.removesuffix("Flux") + " - "
+                    + config.axisActions.xAction.col2.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "Size Residuals (S - S$_{PSF}$)"})
+
+  plot_shapeSizeDiff_sky:
+    # Plots the on-sky distribution of the difference between the determinant
+    # sizes for stars and PSF models
+    class: lsst.analysis.drp.skyPlot.SkyPlotTask
+    config:
+      axisActions.zAction: SubtractColumns
+      axisActions.zAction.colA: CalcShapeSize
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colB: CalcShapeSize
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizeDiff_sky_i
+      fixAroundZero: True
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        from lsst.pipe.tasks.dataFrameActions import SubtractColumns
+        config.axisLabels.update({"z": "Size Residuals (S - S$_{PSF}$)"})
+
+  plot_ellipResids_quiver:
+    # Make a quiver/whisker plot of (star-PSF) ellipticity residuals
+    class: lsst.analysis.drp.quiverPlot.QuiverPlotTask
+    config:
+      axisActions.zAction: CalcEDiff
+      axisActions.zAction.halvePhaseAngle: True
+      axisActions.zAction.colA: CalcE
+      axisActions.zAction.colA.colXx: "i_ixx"
+      axisActions.zAction.colA.colYy: "i_iyy"
+      axisActions.zAction.colA.colXy: "i_ixy"
+      axisActions.zAction.colA.halvePhaseAngle: False
+      axisActions.zAction.colB: CalcE
+      axisActions.zAction.colB.colXx: "i_ixxPSF"
+      axisActions.zAction.colB.colYy: "i_iyyPSF"
+      axisActions.zAction.colB.colXy: "i_ixyPSF"
+      axisActions.zAction.colB.halvePhaseAngle: False
+      connections.plotName: Ediff_i
+      fixAroundZero: True
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcE, CalcEDiff
+        config.axisLabels.update({"z": "E Difference (e$_{MEAS}$ - e$_{PSF}$)"})
+
+  # Tier 3 Ellipticity coadd plots
+  plot_e1_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E1 for
+    # all the points in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      connections.plotName: e1_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E1: (i$_{xx}$ - i$_{yy}$)/(i$_{xx}$ + i$_{yy}$)"})
+
+  plot_e2_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for
+    # all the points in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      axisActions.yAction.colXy: "i_ixy"
+      connections.plotName: e2_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E2: 2i$_{xy}$/(i$_{xx}$ + i$_{yy}$)"})
+
+  plot_shapeSize_scatter:
+    # Plot a scatter plot of the values of (ixx*iyy - ixy^2)^(1/4) a measurement of
+    # the size of the objects.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: "i_ixx"
+      axisActions.yAction.colYy: "i_iyy"
+      axisActions.yAction.colXy: "i_ixy"
+      connections.plotName: ShapeSize_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "Size S: (i$_{xx}$*i$_{yy}$ - i$_{xy}^2$)$^{1/4}$"})
+
+  plot_e1PSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E1 for the PSF model
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE1
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      connections.plotName: e1PSF_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcE1
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E1$_{PSF}$: (i$_{xx}$PSF - i$_{yy}$PSF)/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+
+  plot_e2PSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing E2 for the PSF model
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcE2
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      axisActions.yAction.colXy: "i_ixyPSF"
+      connections.plotName: e2PSF_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcE2
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "E2$_{PSF}$: 2i$_{xy}$PSF/(i$_{xx}$PSF + i$_{yy}$PSF)"})
+
+  plot_shapeSizePSF_scatter:
+    # Make a scatter plot with collapsed histograms for the axes showing the PSF model size
+    # at the locations of stars in a coadd against the PSF magnitude of the sources.
+    class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
+    config:
+      axisActions.yAction: CalcShapeSize
+      axisActions.yAction.colXx: "i_ixxPSF"
+      axisActions.yAction.colYy: "i_iyyPSF"
+      axisActions.yAction.colXy: "i_ixyPSF"
+      connections.plotName: ShapeSizePSF_scatter_i
+      python: |
+        from lsst.analysis.drp.calcFunctors import CalcShapeSize
+        config.axisActions.xAction.column = "i_psfFlux"
+        config.axisActions.magAction.column = "i_psfFlux"
+        config.axisLabels.update({
+               "x": config.axisActions.xAction.column.removesuffix("Flux") + " (mag)",
+               "mag": config.axisActions.magAction.column.removesuffix("Flux") + " (mag)",
+               "y": "PSF Size S$_{PSF}$: (i$_{xx}$PSF*i$_{yy}$PSF - i$_{xy}$PSF$^2$)$^{1/4}$"})

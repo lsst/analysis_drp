@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ import lsst.pex.config as pexConfig
 
 from .plotUtils import generateSummaryStats, parsePlotInfo, addPlotInfo
 from . import calcFunctors  # noqa
+
+matplotlib.use("Agg")
 
 
 class HistPlotTaskConnections(pipeBase.PipelineTaskConnections,
@@ -219,11 +222,14 @@ class HistPlotTask(pipeBase.PipelineTask):
                 plotDf[f"p{i}_{hist}"] = np.array(action(catPlot))
 
         # Gather useful information about the plot
-        try:
-            SN = self.config.selectorActions.SnSelector.threshold
-        except AttributeError:
+        if hasattr(self.config.selectorActions, "catSnSelector"):
+            SN = self.config.selectorActions.catSnSelector.threshold
+            SNFlux = self.config.selectorActions.catSnSelector.fluxType
+        else:
             SN = "N/A"
-        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN)
+            SNFlux = "N/A"
+
+        plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
         # Calculate the corners of the patches and some associated stats
         sumStats = generateSummaryStats(plotDf, self.config.summaryStatsColumn, skymap, plotInfo)
 

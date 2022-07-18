@@ -136,7 +136,7 @@ class SnSelector(DataFrameAction):
                      default="psfFlux")
     threshold = Field(doc="The S/N threshold to remove sources with.",
                       dtype=float,
-                      default=500.0)
+                      default=100.0)
     bands = ListField(doc="The bands to apply the signal to noise cut in.",
                       dtype=str,
                       default=["i"])
@@ -275,7 +275,8 @@ class VisitPlotFlagSelector(DataFrameAction):
 
     @property
     def columns(self):
-        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag"]
+        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag",
+                    "sky_source"]
         yield from flagCols
 
     def __call__(self, df, **kwargs):
@@ -301,7 +302,8 @@ class VisitPlotFlagSelector(DataFrameAction):
         """
 
         result = None
-        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag"]
+        flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag", "centroid_flag",
+                    "sky_source"]
         for flag in flagCols:
             selected = (df[flag].values == 0)
             if result is None:
@@ -340,7 +342,7 @@ class CoaddPlotFlagSelector(DataFrameAction):
     @property
     def columns(self):
         flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag"]
-        filterColumns = ["xy_flag", "detect_isPatchInner", "detect_isDeblendedSource"]
+        filterColumns = ["xy_flag", "detect_isPatchInner", "detect_isDeblendedSource", "sky_object"]
         filterColumns += [band + "_" + flag if len(band) > 0 else band + flag
                           for flag in flagCols for band in self.bands]
         yield from filterColumns
@@ -369,7 +371,7 @@ class CoaddPlotFlagSelector(DataFrameAction):
 
         result = None
         flagCols = ["psfFlux_flag", "pixelFlags_saturatedCenter", "extendedness_flag"]
-        filterColumns = ["xy_flag"]
+        filterColumns = ["xy_flag", "sky_object"]
         filterColumns += [band + "_" + flag if len(band) > 0 else band + flag
                           for flag in flagCols for band in self.bands]
         for flag in filterColumns:

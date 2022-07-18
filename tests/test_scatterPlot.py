@@ -61,6 +61,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
         flux = flux[good]
         flux_meas = flux_meas[good]
         flux_err = flux_err[good]
+        sky_object = np.full(len(flux), False)
 
         # Configure the plot to show observed vs true mags
         config = ScatterPlotWithTwoHistsTaskConfig(
@@ -69,6 +70,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
         config.selectorActions.flagSelector.bands = ["i"]
         config.axisActions.yAction = MagDiff(col1="refcat_flux", col2="refcat_flux")
         config.nonBandColumnPrefixes.append("refcat")
+        config.selectorActions.catSnSelector.threshold = -1e12
         config.sourceSelectorActions.galaxySelector = GalaxyIdentifier
         config.highSnStatisticSelectorActions.statSelector.threshold = 50
         config.lowSnStatisticSelectorActions.statSelector.threshold = 20
@@ -95,8 +97,8 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
                     data[column] = flux_err
                 elif column.endswith("_extendedness"):
                     data[column] = extendedness
-                else:
-                    raise RuntimeError(f"Unexpected column {column} in ScatterPlotWithTwoHistsTaskConfig")
+                elif column.startswith("sky_"):
+                    data[column] = sky_object
 
         self.data = pd.DataFrame(data)
 

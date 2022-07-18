@@ -8,31 +8,25 @@ tasks:
     class: lsst.analysis.drp.scatterPlot.ScatterPlotWithTwoHistsTask
     config:
       axisActions.xAction.column: "refcat_flux_i"
-      axisActions.yAction: MagDiff
       axisActions.yAction.col1: "i_cModelFlux"
       axisActions.yAction.col2: "refcat_flux_i"
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_diff_cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
-                   "y": "cModel - Reference Magnitude (mmag)"}
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
+                   "y": "cModel - Reference (mmag)"}
       python: |
-        from lsst.analysis.drp.calcFunctors import MagDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         config.nonBandColumnPrefixes.append("refcat")
 
   plot_matched_chi_cModelFlux_scatter:
@@ -49,25 +43,20 @@ tasks:
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_chi_cModelFlux
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
                    "y": "chi = (cModel - Reference Flux)/(cModel err)"}
       python: |
-        from lsst.analysis.drp.calcFunctors import MagDiff
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns, DivideColumns
         config.nonBandColumnPrefixes.append("refcat")
 
@@ -83,24 +72,20 @@ tasks:
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_diff_x
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
                    "y": "x - Reference x (pix)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
         config.nonBandColumnPrefixes.append("refcat")
 
@@ -116,24 +101,20 @@ tasks:
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_diff_y
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
                    "y": "x - Reference x (pix)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         from lsst.pipe.tasks.dataFrameActions import SubtractColumns
         config.nonBandColumnPrefixes.append("refcat")
 
@@ -151,24 +132,20 @@ tasks:
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_chi_x
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
                    "y": "chi = (x - Reference x)/(x err)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
         config.nonBandColumnPrefixes.append("refcat")
 
@@ -186,23 +163,19 @@ tasks:
       axisActions.magAction.column: "refcat_flux_i"
       connections.catPlot: matched_truth_summary_objectTable_tract
       connections.plotName: matched_chi_y
-      highSnStatisticSelectorActions.statSelector.bands: ["i"]
       highSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       highSnStatisticSelectorActions.statSelector.threshold: 100
-      lowSnStatisticSelectorActions.statSelector.bands: ["i"]
       lowSnStatisticSelectorActions.statSelector.fluxType: parameters.model
       lowSnStatisticSelectorActions.statSelector.threshold: 20
-      selectorActions.SnSelector: SnSelector
-      selectorActions.SnSelector.bands: ["i"]
-      selectorActions.SnSelector.fluxType: parameters.model
-      selectorActions.SnSelector.threshold: 0.
+      selectorActions.catSnSelector.fluxType: parameters.model
+      selectorActions.catSnSelector.threshold: 0.
       selectorActions.flagSelector: FlagSelector
       sourceSelectorActions.sourceSelector.band: "ref"
       sourceSelectorActions.update: {"galaxySelector": GalaxyIdentifier}
       sourceSelectorActions.galaxySelector.band: "ref"
-      axisLabels: {"x": "Reference Magnitude (mag)", "mag": "cModel Magnitude (mag)",
+      axisLabels: {"x": "Reference (mag)", "mag": "cModel (mag)",
                    "y": "chi = (y - Reference y)/(y err)"}
       python: |
-        from lsst.analysis.drp.dataSelectors import FlagSelector, SnSelector, GalaxyIdentifier
+        from lsst.analysis.drp.dataSelectors import FlagSelector, GalaxyIdentifier
         from lsst.pipe.tasks.dataFrameActions import DivideColumns, SubtractColumns
         config.nonBandColumnPrefixes.append("refcat")

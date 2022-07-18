@@ -1,10 +1,10 @@
 None
-S/N > 50.0 Stats (mag < 21.3)[newline]Median: 0.521    $\sigma_{MAD}$: 11.4    N$_{points}$: 5
-S/N > 20.0 Stats (mag < 24.1)[newline]Median: -5.99    $\sigma_{MAD}$: 38.8    N$_{points}$: 70
-S/N > 50.0 Stats (mag < 22.9)[newline]Median: -1.68    $\sigma_{MAD}$: 12.3    N$_{points}$: 77
-S/N > 20.0 Stats (mag < 24.8)[newline]Median: -1.15    $\sigma_{MAD}$: 34    N$_{points}$: 425
+S/N > 50.0 Stats [mag $\lesssim$ 21.3][newline]Median: 0.521    $\sigma_{MAD}$: 11.4    N$_{points}$: 5
+S/N > 20.0 Stats [mag $\lesssim$ 24.1][newline]Median: -5.99    $\sigma_{MAD}$: 38.8    N$_{points}$: 70
+S/N > 50.0 Stats [mag $\lesssim$ 22.9][newline]Median: -1.68    $\sigma_{MAD}$: 12.3    N$_{points}$: 77
+S/N > 20.0 Stats [mag $\lesssim$ 24.8][newline]Median: -1.15    $\sigma_{MAD}$: 34    N$_{points}$: 425
 test
-test[newline]PhotoCalib: None, Astrometry: None[newline]Table: test, Bands: i, S/N: N/A
+test[newline]PhotoCalib: None, Astrometry: None[newline]Table: test, Bands: i, S/N > -1e+12 (psfFlux)
 
 
 mag
