@@ -281,60 +281,50 @@ def stellarLocusFit(xs, ys, paramDict):
 
     Parameters
     ----------
-    xs : `numpy.ndarray`
-        The color on the xaxis
-    ys : `numpy.ndarray`
-        The color on the yaxis
-    paramDict : lsst.pex.config.dictField.Dict
+    xs : `numpy.ndarray` [`float`]
+        The color on the xaxis.
+    ys : `numpy.ndarray` [`float`]
+        The color on the yaxis.
+    paramDict : `lsst.pex.config.dictField.Dict`
         A dictionary of parameters for line fitting
         xMin : `float`
-            The minimum x edge of the box to use for initial fitting
+            The minimum x edge of the box to use for initial fitting.
         xMax : `float`
-            The maximum x edge of the box to use for initial fitting
+            The maximum x edge of the box to use for initial fitting.
         yMin : `float`
-            The minimum y edge of the box to use for initial fitting
+            The minimum y edge of the box to use for initial fitting.
         yMax : `float`
-            The maximum y edge of the box to use for initial fitting
+            The maximum y edge of the box to use for initial fitting.
         mHW : `float`
-            The hardwired gradient for the fit
+            The hardwired gradient for the fit.
         bHW : `float`
-            The hardwired intercept of the fit
+            The hardwired intercept of the fit.
 
     Returns
     -------
     paramsOut : `dict`
-        A dictionary of the calculated fit parameters
-        xMin : `float`
-            The minimum x edge of the box to use for initial fitting
-        xMax : `float`
-            The maximum x edge of the box to use for initial fitting
-        yMin : `float`
-            The minimum y edge of the box to use for initial fitting
-        yMax : `float`
-            The maximum y edge of the box to use for initial fitting
-        mHW : `float`
-            The hardwired gradient for the fit
-        bHW : `float`
-            The hardwired intercept of the fit
-        mODR : `float`
-            The gradient calculated by the ODR fit
-        bODR : `float`
-            The intercept calculated by the ODR fit
+        A dictionary of the calculated fit parameters.
+        mODR0 : `float`
+            The gradient calculated by the initial ODR fit.
+        bODR0 : `float`
+            The intercept calculated by the initial ODR fit.
         yBoxMin : `float`
-            The y value of the fitted line at xMin
+            The y value of the fitted line at xMin.
         yBoxMax : `float`
-            The y value of the fitted line at xMax
+            The y value of the fitted line at xMax.
         bPerpMin : `float`
-            The intercept of the perpendicular line that goes through xMin
+            The intercept of the perpendicular line that goes through xMin.
         bPerpMax : `float`
-            The intercept of the perpendicular line that goes through xMax
-        mODR2 : `float`
-            The gradient from the second round of fitting
-        bODR2 : `float`
-            The intercept from the second round of fitting
+            The intercept of the perpendicular line that goes through xMax.
+        mODR : `float`
+            The gradient from the second (and final) round of fitting.
+        bODR : `float`
+            The intercept from the second (and final) round of fitting.
         mPerp : `float`
             The gradient of the line perpendicular to the line from the
-            second fit
+            second fit.
+        fitPoints : `numpy.ndarray` [`bool`]
+            A boolean array indicating which points were usee in the final fit.
 
     Notes
     -----
@@ -346,60 +336,57 @@ def stellarLocusFit(xs, ys, paramDict):
     only points that fall within these lines are used to recalculate the fit.
     """
 
-    # Points to use for the fit
-    fitPoints = np.where((xs > paramDict["xMin"]) & (xs < paramDict["xMax"])
-                         & (ys > paramDict["yMin"]) & (ys < paramDict["yMax"]))[0]
+    # Initial subselection of points to use for the fit
+    fitPoints = ((xs > paramDict["xMin"]) & (xs < paramDict["xMax"])
+                 & (ys > paramDict["yMin"]) & (ys < paramDict["yMax"]))
 
     linear = scipyODR.polynomial(1)
 
     data = scipyODR.Data(xs[fitPoints], ys[fitPoints])
     odr = scipyODR.ODR(data, linear, beta0=[paramDict["bHW"], paramDict["mHW"]])
     params = odr.run()
-    mODR = float(params.beta[1])
-    bODR = float(params.beta[0])
+    mODR0 = float(params.beta[1])
+    bODR0 = float(params.beta[0])
 
-    paramsOut = {"xMin": paramDict["xMin"], "xMax": paramDict["xMax"], "yMin": paramDict["yMin"],
-                 "yMax": paramDict["yMax"], "mHW": paramDict["mHW"], "bHW": paramDict["bHW"],
-                 "mODR": mODR, "bODR": bODR}
+    paramsOut = {"mODR0": mODR0, "bODR0": bODR0}
 
     # Having found the initial fit calculate perpendicular ends
-    mPerp = -1.0/mODR
+    mPerp0 = -1.0/mODR0
     # When the gradient is really steep we need to use
-    # the y limits of the box rather than the x ones
+    # the y limits of the box rather than the x ones.
 
-    if np.abs(mODR) > 1:
+    if np.abs(mODR0) > 1:
         yBoxMin = paramDict["yMin"]
-        xBoxMin = (yBoxMin - bODR)/mODR
+        xBoxMin = (yBoxMin - bODR0)/mODR0
         yBoxMax = paramDict["yMax"]
-        xBoxMax = (yBoxMax - bODR)/mODR
+        xBoxMax = (yBoxMax - bODR0)/mODR0
     else:
-        yBoxMin = mODR*paramDict["xMin"] + bODR
+        yBoxMin = mODR0*paramDict["xMin"] + bODR0
         xBoxMin = paramDict["xMin"]
-        yBoxMax = mODR*paramDict["xMax"] + bODR
+        yBoxMax = mODR0*paramDict["xMax"] + bODR0
         xBoxMax = paramDict["xMax"]
 
-    bPerpMin = yBoxMin - mPerp*xBoxMin
+    bPerpMin = yBoxMin - mPerp0*xBoxMin
 
     paramsOut["yBoxMin"] = yBoxMin
     paramsOut["bPerpMin"] = bPerpMin
 
-    bPerpMax = yBoxMax - mPerp*xBoxMax
+    bPerpMax = yBoxMax - mPerp0*xBoxMax
 
     paramsOut["yBoxMax"] = yBoxMax
     paramsOut["bPerpMax"] = bPerpMax
 
     # Use these perpendicular lines to chose the data and refit
-    fitPoints = ((ys > mPerp*xs + bPerpMin) & (ys < mPerp*xs + bPerpMax))
+    fitPoints = ((ys > mPerp0*xs + bPerpMin) & (ys < mPerp0*xs + bPerpMax))
     data = scipyODR.Data(xs[fitPoints], ys[fitPoints])
-    odr = scipyODR.ODR(data, linear, beta0=[bODR, mODR])
+    odr = scipyODR.ODR(data, linear, beta0=[bODR0, mODR0])
     params = odr.run()
-    mODR = float(params.beta[1])
-    bODR = float(params.beta[0])
 
-    paramsOut["mODR2"] = float(params.beta[1])
-    paramsOut["bODR2"] = float(params.beta[0])
+    paramsOut["mODR"] = float(params.beta[1])
+    paramsOut["bODR"] = float(params.beta[0])
 
-    paramsOut["mPerp"] = -1.0/paramsOut["mODR2"]
+    paramsOut["mPerp"] = -1.0/paramsOut["mODR"]
+    paramsOut["fitPoints"] = fitPoints
 
     return paramsOut
 
