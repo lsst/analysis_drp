@@ -190,6 +190,7 @@ class CatalogMatchTask(pipeBase.PipelineTask):
         self.refObjLoader = ReferenceObjectLoader(dataIds=[ref.datasetRef.dataId
                                                            for ref in inputRefs.refCat],
                                                   refCats=inputs.pop('refCat'),
+                                                  name=self.config.connections.refCat,
                                                   config=self.config.astrometryRefObjLoader,
                                                   log=self.log)
 
@@ -355,6 +356,7 @@ class CatalogMatchVisitTask(CatalogMatchTask):
         self.refObjLoader = ReferenceObjectLoader(dataIds=[ref.datasetRef.dataId
                                                            for ref in inputRefs.refCat],
                                                   refCats=inputs.pop('refCat'),
+                                                  name=self.config.connections.refCat,
                                                   config=self.config.astrometryRefObjLoader,
                                                   log=self.log)
 
