@@ -223,6 +223,10 @@ class CatalogMatchTask(pipeBase.PipelineTask):
 
         for selector in self.config.sourceSelectorActions:
             mask &= selector(catalog).astype(bool)
+        # Make sure the coordinates have valid entries
+        mask &= np.isfinite(catalog["coord_ra"])
+        mask &= np.isfinite(catalog["coord_dec"])
+
         targetCatalog = catalog[mask]
         targetCatalog = targetCatalog.reset_index()
 
@@ -378,7 +382,8 @@ class CatalogMatchVisitTask(CatalogMatchTask):
         corners = []
         for visSum in visitSummaryTable:
             for (ra, dec) in zip(visSum['raCorners'], visSum['decCorners']):
-                corners.append(lsst.geom.SpherePoint(ra, dec, units=lsst.geom.degrees).getVector())
+                if np.isfinite(ra) and np.isfinite(dec):
+                    corners.append(lsst.geom.SpherePoint(ra, dec, units=lsst.geom.degrees).getVector())
         visitBoundingCircle = lsst.sphgeom.ConvexPolygon.convexHull(corners).getBoundingCircle()
         center = lsst.geom.SpherePoint(visitBoundingCircle.getCenter())
         radius = visitBoundingCircle.getOpeningAngle()
