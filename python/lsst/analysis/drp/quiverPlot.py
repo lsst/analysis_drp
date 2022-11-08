@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import median_abs_deviation as sigmaMad
 from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
 from lsst.pex.config import Field
@@ -110,7 +110,7 @@ class QuiverPlotTask(SkyPlotTask):
         if np.any(catPlot["sourceType"] == 2):
             statGals = ((catPlot["useForStats"] == 1) & galaxies)
             statGalMed = np.nanmedian(catPlot.loc[statGals, zCol])
-            statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit")
+            statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit", scale="normal")
 
             galStatsText = ("Median: {:.2f}\n".format(statGalMed) + r"$\sigma_{MAD}$: "
                             + "{:.2f}\n".format(statGalMad) + r"n$_{points}$: "
@@ -130,7 +130,7 @@ class QuiverPlotTask(SkyPlotTask):
 
             statStars = ((catPlot["useForStats"] == 1) & stars)
             statStarMed = np.nanmedian(catPlot.loc[statStars, zCol])
-            statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit")
+            statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit", scale="normal")
 
             starStatsText = ("Median: {:.2f}\n".format(statStarMed) + r"$\sigma_{MAD}$: "
                              + "{:.2f}\n".format(statStarMad) + r"n$_{points}$: "
@@ -143,7 +143,7 @@ class QuiverPlotTask(SkyPlotTask):
 
             statAll = (catPlot["useForStats"] == 1)
             statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
-            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit", scale="normal")
 
             allStatsText = ("Median: {:.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
                             + "{:.2f}\n".format(statAllMad) + r"n$_{points}$: "
@@ -155,7 +155,7 @@ class QuiverPlotTask(SkyPlotTask):
 
             statAll = (catPlot["useForStats"] == 1)
             statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
-            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+            statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit", scale="normal")
 
             allStatsText = ("Median: {:.2f}\n".format(statAllMed) + r"$\sigma_{MAD}$: "
                             + "{:.2f}\n".format(statAllMad) + r"n$_{points}$: "

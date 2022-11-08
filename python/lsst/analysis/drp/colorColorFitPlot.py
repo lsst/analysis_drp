@@ -1,7 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import median_abs_deviation as sigmaMad
 import pandas as pd
 from sklearn.neighbors import KernelDensity
 from matplotlib.patches import Rectangle
@@ -351,7 +351,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         axHist.set_ylabel("Number")
         axHist.set_xlabel("Distance to Line Fit")
         medDists = np.median(dists)
-        madDists = sigmaMad(dists)
+        madDists = sigmaMad(dists, scale="normal")
         meanDists = np.mean(dists)
 
         rmsDists = np.sqrt(np.mean(np.array(dists)**2))
