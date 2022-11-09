@@ -1,7 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import median_abs_deviation as sigmaMad
 from scipy.stats import binned_statistic_2d
 from matplotlib.patches import Rectangle
 import matplotlib.patheffects as pathEffects
@@ -339,7 +339,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statStars = ((catPlot["useForStats"] == 1) & stars)
             if sum(statStars) > 0:
                 statStarMed = np.nanmedian(catPlot.loc[statStars, zCol])
-                statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit")
+                statStarMad = sigmaMad(catPlot.loc[statStars, zCol], nan_policy="omit", scale="normal")
                 snTextStr = snText
             else:  # No data to plot
                 statStarMed = np.nan
@@ -361,7 +361,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statGals = ((catPlot["useForStats"] == 1) & galaxies)
             if sum(statGals) > 0:
                 statGalMed = np.nanmedian(catPlot.loc[statGals, zCol])
-                statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit")
+                statGalMad = sigmaMad(catPlot.loc[statGals, zCol], nan_policy="omit", scale="normal")
                 snTextStr = snText
             else:  # No data to plot
                 statGalMed = np.nan
@@ -384,7 +384,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statAll = (catPlot["useForStats"] == 1)
             if sum(statAll) > 0:
                 statAllMed = np.nanmedian(catPlot.loc[statAll, zCol])
-                statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit")
+                statAllMad = sigmaMad(catPlot.loc[statAll, zCol], nan_policy="omit", scale="normal")
                 snTextStr = snText
             else:  # No data to plot
                 statAllMed = np.nan
@@ -402,7 +402,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
             statUnk = ((catPlot["useForStats"] == 1) & unknowns)
             if sum(statUnk) > 0:
                 statUnkMed = np.nanmedian(catPlot.loc[statUnk, zCol])
-                statUnkMad = sigmaMad(catPlot.loc[statUnk, zCol], nan_policy="omit")
+                statUnkMad = sigmaMad(catPlot.loc[statUnk, zCol], nan_policy="omit", scale="normal")
                 snTextStr = snText
             else:  # No data to plot
                 statUnkMed = np.nan
@@ -476,7 +476,7 @@ class SkyPlotTask(pipeBase.PipelineTask):
                 if minDec == maxDec:
                     maxDec += 1e-5  # There is no reason to pick this number in particular
             med = np.median(colorVals)
-            mad = sigmaMad(colorVals)
+            mad = sigmaMad(colorVals, scale="normal")
             vmin = med - 2*mad
             vmax = med + 2*mad
             if self.config.fixAroundZero:

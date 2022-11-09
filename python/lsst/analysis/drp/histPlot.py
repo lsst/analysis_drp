@@ -2,7 +2,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import median_absolute_deviation as sigmaMad
+from scipy.stats import median_abs_deviation as sigmaMad
 from matplotlib import gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
@@ -334,7 +334,7 @@ class HistPlotTask(pipeBase.PipelineTask):
                 # generate additional per-histogram statistics
                 isfinite = np.isfinite(hist_data)
                 meds.append(np.median(hist_data[isfinite]))
-                mads.append(sigmaMad(hist_data[isfinite]))
+                mads.append(sigmaMad(hist_data[isfinite], scale="normal"))
                 nums.append(np.sum(isfinite))
             vLower = np.min(vLowers)
             vUpper = np.max(vUppers)
