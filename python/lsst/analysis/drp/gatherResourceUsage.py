@@ -348,7 +348,7 @@ class GatherResourceUsageTask(PipelineTask):
         # This override exists just so we can pass the butler registry's
         # DimensionUniverse to run in order to standardize the dimensions.
         inputs = butlerQC.get(inputRefs)
-        outputs = self.run(butlerQC.registry.dimensions, **inputs)
+        outputs = self.run(butlerQC.dimensions, **inputs)
         butlerQC.put(outputs, outputRefs)
 
     def run(self, universe, input_metadata):
