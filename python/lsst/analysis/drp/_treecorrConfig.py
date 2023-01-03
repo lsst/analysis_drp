@@ -40,8 +40,7 @@ class BinnedCorr2Config(Config):
     A separate config class is used instead
     of constructing a `~lsst.pex.config.DictField` so that mixed types can be
     supported and the config can be validated at the beginning of the
-    execution. The ``toDict`` provides a minimal dictionary that override only
-    the default values and excludes the key-values pairs when the item is None.
+    execution.
 
     Notes
     -----
@@ -357,10 +356,3 @@ class BinnedCorr2Config(Config):
                 raise FieldValidationError(
                     self.__class__.min_rpar, self, "min_rpar must be <= max_rpar"
                 )
-
-    def toDict(self):
-        # Docs inherited from base class
-        # We are excluding items that are None due to treecorr limitations.
-        # TODO: DM-38480. This override can be removed after treecorr v4.3 is
-        # released and makes its way onto rubin-env.
-        return {k: v for k, v in super().toDict().items() if v is not None}
