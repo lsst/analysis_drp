@@ -23,7 +23,7 @@ class SkyPlotVisitTaskConnections(pipeBase.PipelineTaskConnections, dimensions=(
 
     visitSummaryTable = pipeBase.connectionTypes.Input(doc="A summary table of the ccds in the visit",
                                                        storageClass="ExposureCatalog",
-                                                       name="visitSummary",
+                                                       name="finalVisitSummary",
                                                        dimensions=("visit",))
 
     skyPlot = pipeBase.connectionTypes.Output(doc="A plot showing the on-sky distribution of a value.",
