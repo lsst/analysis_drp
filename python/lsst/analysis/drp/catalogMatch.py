@@ -51,11 +51,11 @@ class AstropyMatchTask(pipeBase.Task):
             separations: `astropy.coordinates.angles.Angle`
                 Array of angle separations between matched objects
         """
-        refCat_ap = SkyCoord(ra=refCatalog['coord_ra'] * u.degree,
-                             dec=refCatalog['coord_dec'] * u.degree)
+        refCat_ap = SkyCoord(ra=refCatalog['coord_ra'].values * u.degree,
+                             dec=refCatalog['coord_dec'].values * u.degree)
 
-        sourceCat_ap = SkyCoord(ra=targetCatalog['coord_ra'] * u.degree,
-                                dec=targetCatalog['coord_dec'] * u.degree)
+        sourceCat_ap = SkyCoord(ra=targetCatalog['coord_ra'].values * u.degree,
+                                dec=targetCatalog['coord_dec'].values * u.degree)
 
         id, d2d, d3d = refCat_ap.match_to_catalog_sky(sourceCat_ap)
 
