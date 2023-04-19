@@ -30,11 +30,12 @@ from collections import defaultdict
 import dataclasses
 import re
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
 
-from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum
+from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum, UnresolvedRefWarning
 from lsst.daf.butler.core.utils import globToRegex
 from lsst.pex.config import Field, ListField
 from lsst.pipe.base import (
@@ -261,23 +262,26 @@ class GatherResourceUsageTask(PipelineTask):
                 storageClass=GatherResourceUsageConnections.output_table.storageClass,
             )
             data_id = DataCoordinate.makeEmpty(universe=input_metadata_dataset_type.dimensions.universe)
-            outputs = {
-                output_table_dataset_type: [DatasetRef(output_table_dataset_type, data_id)],
-            }
-            if task_def.metadataDatasetName is not None:
-                output_metadata_dataset_type = DatasetType(
-                    task_def.metadataDatasetName,
-                    dimensions=empty_dimensions,
-                    storageClass="TaskMetadata",
-                )
-                outputs[output_metadata_dataset_type] = [DatasetRef(output_metadata_dataset_type, data_id)]
-            if task_def.logOutputDatasetName is not None:
-                log_dataset_type = DatasetType(
-                    task_def.logOutputDatasetName,
-                    dimensions=empty_dimensions,
-                    storageClass="ButlerLogRecords",
-                )
-                outputs[log_dataset_type] = [DatasetRef(log_dataset_type, data_id)]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UnresolvedRefWarning)
+                outputs = {
+                    output_table_dataset_type: [DatasetRef(output_table_dataset_type, data_id)],
+                }
+                if task_def.metadataDatasetName is not None:
+                    output_metadata_dataset_type = DatasetType(
+                        task_def.metadataDatasetName,
+                        dimensions=empty_dimensions,
+                        storageClass="TaskMetadata",
+                    )
+                    outputs[output_metadata_dataset_type] = [DatasetRef(output_metadata_dataset_type,
+                                                                        data_id)]
+                if task_def.logOutputDatasetName is not None:
+                    log_dataset_type = DatasetType(
+                        task_def.logOutputDatasetName,
+                        dimensions=empty_dimensions,
+                        storageClass="ButlerLogRecords",
+                    )
+                    outputs[log_dataset_type] = [DatasetRef(log_dataset_type, data_id)]
             quantum = Quantum(
                 taskName=task_def.taskName,
                 taskClass=task_def.taskClass,
