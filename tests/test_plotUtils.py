@@ -24,9 +24,7 @@ class FitTest(lsst.utils.tests.TestCase):
         # the points of intersection between the box and the fit
         # line. Test that these are returning what is expected.
         self.assertFloatsAlmostEqual(paramsOut["mODR"], 1.0)
-        self.assertFloatsAlmostEqual(paramsOut["mODR2"], 1.0)
         self.assertFloatsAlmostEqual(paramsOut["bODR"], 0.0)
-        self.assertFloatsAlmostEqual(paramsOut["bODR2"], 0.0)
         self.assertFloatsAlmostEqual(paramsOut["bPerpMin"], 0.0)
         self.assertFloatsAlmostEqual(paramsOut["bPerpMax"], 22.0)
 
