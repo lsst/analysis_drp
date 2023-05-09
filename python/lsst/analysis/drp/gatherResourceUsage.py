@@ -28,17 +28,18 @@ __all__ = (
 import argparse
 from collections import defaultdict
 import dataclasses
+import datetime
 import re
 import logging
-import warnings
 
 import numpy as np
 import pandas as pd
 
-from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum, UnresolvedRefWarning
+from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum
 from lsst.daf.butler.core.utils import globToRegex
 from lsst.pex.config import Field, ListField
 from lsst.pipe.base import (
+    Instrument,
     PipelineTask,
     PipelineTaskConfig,
     PipelineTaskConnections,
@@ -203,7 +204,7 @@ class GatherResourceUsageTask(PipelineTask):
     _DefaultName = "gatherResourceUsage"
 
     @classmethod
-    def build_quantum_graph(cls, metadata_refs):
+    def build_quantum_graph(cls, metadata_refs, graph_metadata):
         """Build a specialized `QuantumGraph` that configures and runs this
         task on existing metadata datasets.
 
@@ -213,6 +214,9 @@ class GatherResourceUsageTask(PipelineTask):
             References to metadata datasets.  Non-metadata datasets are
             silently ignored, in order to make it easier to pass in more
             general dataset query results.
+        graph_metadata : `dict` [ `str`, `Any` ]
+            Graph metadata. It is required to contain "output_run" key with the
+            name of the output RUN collection.
 
         Notes
         -----
@@ -262,26 +266,28 @@ class GatherResourceUsageTask(PipelineTask):
                 storageClass=GatherResourceUsageConnections.output_table.storageClass,
             )
             data_id = DataCoordinate.makeEmpty(universe=input_metadata_dataset_type.dimensions.universe)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=UnresolvedRefWarning)
-                outputs = {
-                    output_table_dataset_type: [DatasetRef(output_table_dataset_type, data_id)],
-                }
-                if task_def.metadataDatasetName is not None:
-                    output_metadata_dataset_type = DatasetType(
-                        task_def.metadataDatasetName,
-                        dimensions=empty_dimensions,
-                        storageClass="TaskMetadata",
-                    )
-                    outputs[output_metadata_dataset_type] = [DatasetRef(output_metadata_dataset_type,
-                                                                        data_id)]
-                if task_def.logOutputDatasetName is not None:
-                    log_dataset_type = DatasetType(
-                        task_def.logOutputDatasetName,
-                        dimensions=empty_dimensions,
-                        storageClass="ButlerLogRecords",
-                    )
-                    outputs[log_dataset_type] = [DatasetRef(log_dataset_type, data_id)]
+            output_run = graph_metadata["output_run"]
+            outputs = {
+                output_table_dataset_type: [
+                    DatasetRef(output_table_dataset_type, data_id, run=output_run)
+                ],
+            }
+            if task_def.metadataDatasetName is not None:
+                output_metadata_dataset_type = DatasetType(
+                    task_def.metadataDatasetName,
+                    dimensions=empty_dimensions,
+                    storageClass="TaskMetadata",
+                )
+                outputs[output_metadata_dataset_type] = [
+                    DatasetRef(output_metadata_dataset_type, data_id, run=output_run)
+                ]
+            if task_def.logOutputDatasetName is not None:
+                log_dataset_type = DatasetType(
+                    task_def.logOutputDatasetName,
+                    dimensions=empty_dimensions,
+                    storageClass="ButlerLogRecords",
+                )
+                outputs[log_dataset_type] = [DatasetRef(log_dataset_type, data_id, run=output_run)]
             quantum = Quantum(
                 taskName=task_def.taskName,
                 taskClass=task_def.taskClass,
@@ -290,7 +296,7 @@ class GatherResourceUsageTask(PipelineTask):
                 outputs=outputs,
             )
             quanta_by_task_def[task_def] = {quantum}
-        return QuantumGraph(quanta_by_task_def)
+        return QuantumGraph(quanta_by_task_def, metadata=graph_metadata)
 
     @classmethod
     def build_quantum_graph_cli(cls, argv):
@@ -331,6 +337,28 @@ class GatherResourceUsageTask(PipelineTask):
             default=None,
             help="Data ID expression used when querying for input metadata datasets.",
         )
+        parser.add_argument(
+            "--output",
+            type=str,
+            help=(
+                "Name of the output CHAINED collection. If this options is specified and "
+                "--output-run is not, then a new RUN collection will be created by appending "
+                "a timestamp to the value of this option."
+            ),
+            default=None,
+            metavar="COLL",
+        )
+        parser.add_argument(
+            "--output-run",
+            type=str,
+            help=(
+                "Output RUN collection to write resulting images. If not provided "
+                "then --output must be provided and a new RUN collection will be created "
+                "by appending a timestamp to the value passed with --output."
+            ),
+            default=None,
+            metavar="RUN",
+        )
         args = parser.parse_args(argv)
         base_dataset_type_filter = re.compile(r"\w+_metadata")
         if not args.dataset_types:
@@ -339,7 +367,23 @@ class GatherResourceUsageTask(PipelineTask):
             input_dataset_types = [globToRegex(expr) for expr in args.dataset_types]
         butler = Butler(args.repo, collections=args.collections)
         metadata_refs = butler.registry.queryDatasets(input_dataset_types, where=args.where, findFirst=True)
-        qg = cls.build_quantum_graph(metadata_refs)
+
+        # Figure out collection names
+        if args.output_run is None:
+            if args.output is None:
+                raise ValueError("At least one of --output or --output-run options is required.")
+            args.output_run = "{}/{}".format(args.output, Instrument.makeCollectionTimestamp())
+
+        # Metadata includes a subset of attributes defined in CmdLineFwk.
+        graph_metadata = {
+            "input": args.collections,
+            "butler_argument": args.repo,
+            "output": args.output,
+            "output_run": args.output_run,
+            "data_query": args.where,
+            "time": f"{datetime.datetime.now()}",
+        }
+        qg = cls.build_quantum_graph(metadata_refs, graph_metadata)
         qg.saveUri(args.filename)
 
     def runQuantum(
