@@ -97,6 +97,7 @@ class GatherResourceUsageConnections(
             self.input_metadata,
             dimensions=list(self.config.dimensions),
         )
+        self.allConnections["input_metadata"] = self.input_metadata
 
 
 class GatherResourceUsageConfig(
