@@ -19,10 +19,10 @@ class ScatterPlotVisitConnections(pipeBase.PipelineTaskConnections,
                                              dimensions=("visit",),
                                              deferLoad=True)
 
-    visitSummaryTable = pipeBase.connections.Input(doc="A summary table of the ccds in the visit",
-                                                   storageClass="ExposureCatalog",
-                                                   name="finalVisitSummary",
-                                                   dimensions=("visit",))
+    visitSummaryTable = pipeBase.connectionTypes.Input(doc="A summary table of the ccds in the visit",
+                                                       storageClass="ExposureCatalog",
+                                                       name="finalVisitSummary",
+                                                       dimensions=("visit",))
 
     scatterPlot = pipeBase.connectionTypes.Output(doc="A scatter plot with histograms for both axes.",
                                                   storageClass="Plot",
