@@ -35,11 +35,12 @@ import logging
 import numpy as np
 import pandas as pd
 
-from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, Quantum
+from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, DimensionGraph, Quantum
 from lsst.daf.butler.core.utils import globToRegex
 from lsst.pex.config import Field, ListField
 from lsst.pipe.base import (
     Instrument,
+    PipelineDatasetTypes,
     PipelineTask,
     PipelineTaskConfig,
     PipelineTaskConnections,
@@ -238,6 +239,9 @@ class GatherResourceUsageTask(PipelineTask):
         # Iterate over those groups, creating a configuration of
         # this task and quanta for each one.
         quanta_by_task_def = {}
+        init_outputs = {}
+        empty_dimensions: DimensionGraph | None = None
+        data_id: DataCoordinate | None = None
         for input_metadata_dataset_type, metadata_refs in metadata_refs_by_dataset_type.items():
             if (m := re.fullmatch(r"^(\w+)_metadata$", input_metadata_dataset_type.name)) is None:
                 continue
@@ -295,7 +299,29 @@ class GatherResourceUsageTask(PipelineTask):
                 outputs=outputs,
             )
             quanta_by_task_def[task_def] = {quantum}
-        return QuantumGraph(quanta_by_task_def, metadata=graph_metadata)
+
+            config_dataset_type = DatasetType(
+                task_def.configDatasetName,
+                dimensions=empty_dimensions,
+                storageClass="Config",
+            )
+            init_outputs[task_def] = [DatasetRef(config_dataset_type, data_id, run=output_run)]
+
+        global_init_outputs = []
+        if empty_dimensions is not None and data_id is not None:
+            packages_dataset_type = DatasetType(
+                PipelineDatasetTypes.packagesDatasetName,
+                dimensions=empty_dimensions,
+                storageClass="Packages",
+            )
+            global_init_outputs.append(DatasetRef(packages_dataset_type, data_id, run=output_run))
+
+        return QuantumGraph(
+            quanta_by_task_def,
+            initOutputs=init_outputs,
+            globalInitOutputs=global_init_outputs,
+            metadata=graph_metadata,
+        )
 
     @classmethod
     def build_quantum_graph_cli(cls, argv):
