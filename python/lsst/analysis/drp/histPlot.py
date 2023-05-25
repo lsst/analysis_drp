@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
+from lsst.pex.config.configurableActions import ConfigurableActionStructField
 from lsst.skymap import BaseSkyMap
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig

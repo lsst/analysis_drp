@@ -9,7 +9,7 @@ import matplotlib.patheffects as pathEffects
 
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
-from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
+from lsst.pex.config.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 
 from .calcFunctors import ExtinctionCorrectedMagDiff

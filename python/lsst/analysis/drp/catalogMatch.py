@@ -8,7 +8,7 @@ import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 import lsst.geom
 from lsst.meas.algorithms import ReferenceObjectLoader, LoadReferenceObjectsTask
-from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
+from lsst.pex.config.configurableActions import ConfigurableActionStructField
 from lsst.skymap import BaseSkyMap
 
 from . import dataSelectors

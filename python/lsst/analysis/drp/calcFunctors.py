@@ -30,7 +30,7 @@ import treecorr
 from astropy import units as u
 
 from lsst.pex.config import ChoiceField, ConfigField, DictField, Field, FieldValidationError
-from lsst.pipe.tasks.configurableActions import ConfigurableActionField
+from lsst.pex.config.configurableActions import ConfigurableActionField
 from lsst.pipe.tasks.dataFrameActions import (CoordColumn, DataFrameAction, DivideColumns,
                                               FractionalDifferenceColumns, MultiColumnAction,
                                               SingleColumnAction, DiffOfDividedColumns,
