@@ -24,7 +24,7 @@ import numpy as np
 
 import lsst.pipe.base as pipeBase
 from lsst.pex.config import ChoiceField, DictField, Field
-from lsst.pipe.tasks.configurableActions import ConfigurableActionField, ConfigurableActionStructField
+from lsst.pex.config.configurableActions import ConfigurableActionField, ConfigurableActionStructField
 
 from . import dataSelectors
 from .calcFunctors import CalcRhoStatistics

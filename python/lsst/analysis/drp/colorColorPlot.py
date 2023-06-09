@@ -7,7 +7,7 @@ import scipy.stats as scipyStats
 
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
-from lsst.pipe.tasks.configurableActions import ConfigurableActionStructField
+from lsst.pex.config.configurableActions import ConfigurableActionStructField
 from lsst.pipe.tasks.dataFrameActions import MagColumnNanoJansky
 from .calcFunctors import ExtinctionCorrectedMagDiff
 from .dataSelectors import FlagSelector, SnSelector, StarIdentifier, GalaxyIdentifier, CoaddPlotFlagSelector
