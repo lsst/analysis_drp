@@ -7,7 +7,7 @@ import pandas as pd
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
 import lsst.geom
-from lsst.meas.algorithms import ReferenceObjectLoader, LoadReferenceObjectsTask
+from lsst.meas.algorithms import ReferenceObjectLoader, LoadReferenceObjectsConfig
 from lsst.pex.config.configurableActions import ConfigurableActionStructField
 from lsst.skymap import BaseSkyMap
 
@@ -109,8 +109,8 @@ class CatalogMatchConnections(pipeBase.PipelineTaskConnections, dimensions=("tra
 
 class CatalogMatchConfig(pipeBase.PipelineTaskConfig, pipelineConnections=CatalogMatchConnections):
 
-    astrometryRefObjLoader = pexConfig.ConfigurableField(
-        target=LoadReferenceObjectsTask,
+    astrometryRefObjLoader = pexConfig.ConfigField(
+        dtype=LoadReferenceObjectsConfig,
         doc="Reference object loader for astrometric fit",
     )
 
