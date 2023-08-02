@@ -167,7 +167,7 @@ class CatalogMatchTask(pipeBase.PipelineTask):
     ConfigClass = CatalogMatchConfig
     _DefaultName = "catalogMatch"
 
-    def __init__(self, butler=None, initInputs=None, **kwargs):
+    def __init__(self, initInputs=None, **kwargs):
         super().__init__(**kwargs)
         self.makeSubtask("matcher")
 
