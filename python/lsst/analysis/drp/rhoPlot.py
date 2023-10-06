@@ -241,7 +241,7 @@ class RhoPlotTask(pipeBase.PipelineTask):
         ----------
         catPlot : `~pandas.core.frame.DataFrame`
             The catalog to compute the rho-statistics from.
-        dataId: `~lsst.daf.butler.core.dimensions._coordinate._ExpandedTupleDataCoordinate`  # noqa
+        dataId : `~lsst.daf.butler.DataCoordinate`
             The dimensions that the plot is being made from.
         runName : `str`
             The name of the collection that the plot is written out to.

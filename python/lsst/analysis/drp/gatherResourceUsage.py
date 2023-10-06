@@ -36,7 +36,7 @@ import numpy as np
 import pandas as pd
 
 from lsst.daf.butler import Butler, DataCoordinate, DatasetRef, DatasetType, DimensionGraph, Quantum
-from lsst.daf.butler.core.utils import globToRegex
+from lsst.daf.butler.utils import globToRegex
 from lsst.pex.config import Field, ListField
 from lsst.pipe.base import (
     Instrument,
@@ -779,7 +779,7 @@ def _dtype_from_field_spec(field_spec):
 
     Parameters
     ----------
-    field_spec : `lsst.daf.butler.core.ddl.FieldSpec`
+    field_spec : `lsst.daf.butler.ddl.FieldSpec`
         Object describing the field in a SQL-friendly sense.
 
     Returns

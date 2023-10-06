@@ -36,8 +36,7 @@ def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux):
 
     Parameters
     ----------
-    dataId : `lsst.daf.butler.core.dimensions.`
-             `_coordinate._ExpandedTupleDataCoordinate`
+    dataId : `lsst.daf.butler.DataCoordinate`
     runName : `str`
 
     Returns

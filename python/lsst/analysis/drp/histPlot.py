@@ -167,8 +167,7 @@ class HistPlotTask(pipeBase.PipelineTask):
         ----------
         catPlot : `pandas.core.frame.DataFrame`
             The catalog to plot the points from.
-        dataId :
-        `lsst.daf.butler.core.dimensions._coordinate._ExpandedTupleDataCoordinate`
+        dataId : `lsst.daf.butler.DataCoordinate`
             The dimensions that the plot is being made from.
         runName : `str`
             The name of the collection that the plot is written out to.
