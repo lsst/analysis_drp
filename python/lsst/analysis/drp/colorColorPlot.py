@@ -467,7 +467,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             # Compute 2d histograms of the stars (used in the contour plot
             # function).
             countsStars, xEdgesStars, yEdgesStars = np.histogram2d(xsStars, ysStars, bins=self.config.nBins,
-                                                                   normed=False)
+                                                                   density=False)
             zsStars = countsStars.transpose()
             [vminStars, vmaxStars] = np.nanpercentile(zsStars, [1, 99])
             vminStars = max(5, vminStars)
@@ -484,7 +484,7 @@ class ColorColorPlotTask(pipeBase.PipelineTask):
             # Compute 2d histograms of the galaxies (used in the contour plot
             # function).
             countsGals, xEdgesGals, yEdgesGals = np.histogram2d(xsGals, ysGals, bins=self.config.nBins,
-                                                                normed=False)
+                                                                density=False)
             zsGals = countsGals.transpose()
             [vminGals, vmaxGals] = np.nanpercentile(zsGals, [1, 99])
             vminGals = max(5, vminGals)
