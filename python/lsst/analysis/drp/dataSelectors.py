@@ -47,9 +47,9 @@ class FlagSelector(DataFrameAction):
         """
         result = np.ones(len(df), dtype=bool)
         for flag in self.selectWhenFalse:
-            result &= (df[flag].values == 0)
+            result &= (np.array(df[flag]) == 0)
         for flag in self.selectWhenTrue:
-            result &= (df[flag].values == 1)
+            result &= (np.array(df[flag]) == 1)
         return result
 
 
