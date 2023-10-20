@@ -1,3 +1,4 @@
+import astropy.units as u
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,6 +107,13 @@ class ColorColorFitPlotConfig(pipeBase.PipelineTaskConfig,
         optional=True,
     )
 
+    minPointsForFit = pexConfig.RangeField(
+        doc="Minimum number of valid objects to bother attempting a fit.",
+        dtype=int,
+        default=5,
+        min=1,
+    )
+
     def setDefaults(self):
         super().setDefaults()
         self.axisActions.xAction.magDiff.returnMillimags = False
@@ -205,16 +213,33 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         ys = plotDf[self.config.axisLabels["y"]].values
 
         plotInfo = parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux)
-        if len(plotDf) == 0:
+        if len(plotDf) < self.config.minPointsForFit:
             fig = plt.Figure()
-            noDataText = ("No data to plot after selectors applied\n(do you have all three of "
-                          "the bands required: {}?)".format(bands))
+            if len(plotDf) == 0:
+                noDataText = ("No data to plot after selectors applied\n(do you have all three of "
+                              "the bands required: {}?)".format(bands))
+            else:
+                noDataText = ("Not enough data ({} < config.minPointsForFIt = {}) after selectors for "
+                              "fit.".format(len(plotDf), self.config.minPointsForFit))
             fig.text(0.5, 0.5, noDataText, ha="center", va="center")
-            fig = addPlotInfo(fig, plotInfo)
         else:
             fitParams = stellarLocusFit(xs, ys, self.config.stellarLocusFitDict)
-            fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
+            try:
+                fig = self.colorColorFitPlot(plotDf, plotInfo, fitParams)
+                if len(fitParams["fitPoints"]) < 1:
+                    raise ValueError("No fitPoints for {}".format(dataId))
+            except ValueError as e:
+                self.log.warning("Fit failed for %s with: %s", dataId, e)
+                fig = plt.Figure()
+                eStr = e.args[0]
+                chunks, chunk_size = len(eStr), 50
+                eStrChunked = ""
+                for i in range(0, chunks, chunk_size):
+                    eStrChunked += eStr[i:i+chunk_size] + "\n"
+                noDataText = "Fit failed with:\n{}".format(eStrChunked)
+                fig.text(0.5, 0.5, noDataText, ha="center", va="center")
 
+        fig = addPlotInfo(fig, plotInfo)
         return pipeBase.Struct(colorColorFitPlot=fig)
 
     def colorColorFitPlot(self, catPlot, plotInfo, fitParams):
@@ -290,7 +315,10 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         ys = catPlot[self.config.axisLabels["y"]].values
         mags = catPlot[self.config.axisLabels["mag"]].values
 
-        if len(xs) == 0 or len(ys) == 0:
+        if len(xs) < self.config.minPointsForFit or len(ys) < self.config.minPointsForFit:
+            noDataText = ("Number of objects after cuts ({}) is less than the minimum\nrequired "
+                          "by config.minPointsForFit ({})".format(len(xs), self.config.minPointsForFit))
+            fig.text(0.5, 0.5, noDataText, ha="center", va="center")
             return fig
 
         # Points used for the fit
@@ -305,10 +333,11 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                 SNsUsed = (catPlot[SNBand + "_" + plotInfo["SNFlux"]].values[fitPoints]
                            / catPlot[SNBand + "_" + plotInfo["SNFlux"] + "Err"].values[fitPoints])
                 minSnUsed = np.nanmin(SNsUsed)
-                magsUsed = mags[fitPoints]
+                fluxesUsed = catPlot[SNBand + "_" + self.config.fluxTypeForColor].values[fitPoints]
+                magsUsed = (fluxesUsed*u.nJy).to_value(u.ABmag)
                 incr = 5.0
                 idsUsed = (SNsUsed < minSnUsed + incr)
-                while sum(idsUsed) < max(0.005*len(idsUsed), 3):
+                while sum(idsUsed) < max(int(0.005*len(idsUsed)), 1):
                     incr += 5.0
                     idsUsed = (SNsUsed < plotInfo["SN"] + incr)
                 medMagUsed = np.nanmedian(magsUsed[idsUsed])
@@ -331,11 +360,18 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                 ax.text(0.04, yLoc, infoText, color="C0", transform=ax.transAxes,
                         fontsize=6, va="center")
 
-        # Calculate the density of the points
+        # Calculate the density of the points. Set all to 0.5 if density
+        # can't be calculated.
         xyUsed = np.vstack([xs[fitPoints], ys[fitPoints]])
         xyNotUsed = np.vstack([xs[~fitPoints], ys[~fitPoints]])
-        zUsed = scipy.stats.gaussian_kde(xyUsed)(xyUsed)
-        zNotUsed = scipy.stats.gaussian_kde(xyNotUsed)(xyNotUsed)
+        try:
+            zUsed = scipy.stats.gaussian_kde(xyUsed)(xyUsed)
+        except np.linalg.LinAlgError:
+            zUsed = [0.5]*len(xyUsed)
+        try:
+            zNotUsed = scipy.stats.gaussian_kde(xyNotUsed)(xyNotUsed)
+        except np.linalg.LinAlgError:
+            zNotUsed = [0.5]*len(xyNotUsed)
 
         notUsedScatter = ax.scatter(xs[~fitPoints], ys[~fitPoints], c=zNotUsed, cmap=newGrays,
                                     s=0.3)
@@ -350,6 +386,7 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
                            ha="center", va="center", fontsize=7)
         cbText.set_path_effects([pathEffects.Stroke(linewidth=1.5, foreground="w"), pathEffects.Normal()])
         cbAx.set_xticks([np.min(zUsed), np.max(zUsed)], labels=["Less", "More"], fontsize=7)
+
         cbAxNotUsed = fig.add_axes([0.12, 0.11, 0.43, 0.04])
         plt.colorbar(notUsedScatter, cax=cbAxNotUsed, orientation="horizontal")
         cbText = cbAxNotUsed.text(0.5, 0.5, "Number Density (not used in fit)", color="k",
