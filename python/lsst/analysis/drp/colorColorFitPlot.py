@@ -297,10 +297,10 @@ class ColorColorFitPlotTask(pipeBase.PipelineTask):
         the fit line is given in a histogram in the second panel.
         """
 
-        self.log.info(("Plotting %s: the values of %s against %s on a color-color plot with the area "
-                       "used for calculating the stellar locus fits marked.",
-                       self.config.connections.plotName, self.config.axisLabels["x"],
-                       self.config.axisLabels["y"]))
+        self.log.info("Plotting %s: the values of %s against %s on a color-color plot with the area "
+                      "used for calculating the stellar locus fits marked.",
+                      self.config.connections.plotName, self.config.axisLabels["x"],
+                      self.config.axisLabels["y"])
 
         # Define a new colormap
         newBlues = mkColormap(["darkblue", "paleturquoise"])
