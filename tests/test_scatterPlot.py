@@ -27,6 +27,7 @@ from lsst.analysis.drp.calcFunctors import MagDiff
 from lsst.analysis.drp.dataSelectors import GalaxyIdentifier
 from lsst.analysis.drp.plotUtils import get_and_remove_figure_text
 from lsst.analysis.drp.scatterPlot import ScatterPlotWithTwoHistsTask, ScatterPlotWithTwoHistsTaskConfig
+from lsst.daf.butler import DataCoordinate, DimensionUniverse
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -111,8 +112,9 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
 
     def test_ScatterPlotWithTwoHistsTask(self):
         plt.rcParams.update(plt.rcParamsDefault)
+        universe = DimensionUniverse()
         result = self.task.run(self.data,
-                               dataId={},
+                               dataId=DataCoordinate.makeEmpty(universe),
                                runName="test",
                                skymap=None,
                                tableName="test",
