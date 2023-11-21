@@ -114,7 +114,7 @@ class ScatterPlotWithTwoHistsTaskTestCase(lsst.utils.tests.TestCase):
         plt.rcParams.update(plt.rcParamsDefault)
         universe = DimensionUniverse()
         result = self.task.run(self.data,
-                               dataId=DataCoordinate.makeEmpty(universe),
+                               dataId=DataCoordinate.make_empty(universe),
                                runName="test",
                                skymap=None,
                                tableName="test",
