@@ -45,8 +45,7 @@ def parsePlotInfo(dataId, runName, tableName, bands, plotName, SN, SNFlux):
     """
     plotInfo = {"run": runName, "tractTableType": tableName, "plotName": plotName, "SN": SN, "SNFlux": SNFlux}
 
-    for dataInfo in dataId:
-        plotInfo[dataInfo.name] = dataId[dataInfo.name]
+    plotInfo.update(dataId.mapping)
 
     bandStr = ""
     for band in bands:
