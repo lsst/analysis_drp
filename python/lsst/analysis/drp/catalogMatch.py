@@ -51,6 +51,11 @@ class AstropyMatchTask(pipeBase.Task):
             separations: `astropy.coordinates.angles.Angle`
                 Array of angle separations between matched objects
         """
+        # Get rid of entries in the refCat with non-finite RA/Dec values.
+        refRas = refCatalog['coord_ra']
+        refDecs = refCatalog['coord_dec']
+        refRaDecFiniteMask = np.isfinite(refRas) & np.isfinite(refDecs)
+        refCatalog = refCatalog[refRaDecFiniteMask]
         refCat_ap = SkyCoord(ra=refCatalog['coord_ra'].values * u.degree,
                              dec=refCatalog['coord_dec'].values * u.degree)
 
@@ -85,7 +90,7 @@ class CatalogMatchConnections(pipeBase.PipelineTaskConnections, dimensions=("tra
 
     refCat = pipeBase.connectionTypes.PrerequisiteInput(
         doc="The reference catalog to match to loaded input catalog sources.",
-        name="gaia_dr2_20200414",
+        name="gaia_dr3_20230707",
         storageClass="SimpleCatalog",
         dimensions=("skypix",),
         deferLoad=True,
@@ -271,11 +276,17 @@ class CatalogMatchTask(pipeBase.PipelineTask):
                                                     'i',
                                                     epoch=epoch)
         refCat = skyCircle.refCat
+        # Get rid of entries in the refCat with non-finite RA/Dec values.
+        refRas = refCat['coord_ra']
+        refDecs = refCat['coord_dec']
+        refRaDecFiniteMask = np.isfinite(refRas) & np.isfinite(refDecs)
+        refCat = refCat[refRaDecFiniteMask].copy(deep=True)
 
         # Convert the coordinates to RA/Dec and convert the catalog to a
         # dataframe
         refCat['coord_ra'] = (refCat['coord_ra'] * u.radian).to(u.degree).to_value()
         refCat['coord_dec'] = (refCat['coord_dec'] * u.radian).to(u.degree).to_value()
+
         self.refCat = refCat.asAstropy().to_pandas()
 
 
@@ -293,7 +304,7 @@ class CatalogMatchVisitConnections(pipeBase.PipelineTaskConnections, dimensions=
 
     refCat = pipeBase.connectionTypes.PrerequisiteInput(
         doc="The astrometry reference catalog to match to loaded input catalog sources.",
-        name="gaia_dr2_20200414",
+        name="gaia_dr3_20230707",
         storageClass="SimpleCatalog",
         dimensions=("skypix",),
         deferLoad=True,
