@@ -3,7 +3,7 @@
 import numpy as np
 from smatch.matcher import Matcher
 from astropy import units as u
-import pandas as pd
+import astropy.table
 
 import lsst.pipe.base as pipeBase
 import lsst.pex.config as pexConfig
@@ -16,16 +16,16 @@ class RedGalaxyTruthAssociationConnections(pipeBase.PipelineTaskConnections,
                                            dimensions=("tract", "skymap"),
                                            defaultTemplates={"inputCoaddName": "deep"}):
     object_table = pipeBase.connectionTypes.Input(doc="The tract catalog to do association.",
-                                                  storageClass="DataFrame",
+                                                  storageClass="ArrowAstropy",
                                                   name="objectTable_tract",
                                                   dimensions=("tract", "skymap"),
                                                   deferLoad=True)
     redgal_table = pipeBase.connectionTypes.Input(doc="The red galaxy truth catalog.",
-                                                  storageClass="DataFrame",
+                                                  storageClass="ArrowAstropy",
                                                   name="cosmodc2_1_1_4_redmapper_v0_8_1_redgals",
                                                   deferLoad=True)
     matched_red_galaxies = pipeBase.connectionTypes.Output(doc="Matched object/red galaxy table.",
-                                                           storageClass="DataFrame",
+                                                           storageClass="ArrowAstropy",
                                                            name="matched_true_red_galaxies",
                                                            dimensions=("tract", "skymap"))
 
@@ -113,7 +113,7 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
 
         struct = self.run(object_table, redgal_table)
 
-        butlerQC.put(pd.DataFrame(struct.matched_red_galaxies),
+        butlerQC.put(astropy.table.Table(struct.matched_red_galaxies),
                      outputRefs.matched_red_galaxies)
 
     def run(self, object_table, redgal_table):
@@ -121,25 +121,23 @@ class RedGalaxyTruthAssociationTask(pipeBase.PipelineTask):
 
         Parameters
         ----------
-        object_table : `pandas.DataFrame`
-            Object table dataframe with select columns.
-        redgal_table : `pandas.DataFrame`
-            Red galaxy truth table dataframe.
+        object_table : `astropy.table.Table`
+            Object table table with select columns.
+        redgal_table : `astropy.table.Table`
+            Red galaxy truth table table.
 
         Returns
         -------
         struct : `lsst.pipe.base.struct`
             Struct with outputs for persistence.
         """
-        object_table.reset_index(inplace=True)
-
         mask = np.ones(len(object_table), dtype=bool)
         for selector in self.config.selector_actions:
             mask &= selector(object_table)
 
         # Down-select and convert to numpy recarrays
-        object_table = object_table[mask].to_records()
-        redgal_table = redgal_table.to_records()
+        object_table = object_table[mask].as_array()
+        redgal_table = redgal_table.as_array()
 
         # Match tables
         with Matcher(redgal_table["ra"], redgal_table["dec"]) as matcher:
